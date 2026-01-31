@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Direct Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        button { padding: 15px 30px; margin: 10px; cursor: pointer; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 16px; }
+        pre { background: #0d0d0d; padding: 20px; border-radius: 8px; overflow-x: auto; }
+        .log { color: #22c55e; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Direct API Test</h1>
+    <p>Click the button to test if the Color Wheel API is working:</p>
+    
+    <button onclick="testAPI()">🧪 TEST API WRITE</button>
+    <button onclick="testDirect()">🔴 DIRECT RED WRITE</button>
+    <button onclick="clearLog()">🗑️ Clear Log</button>
+    
+    <div id="output">
+        <pre id="log">Click a button to test...</pre>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = isError ? '❌' : '✅';
+            log.textContent += `\n${timestamp} ${prefix} ${message}`;
+        }
+        
+        function clearLog() {
+            log.textContent = 'Log cleared. Click a button to test...';
+        }
+        
+        async function testAPI() {
+            log.textContent = '';
+            addLog('Testing Color Wheel API...');
+            
+            try {
+                addLog('Fetching from /api/write-theme');
+                const response = await fetch('/api/write-theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        json: {
+                            $schema: 'https://opencode.ai/desktop-theme.json',
+                            name: 'API TEST ' + Date.now(),
+                            id: 'custom',
+                            light: { seeds: { primary: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0') }, overrides: {} },
+                            dark: { seeds: { primary: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0') }, overrides: {} }
+                        },
+                        themeName: 'API Test'
+                    })
+                });
+                
+                addLog('Response status: ' + response.status);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    addLog('SUCCESS: ' + JSON.stringify(result));
+                } else {
+                    addLog('FAILED: Status ' + response.status, true);
+                }
+            } catch (error) {
+                addLog('ERROR: ' + error.message, true);
+                addLog('Error name: ' + error.name, true);
+            }
+        }
+        
+        async function testDirect() {
+            log.textContent = '';
+            addLog('Writing RED theme directly...');
+            
+            try {
+                const response = await fetch('/api/write-theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        json: {
+                            $schema: 'https://opencode.ai/desktop-theme.json',
+                            name: 'DIRECT RED TEST',
+                            id: 'custom',
+                            light: { seeds: { primary: '#ff0000' }, overrides: { 'background-base': '#ff0000' } },
+                            dark: { seeds: { primary: '#ff0000' }, overrides: { 'background-base': '#ff0000' } }
+                        },
+                        themeName: 'Direct Red Test'
+                    })
+                });
+                
+                const result = await response.json();
+                addLog('Result: ' + JSON.stringify(result));
+            } catch (error) {
+                addLog('ERROR: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>API Test</h1>
+    <button onclick="testAPI()">Test API</button>
+    <pre id="output"></pre>
+    <script>
+        async function testAPI() {
+            const output = document.getElementById('output');
+            try {
+                output.textContent = 'Testing API...';
+                
+                const response = await fetch('/api/write-theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        json: { test: 'browser test', timestamp: Date.now() },
+                        themeName: 'Browser Test'
+                    })
+                });
+                
+                const result = await response.json();
+                output.textContent = 'Success: ' + JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message + '\n' + error.stack;
+            }
+        }
+    </script>
+</body>
+</html>

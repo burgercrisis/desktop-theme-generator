@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Browser Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #6366f1; color: white; border: none; border-radius: 4px; }
+        pre { background: #0d0d0d; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>API Browser Test</h1>
+    <button onclick="testGet()">Test GET Endpoint</button>
+    <button onclick="testPost()">Test POST Endpoint</button>
+    <button onclick="testFull()">Full Integration Test</button>
+    
+    <div id="results">
+        <h3>Results:</h3>
+        <pre id="output">Click a button to test...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message, isError = false) {
+            const prefix = isError ? '❌ ERROR: ' : '✅ ';
+            output.textContent += prefix + message + '\n';
+        }
+        
+        async function testGet() {
+            output.textContent = '';
+            try {
+                log('Testing GET /api/test...');
+                const response = await fetch('/api/test');
+                const result = await response.json();
+                log('GET Response: ' + JSON.stringify(result));
+            } catch (error) {
+                log('GET Error: ' + error.message, true);
+            }
+        }
+        
+        async function testPost() {
+            output.textContent = '';
+            try {
+                log('Testing POST /api/write-theme...');
+                const response = await fetch('/api/write-theme', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:3000'
+                    },
+                    body: JSON.stringify({
+                        json: { 
+                            test: 'browser test', 
+                            timestamp: Date.now(),
+                            $schema: 'https://opencode.ai/desktop-theme.json',
+                            name: 'Browser Test Theme',
+                            id: 'custom',
+                            light: { seeds: { primary: '#6366f1' }, overrides: {} },
+                            dark: { seeds: { primary: '#6366f1' }, overrides: {} }
+                        },
+                        themeName: 'Browser Test'
+                    })
+                });
+                
+                log('POST Status: ' + response.status);
+                const result = await response.json();
+                log('POST Response: ' + JSON.stringify(result, null, 2));
+            } catch (error) {
+                log('POST Error: ' + error.message, true);
+                log('POST Error name: ' + error.name, true);
+                if (error.stack) log('Stack: ' + error.stack, true);
+            }
+        }
+        
+        async function testFull() {
+            output.textContent = '';
+            await testGet();
+            await new Promise(r => setTimeout(r, 500));
+            await testPost();
+        }
+    </script>
+</body>
+</html>
