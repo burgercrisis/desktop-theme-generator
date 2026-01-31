@@ -1,4 +1,4 @@
-# Desktop Theme Generator
+# opendesktopgui - Desktop Theme Generator
 
 A full-featured webapp for generating desktop themes using the color wheel with complete harmony and variant systems. Built by cannibalizing components from [ChromaHarmony](https://github.com/anomalyco/chromaharmony).
 
