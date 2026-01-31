@@ -65,7 +65,10 @@ pnpm install
 pnpm dev
 ```
 
-This will start the development server at http://localhost:3000
+This will start the development server at http://localhost:3032 (or next available port).
+
+### Special Feature: Theme Integration
+This generator includes a custom Vite plugin (`themeWritePlugin`) that allows it to save generated themes directly to the main Opencode application. When you click "Save to Opencode", the generator sends a request to the local Vite server to write the `custom-theme.json` file.
 
 ### Build
 

@@ -1,6 +1,6 @@
 import { Plugin } from "vite"
-import fs from "fs"
-import path from "path"
+import * as fs from "fs"
+import * as path from "path"
 
 const THEME_WRITE_ENDPOINT = "/api/write-theme"
 const THEME_CSS_WRITE_ENDPOINT = "/api/write-theme-css"
