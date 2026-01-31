@@ -13,6 +13,7 @@ export interface RGB {
 export type HarmonyRule =
   | 'Monochromatic (1)'
   | 'Analogous (3)'
+  | 'Analogous (5)'
   | 'Accented Analogous (4)'
   | 'Complementary (2)'
   | 'Split Complementary (3)'
@@ -57,6 +58,7 @@ export type VariantStrategy =
   | 'Velvet'
   | 'Toxic'
   | 'Vintage'
+  | 'Warm'
   | 'Glacial'
   | 'Heatwave'
   | 'Cinematic'
@@ -76,127 +78,89 @@ export interface PaletteGroup {
 
 export interface DesktopTheme {
   name: string;
-  colors: OpencodeThemeColors;
+  colors: InternalThemeColors;
   palette: ColorStop[];
+}
+
+export interface InternalThemeColors {
+  [key: string]: string;
+  background: string;
+  backgroundWeak: string;
+  backgroundStrong: string;
+  backgroundStronger: string;
+  surfaceBase: string;
+  surfaceBaseHover: string;
+  surfaceBaseActive: string;
+  surfaceRaised: string;
+  surfaceRaisedHover: string;
+  surfaceRaisedActive: string;
+  surfaceRaisedStrong: string;
+  surfaceWeak: string;
+  surfaceWeaker: string;
+  surfaceStrong: string;
+  foreground: string;
+  foregroundWeak: string;
+  foregroundWeaker: string;
+  foregroundStrong: string;
+  textOnBrand: string;
+  borderBase: string;
+  borderWeak: string;
+  borderStrong: string;
+  borderSelected: string;
+  focusRing: string;
+  iconBase: string;
+  iconWeak: string;
+  iconStrong: string;
+  lineIndicator: string;
+  lineIndicatorActive: string;
+  primary: string;
+  primaryHover: string;
+  primaryActive: string;
+  primaryText: string;
+  secondary: string;
+  secondaryHover: string;
+  secondaryActive: string;
+  secondaryText: string;
+  accent: string;
+  accentHover: string;
+  accentActive: string;
+  accentText: string;
+  success: string;
+  successHover: string;
+  successActive: string;
+  successText: string;
+  warning: string;
+  warningHover: string;
+  warningActive: string;
+  warningText: string;
+  critical: string;
+  criticalHover: string;
+  criticalActive: string;
+  criticalText: string;
+  info: string;
+  infoHover: string;
+  infoActive: string;
+  infoText: string;
+  codeBackground: string;
+  codeForeground: string;
+  tabActive: string;
+  tabInactive: string;
+  tabHover: string;
+  diffAddBackground: string;
+  diffAddForeground: string;
+  diffRemoveBackground: string;
+  diffRemoveForeground: string;
+  avatarBackground: string;
+  avatarForeground: string;
+  scrollbarThumb: string;
+  scrollbarTrack: string;
+  shadow: string;
+  overlay: string;
 }
 
 // Opencode-compatible theme colors with kebab-case naming
 export interface OpencodeThemeColors {
-  // Background tokens
-  'background-base': string;
-  'background-weak': string;
-  'background-strong': string;
-  'background-stronger': string;
-  
-  // Surface tokens
-  'surface-base': string;
-  'surface-base-hover': string;
-  'surface-base-active': string;
-  'surface-raised-base': string;
-  'surface-raised-base-hover': string;
-  'surface-raised-base-active': string;
-  'surface-raised-strong': string;
-  'surface-weak': string;
-  'surface-weaker': string;
-  'surface-strong': string;
-  
-  // Text tokens
-  'text-base': string;
-  'text-weak': string;
-  'text-weaker': string;
-  'text-strong': string;
-  'text-on-brand-base': string;
-  
-  // Border tokens
-  'border-base': string;
-  'border-weak': string;
-  'border-strong': string;
-  'border-selected': string;
-  
-  // Icon tokens
-  'icon-base': string;
-  'icon-weak': string;
-  'icon-strong': string;
-  
-  // Primary tokens
-  'primary-base': string;
-  'primary-hover': string;
-  'primary-active': string;
-  'primary-text': string;
-  
-  // Secondary tokens (mapped to accent in Opencode)
-  'secondary-base': string;
-  'secondary-hover': string;
-  'secondary-active': string;
-  'secondary-text': string;
-  
-  // Accent tokens (mapped to info in Opencode)
-  'accent-base': string;
-  'accent-hover': string;
-  'accent-active': string;
-  'accent-text': string;
-  
-  // Success tokens
-  'success-base': string;
-  'success-hover': string;
-  'success-active': string;
-  'success-text': string;
-  
-  // Warning tokens
-  'warning-base': string;
-  'warning-hover': string;
-  'warning-active': string;
-  'warning-text': string;
-  
-  // Critical/Error tokens
-  'critical-base': string;
-  'critical-hover': string;
-  'critical-active': string;
-  'critical-text': string;
-  
-  // Info tokens (mapped from accent in current system)
-  'info-base': string;
-  'info-hover': string;
-  'info-active': string;
-  'info-text': string;
-  
-  // Interactive tokens
-  'interactive-base': string;
-  'interactive-hover': string;
-  'interactive-active': string;
-  'interactive-text': string;
-  
-  // Diff tokens
-  'diff-add-base': string;
-  'diff-add-foreground': string;
-  'diff-delete-base': string;
-  'diff-delete-foreground': string;
-  
-  // Code tokens
-  'code-background': string;
-  'code-foreground': string;
-  
-  // Tab tokens
-  'tab-active': string;
-  'tab-inactive': string;
-  'tab-hover': string;
-  
-  // Line indicator
-  'line-indicator': string;
-  'line-indicator-active': string;
-  
-  // Avatar tokens
-  'avatar-background': string;
-  'avatar-foreground': string;
-  
-  // Scrollbar tokens
-  'scrollbar-thumb': string;
-  'scrollbar-track': string;
-  
-  // Focus and other tokens
-  'focus-ring': string;
-  'shadow': string;
-  'overlay': string;
+  [key: string]: string;
 }
 
 export type SeedName = 
@@ -207,6 +171,8 @@ export type SeedName =
   | 'error' 
   | 'info' 
   | 'interactive' 
+  | 'accent'
+  | 'critical'
   | 'diffAdd' 
   | 'diffDelete';
 

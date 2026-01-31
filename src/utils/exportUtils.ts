@@ -1,37 +1,85 @@
-import { DesktopTheme } from "../types"
+import { DesktopTheme, OpencodeThemeColors, SeedColor } from "../types"
 
 export interface OpencodeThemeJSON {
   $schema: string
   name: string
   id: string
   light: {
-    seeds: {
-      neutral: string
-      primary: string
-      success: string
-      warning: string
-      error: string
-      info: string
-      interactive: string
-      diffAdd: string
-      diffDelete: string
-    }
+    seeds: Record<string, string>
     overrides: Record<string, string>
   }
   dark: {
-    seeds: {
-      neutral: string
-      primary: string
-      success: string
-      warning: string
-      error: string
-      info: string
-      interactive: string
-      diffAdd: string
-      diffDelete: string
-    }
+    seeds: Record<string, string>
     overrides: Record<string, string>
   }
+}
+
+export const exportFormats = [
+  { id: "css", name: "CSS Variables", ext: ".css", mime: "text/css" },
+  { id: "json", name: "JSON", ext: ".json", mime: "application/json" },
+  { id: "tailwind", name: "Tailwind Config", ext: ".js", mime: "text/javascript" },
+  { id: "scss", name: "SCSS Variables", ext: ".scss", mime: "text/x-scss" },
+  { id: "opencode9", name: "Opencode (9-Seed)", ext: ".json", mime: "application/json" },
+]
+
+export const exportToCSS = (theme: DesktopTheme): string => {
+  let css = ":root {\n"
+  for (const [key, value] of Object.entries(theme.colors)) {
+    if (typeof value === "string" && !key.startsWith("[")) {
+      const kebab = key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
+      css += `  --${kebab}: ${value};\n`
+    }
+  }
+  css += "}"
+  return css
+}
+
+export const exportToJSON = (theme: DesktopTheme): string => {
+  return JSON.stringify(theme, null, 2)
+}
+
+export const exportToSCSS = (theme: DesktopTheme): string => {
+  let scss = ""
+  for (const [key, value] of Object.entries(theme.colors)) {
+    if (typeof value === "string" && !key.startsWith("[")) {
+      const kebab = key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
+      scss += `$${kebab}: ${value};\n`
+    }
+  }
+  return scss
+}
+
+export const exportToTailwind = (theme: DesktopTheme): string => {
+  const colors: Record<string, string> = {}
+  for (const [key, value] of Object.entries(theme.colors)) {
+    if (typeof value === "string" && !key.startsWith("[")) {
+      const kebab = key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
+      colors[kebab] = value
+    }
+  }
+  return `module.exports = {\n  theme: {\n    extend: {\n      colors: ${JSON.stringify(colors, null, 6)}\n    }\n  }\n}`
+}
+
+export const exportToOpencode9SeedJSON = (name: string, colors: OpencodeThemeColors, seeds: SeedColor[]): string => {
+  const seedMap: Record<string, string> = {}
+  seeds.forEach(s => {
+    seedMap[s.name] = s.hex
+  })
+
+  const json = {
+    $schema: "https://opencode.ai/desktop-theme.json",
+    name,
+    id: name.toLowerCase().replace(/\s+/g, "-"),
+    light: {
+      seeds: seedMap,
+      overrides: colors
+    },
+    dark: {
+      seeds: seedMap,
+      overrides: colors
+    }
+  }
+  return JSON.stringify(json, null, 2)
 }
 
 /**
@@ -80,7 +128,6 @@ export const writeCustomThemeFile = async (
   theme: DesktopTheme,
 ): Promise<{ success: boolean; error?: string }> => {
   const json = exportToOpencodeJSON(theme)
-  const jsonString = JSON.stringify(json, null, 2)
 
   const apiUrls = [
     "/api/write-theme",

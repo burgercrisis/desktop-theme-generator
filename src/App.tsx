@@ -23,8 +23,8 @@ import {
   writeCustomThemeFile,
 } from "./utils/exportUtils"
 import { opencodePresets, getPresetOverrides } from "./utils/themePresets"
-import { HSL, HarmonyRule, VariantStrategy, DesktopTheme, SeedColor, OpencodeThemeColors } from "./types"
-import { hslToHex, getContrastRatio, getWCAGLevel, getContrastScore } from "./utils/colorUtils"
+import { HSL, HarmonyRule, VariantStrategy, DesktopTheme, OpencodeThemeColors } from "./types"
+import { getContrastRatio, getWCAGLevel, getContrastScore } from "./utils/colorUtils"
 import "./App.css"
 
 const App: React.FC = () => {
@@ -35,7 +35,7 @@ const App: React.FC = () => {
   const [contrast, setContrast] = useState(50)
   const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>("Tints & Shades")
   const [themeName, setThemeName] = useState("My Theme")
-  const [copiedHex, setCopiedHex] = useState<string | null>(null)
+  const [, setCopiedHex] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"palette" | "export">("palette")
   const [useOpencodeMode, setUseOpencodeMode] = useState(true)
 
@@ -70,14 +70,6 @@ const App: React.FC = () => {
       return generateOpencodeThemeColors(seeds9, seedVariants as any)
     }
     const oldPaletteGroups = generateHarmony(baseColor, harmony, spread)
-    const oldVariants = oldPaletteGroups.map((group, idx) => {
-      const prevHsl = oldPaletteGroups[idx === 0 ? oldPaletteGroups.length - 1 : idx - 1].base.hsl
-      const nextHsl = oldPaletteGroups[(idx + 1) % oldPaletteGroups.length].base.hsl
-      return {
-        group,
-        variants: generateVariants(group.base.hsl, variantCount, contrast, variantStrategy, prevHsl, nextHsl),
-      }
-    })
     const oldColors = generateThemeColors(oldPaletteGroups, baseColor)
 
     const converted: OpencodeThemeColors = {
@@ -326,7 +318,7 @@ const App: React.FC = () => {
 
       if (format === "opencode9") {
         const content = exportToOpencode9SeedJSON(themeName, opencodeTheme, seeds9)
-        const formatInfo = exportFormats.find((f) => f.id === format)
+        const formatInfo = exportFormats.find((f: any) => f.id === format)
         downloadFile(
           content,
           `${themeName.toLowerCase().replace(/\s+/g, "-")}${formatInfo?.ext || ".json"}`,
@@ -339,7 +331,7 @@ const App: React.FC = () => {
       if (!exporter) return
 
       const content = exporter(theme)
-      const formatInfo = exportFormats.find((f) => f.id === format)
+      const formatInfo = exportFormats.find((f: any) => f.id === format)
       downloadFile(
         content,
         `${themeName.toLowerCase().replace(/\s+/g, "-")}${formatInfo?.ext || ".css"}`,
@@ -731,7 +723,7 @@ const App: React.FC = () => {
                       value={spread}
                       onChange={(e) => setSpread(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accent: theme.colors.accent }}
+                      style={{ accentColor: theme.colors.accent }}
                     />
                   </div>
 
@@ -747,7 +739,7 @@ const App: React.FC = () => {
                       value={variantCount}
                       onChange={(e) => setVariantCount(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accent: theme.colors.secondary }}
+                      style={{ accentColor: theme.colors.secondary }}
                     />
                   </div>
 
@@ -763,7 +755,7 @@ const App: React.FC = () => {
                       value={contrast}
                       onChange={(e) => setContrast(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accent: theme.colors.primary }}
+                      style={{ accentColor: theme.colors.primary }}
                     />
                   </div>
                 </div>
@@ -1032,7 +1024,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="p-4">
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    {exportFormats.map((format) => (
+                    {exportFormats.map((format: any) => (
                       <button
                         key={format.id}
                         onClick={() => handleExport(format.id)}

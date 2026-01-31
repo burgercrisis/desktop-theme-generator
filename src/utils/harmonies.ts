@@ -1,61 +1,5 @@
 import { hslToHex } from "./colorUtils"
-
-export type HSL = { h: number; s: number; l: number }
-export type HarmonyRule =
-  | "Analogous (3)"
-  | "Analogous (5)"
-  | "Monochromatic (1)"
-  | "Triadic (3)"
-  | "Tetradic (4)"
-  | "Square (4)"
-  | "Split Complementary (3)"
-  | "Double Split Complementary (5)"
-  | "Compound (3)"
-  | "Double Analogous (4)"
-  | "Six Tone (6)"
-  | "Pentagram (5)"
-  | "Full Spectrum (8)"
-  | "Clash Complementary (3)"
-  | "Synthwave (3)"
-  | "Analogous Clash (3)"
-  | "Natural (3)"
-  | "Shades (1)"
-  | "Hard Clash (3)"
-export type VariantStrategy =
-  | "Tints & Shades"
-  | "Tones"
-  | "Neon Glow"
-  | "Vibrant"
-  | "Pastel"
-  | "Vintage"
-  | "Clay"
-  | "Deep & Rich"
-  | "Glacial"
-  | "Heatwave"
-  | "Cinematic"
-  | "Memphis"
-  | "Glitch"
-
-export interface ColorStop {
-  hsl: HSL
-  hex: string
-  name: string
-}
-
-export interface PaletteGroup {
-  base: ColorStop
-  variants: ColorStop[]
-}
-
-export interface SeedColor {
-  name: string
-  hex: string
-  hsl: HSL
-}
-
-export interface OpencodeThemeColors {
-  [key: string]: string
-}
+import { HSL, HarmonyRule, VariantStrategy, ColorStop, PaletteGroup, SeedColor, OpencodeThemeColors, InternalThemeColors, SeedName } from "../types"
 
 const normalizeHue = (h: number): number => {
   const normalized = h % 360
@@ -224,7 +168,7 @@ export const generateVariants = (hsl: HSL, steps: number, contrast: number, stra
   return variants
 }
 
-export const generateThemeColors = (paletteGroups: PaletteGroup[], baseColor: HSL) => {
+export const generateThemeColors = (paletteGroups: PaletteGroup[], baseColor: HSL): InternalThemeColors => {
   const primary = paletteGroups[0]?.base.hex || hslToHex(baseColor.h, baseColor.s, baseColor.l)
   const secondary = paletteGroups[1]?.base.hex || hslToHex((baseColor.h + 120) % 360, baseColor.s, baseColor.l)
   const accent = paletteGroups[2]?.base.hex || hslToHex((baseColor.h + 60) % 360, baseColor.s, baseColor.l)
@@ -317,7 +261,7 @@ export const generateThemeColors = (paletteGroups: PaletteGroup[], baseColor: HS
   }
 }
 
-export const harmonyOptions = [
+export const harmonyOptions: { value: HarmonyRule; label: string }[] = [
   { value: "Analogous (3)", label: "Analogous (3)" },
   { value: "Analogous (5)", label: "Analogous (5)" },
   { value: "Monochromatic (1)", label: "Monochromatic (1)" },
@@ -339,7 +283,7 @@ export const harmonyOptions = [
   { value: "Hard Clash (3)", label: "Hard Clash (3)" }
 ]
 
-export const variantStrategyOptions = [
+export const variantStrategyOptions: { value: VariantStrategy; label: string }[] = [
   { value: "Tints & Shades", label: "Tints & Shades" },
   { value: "Tones", label: "Tones" },
   { value: "Neon Glow", label: "Neon Glow" },
@@ -367,10 +311,9 @@ export const thematicPresets = {
   psychedelic: { h: [0, 360], s: [90, 100], l: [50, 60], harmony: "Full Spectrum (8)" as HarmonyRule, strategy: "Glitch" as VariantStrategy },
   warm: { h: [0, 60], s: [60, 90], l: [45, 65], harmony: "Analogous (3)" as HarmonyRule, strategy: "Heatwave" as VariantStrategy },
   cool: { h: [170, 250], s: [50, 80], l: [45, 65], harmony: "Analogous (3)" as HarmonyRule, strategy: "Glacial" as VariantStrategy },
-  subtle: { h: [0, 360], s: [10, 30], l: [70, 90], harmony: "Monochromatic (1)" as HarmonyRule, strategy: "Tints & Shades" as VariantStrategy }
+  subtle: { h: [0, 360], s: [10, 30], l: [70, 90], harmony: "Monochromatic (1)" as HarmonyRule, strategy: "Tints & Shades" as VariantStrategy },
+  neon: { h: [150, 180], s: [90, 100], l: [50, 60], harmony: "Analogous (3)" as HarmonyRule, strategy: "Neon Glow" as VariantStrategy }
 }
-
-export type SeedName = "neutral" | "primary" | "interactive" | "success" | "error" | "info" | "warning" | "accent" | "critical"
 
 export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
   { name: "neutral", hex: "#8e8b8b", hsl: { h: 20, s: 5, l: 55 } },
@@ -384,7 +327,7 @@ export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
   { name: "critical", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } }
 ]
 
-export const generate9SeedHarmony = (baseColor: HSL): SeedColor[] => [
+export const generate9SeedHarmony = (baseColor: HSL, _rule?: HarmonyRule, _spread?: number): SeedColor[] => [
   { name: "neutral", hex: "#8e8b8b", hsl: { h: 20, s: 5, l: 55 } },
   { name: "primary", hex: hslToHex(baseColor.h, baseColor.s, baseColor.l), hsl: baseColor },
   { name: "interactive", hex: "#0db9d7", hsl: { h: 190, s: 85, l: 48 } },

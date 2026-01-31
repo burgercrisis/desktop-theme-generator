@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.tsx", "src/**/*.ts", "vite.config.ts"],
+  "include": ["src/**/*.tsx", "src/**/*.ts"],
+  "exclude": ["src/utils/themeWritePlugin.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
