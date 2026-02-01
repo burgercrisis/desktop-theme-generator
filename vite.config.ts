@@ -1,7 +1,7 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { themeWritePlugin } from "./src/utils/themeWritePlugin"
-import * as path from "path"
+import * as path from "path" // Modified to trigger restart
 import { fileURLToPath } from "url"
 
 const __filename = fileURLToPath(import.meta.url)

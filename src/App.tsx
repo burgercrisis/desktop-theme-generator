@@ -6,6 +6,7 @@ import {
 } from "./utils/engine/harmonies"
 import {
   generateOpencodeThemeColors,
+  generateThemeColors,
   harmonyOptions,
   variantStrategyOptions,
   thematicPresets,
@@ -18,13 +19,33 @@ import {
   exportToOpencode9SeedJSON,
   downloadFile,
   exportFormats,
-  writeCustomThemeFile,
   writeOpencode9ThemeFile,
 } from "./utils/exportUtils"
 import { opencodePresets, getPresetOverrides } from "./utils/themePresets"
-import { HSL, HarmonyRule, VariantStrategy, DesktopTheme, OpencodeThemeColors } from "./types"
+import { 
+  HSL, 
+  HarmonyRule, 
+  VariantStrategy, 
+  DesktopTheme, 
+  OpencodeThemeColors, 
+  SeedColor, 
+  SeedName, 
+  InternalThemeColors,
+  ColorSpace,
+  OutputSpace
+} from "./types"
 import { getContrastRatio, getWCAGLevel, getContrastScore } from "./utils/colorUtils"
 import "./App.css"
+
+const getInitialState = (key: string, defaultValue: any) => {
+  const saved = localStorage.getItem(key)
+  if (!saved) return defaultValue
+  try {
+    return JSON.parse(saved)
+  } catch (e) {
+    return defaultValue
+  }
+}
 
 const App: React.FC = () => {
   const [baseColor, setBaseColor] = useState<HSL>({ h: 220, s: 25, l: 55 })
@@ -33,6 +54,9 @@ const App: React.FC = () => {
   const [variantCount, setVariantCount] = useState(2)
   const [contrast, setContrast] = useState(50)
   const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>("Tints & Shades")
+  const [colorSpace, setColorSpace] = useState<ColorSpace>(() => getInitialState("colorSpace", "HSL"))
+  const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
+  const [useOpencodeMode, setUseOpencodeMode] = useState(() => getInitialState("useOpencodeMode", true))
   const [themeName, setThemeName] = useState("My Theme")
   const [, setCopiedHex] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"palette" | "export">("palette")
@@ -52,6 +76,7 @@ const App: React.FC = () => {
   React.useEffect(() => localStorage.setItem("variantStrategy", JSON.stringify(variantStrategy)), [variantStrategy])
   React.useEffect(() => localStorage.setItem("colorSpace", JSON.stringify(colorSpace)), [colorSpace])
   React.useEffect(() => localStorage.setItem("outputSpace", JSON.stringify(outputSpace)), [outputSpace])
+  React.useEffect(() => localStorage.setItem("useOpencodeMode", JSON.stringify(useOpencodeMode)), [useOpencodeMode])
   React.useEffect(() => localStorage.setItem("themeName", JSON.stringify(themeName)), [themeName])
   React.useEffect(() => localStorage.setItem("matrixMode", JSON.stringify(matrixMode)), [matrixMode])
   React.useEffect(() => localStorage.setItem("manualOverrides", JSON.stringify(manualOverrides)), [manualOverrides])
@@ -185,9 +210,6 @@ const App: React.FC = () => {
     }
     return converted
   }, [useOpencodeMode, seeds9, seedVariants, baseColor, harmony, spread, variantCount, contrast, variantStrategy])
-
-  // Keep old system for backward compatibility
-  const paletteGroups = useMemo(() => generateHarmony(baseColor, harmony, spread), [baseColor, harmony, spread])
 
   const allVariants = useMemo(() => {
     return paletteGroups.flatMap(group => [group.base, ...group.variants])
@@ -741,6 +763,60 @@ const App: React.FC = () => {
                 <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Configuration</h2>
               </div>
               <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between p-2 rounded bg-indigo-500/10 border border-indigo-500/20 mb-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-indigo-300">Opencode 9-Seed Mode</span>
+                    <span className="text-[10px] opacity-60">Generate 9 semantic seeds for Opencode UI</span>
+                  </div>
+                  <button
+                    onClick={() => setUseOpencodeMode(!useOpencodeMode)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${useOpencodeMode ? 'bg-indigo-500' : 'bg-gray-700'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${useOpencodeMode ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Color Space</label>
+                    <select
+                      value={colorSpace}
+                      onChange={(e) => setColorSpace(e.target.value as ColorSpace)}
+                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
+                      style={{
+                        backgroundColor: "transparent",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        color: theme.colors["text-base"] || "#ffffff",
+                      }}
+                    >
+                      {['HSL', 'CAM02', 'HSLuv', 'LCh D50', 'LCh D65', 'OkLCh', 'IPT', 'LCh(uv)'].map((opt) => (
+                        <option key={opt} value={opt} className="bg-[#1a1a1a]">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Output Space</label>
+                    <select
+                      value={outputSpace}
+                      onChange={(e) => setOutputSpace(e.target.value as OutputSpace)}
+                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
+                      style={{
+                        backgroundColor: "transparent",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        color: theme.colors["text-base"] || "#ffffff",
+                      }}
+                    >
+                      {['sRGB', 'P3', 'AdobeRGB', 'Rec.2020', 'HSL', 'HSV'].map((opt) => (
+                        <option key={opt} value={opt} className="bg-[#1a1a1a]">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Harmony Rule</label>

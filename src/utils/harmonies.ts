@@ -1,5 +1,5 @@
 import { hslToHex } from "./colorUtils"
-import { HSL, HarmonyRule, VariantStrategy, ColorStop, PaletteGroup, SeedColor, OpencodeThemeColors, InternalThemeColors, SeedName } from "../types"
+import { HSL, HarmonyRule, VariantStrategy, PaletteGroup, SeedColor, OpencodeThemeColors, InternalThemeColors } from "../types"
 
 export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
   { name: "neutral", hex: "#8e8b8b", hsl: { h: 20, s: 5, l: 55 } },
