@@ -6,7 +6,6 @@ import {
 } from "./utils/engine/harmonies"
 import {
   generateOpencodeThemeColors,
-  generateThemeColors,
   harmonyOptions,
   variantStrategyOptions,
   thematicPresets,
@@ -48,12 +47,12 @@ const getInitialState = (key: string, defaultValue: any) => {
 }
 
 const App: React.FC = () => {
-  const [baseColor, setBaseColor] = useState<HSL>({ h: 220, s: 25, l: 55 })
-  const [harmony, setHarmony] = useState<HarmonyRule>("Analogous (3)")
-  const [spread, setSpread] = useState(30)
-  const [variantCount, setVariantCount] = useState(2)
-  const [contrast, setContrast] = useState(50)
-  const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>("Tints & Shades")
+  const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 210, s: 50, l: 50 }))
+  const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
+  const [spread, setSpread] = useState(() => getInitialState("spread", 30))
+  const [variantCount, setVariantCount] = useState(() => getInitialState("variantCount", 2))
+  const [contrast, setContrast] = useState(() => getInitialState("contrast", 50))
+  const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>(() => getInitialState("variantStrategy", VariantStrategy.TINTS_SHADES))
   const [colorSpace, setColorSpace] = useState<ColorSpace>(() => getInitialState("colorSpace", "HSL"))
   const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
   const [useOpencodeMode, setUseOpencodeMode] = useState(() => getInitialState("useOpencodeMode", true))
@@ -121,95 +120,6 @@ const App: React.FC = () => {
     })
     return variants
   }, [seeds9, variantCount, contrast, variantStrategy])
-
-  // Generate Opencode theme colors
-  const opencodeTheme = useMemo<OpencodeThemeColors>(() => {
-    if (useOpencodeMode) {
-      return generateOpencodeThemeColors(seeds9, seedVariants as any)
-    }
-    const oldPaletteGroups = generateHarmony(baseColor, harmony, spread)
-    const oldColors = generateThemeColors(oldPaletteGroups, baseColor)
-
-    const converted: OpencodeThemeColors = {
-      "background-base": oldColors.background,
-      "background-weak": oldColors.backgroundWeak,
-      "background-strong": oldColors.backgroundStrong,
-      "background-stronger": oldColors.backgroundStronger,
-      "surface-base": oldColors.surfaceBase,
-      "surface-base-hover": oldColors.surfaceBaseHover,
-      "surface-base-active": oldColors.surfaceBaseActive,
-      "surface-raised-base": oldColors.surfaceRaised,
-      "surface-raised-base-hover": oldColors.surfaceRaisedHover,
-      "surface-raised-base-active": oldColors.surfaceRaisedActive,
-      "surface-raised-strong": oldColors.surfaceRaisedStrong,
-      "surface-weak": oldColors.surfaceWeak,
-      "surface-weaker": oldColors.surfaceWeaker,
-      "surface-strong": oldColors.surfaceStrong,
-      "text-base": oldColors.foreground,
-      "text-weak": oldColors.foregroundWeak,
-      "text-weaker": oldColors.foregroundWeaker,
-      "text-strong": oldColors.foregroundStrong,
-      "text-on-brand-base": oldColors.textOnBrand,
-      "border-base": oldColors.borderBase,
-      "border-weak": oldColors.borderWeak,
-      "border-strong": oldColors.borderStrong,
-      "border-selected": oldColors.borderSelected,
-      "icon-base": oldColors.iconBase,
-      "icon-weak": oldColors.iconWeak,
-      "icon-strong": oldColors.iconStrong,
-      "primary-base": oldColors.primary,
-      "primary-hover": oldColors.primaryHover,
-      "primary-active": oldColors.primaryActive,
-      "primary-text": oldColors.primaryText,
-      "secondary-base": oldColors.secondary,
-      "secondary-hover": oldColors.secondaryHover,
-      "secondary-active": oldColors.secondaryActive,
-      "secondary-text": oldColors.secondaryText,
-      "accent-base": oldColors.accent,
-      "accent-hover": oldColors.accentHover,
-      "accent-active": oldColors.accentActive,
-      "accent-text": oldColors.accentText,
-      "success-base": oldColors.success,
-      "success-hover": oldColors.successHover,
-      "success-active": oldColors.successActive,
-      "success-text": oldColors.successText,
-      "warning-base": oldColors.warning,
-      "warning-hover": oldColors.warningHover,
-      "warning-active": oldColors.warningActive,
-      "warning-text": oldColors.warningText,
-      "critical-base": oldColors.critical,
-      "critical-hover": oldColors.criticalHover,
-      "critical-active": oldColors.criticalActive,
-      "critical-text": oldColors.criticalText,
-      "info-base": oldColors.info,
-      "info-hover": oldColors.infoHover,
-      "info-active": oldColors.infoActive,
-      "info-text": oldColors.infoText,
-      "interactive-base": oldColors.primary,
-      "interactive-hover": oldColors.primaryHover,
-      "interactive-active": oldColors.primaryActive,
-      "interactive-text": oldColors.primaryText,
-      "diff-add-base": oldColors.diffAddBackground,
-      "diff-add-foreground": oldColors.diffAddForeground,
-      "diff-delete-base": oldColors.diffRemoveBackground,
-      "diff-delete-foreground": oldColors.diffRemoveForeground,
-      "code-background": oldColors.codeBackground,
-      "code-foreground": oldColors.codeForeground,
-      "tab-active": oldColors.tabActive,
-      "tab-inactive": oldColors.tabInactive,
-      "tab-hover": oldColors.tabHover,
-      "line-indicator": oldColors.lineIndicator,
-      "line-indicator-active": oldColors.lineIndicatorActive,
-      "avatar-background": oldColors.avatarBackground,
-      "avatar-foreground": oldColors.avatarForeground,
-      "scrollbar-thumb": oldColors.scrollbarThumb,
-      "scrollbar-track": oldColors.scrollbarTrack,
-      "focus-ring": oldColors.focusRing,
-      "shadow": oldColors.shadow,
-      "overlay": oldColors.overlay,
-    }
-    return converted
-  }, [useOpencodeMode, seeds9, seedVariants, baseColor, harmony, spread, variantCount, contrast, variantStrategy])
 
   const allVariants = useMemo(() => {
     return paletteGroups.flatMap(group => [group.base, ...group.variants])
@@ -458,7 +368,7 @@ const App: React.FC = () => {
       }
 
       if (format === "opencode9") {
-        const content = exportToOpencode9SeedJSON(themeName, opencodeTheme, seeds9)
+        const content = exportToOpencode9SeedJSON(themeName, themeColors, seeds9, manualOverrides)
         const formatInfo = exportFormats.find((f: any) => f.id === format)
         downloadFile(
           content,
@@ -488,8 +398,11 @@ const App: React.FC = () => {
       s: 40 + Math.floor(Math.random() * 60),
       l: 40 + Math.floor(Math.random() * 30),
     })
-    setHarmony(harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value)
-    setVariantStrategy(variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value)
+    const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
+    const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
+    
+    setHarmony(randomHarmony)
+    setVariantStrategy(randomStrategy)
     setVariantCount(1 + Math.floor(Math.random() * 4))
     setSpread(15 + Math.floor(Math.random() * 45))
     setContrast(20 + Math.floor(Math.random() * 70))
@@ -509,8 +422,11 @@ const App: React.FC = () => {
       s: Math.random() > 0.5 ? 80 + Math.random() * 20 : Math.random() * 30,
       l: Math.random() > 0.5 ? 70 + Math.random() * 30 : Math.random() * 30,
     })
-    setHarmony(harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value)
-    setVariantStrategy(variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value)
+    const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
+    const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
+    
+    setHarmony(randomHarmony)
+    setVariantStrategy(randomStrategy)
     setVariantCount(Math.floor(Math.random() * 5) + 1)
     setSpread(Math.floor(Math.random() * 180))
   }, [])

@@ -322,88 +322,28 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
   return converted
 }
 
-export const harmonyOptions: { value: HarmonyRule; label: string }[] = [
-  { value: "Monochromatic (1)", label: "Monochromatic (1)" },
-  { value: "Analogous (3)", label: "Analogous (3)" },
-  { value: "Analogous (5)", label: "Analogous (5)" },
-  { value: "Accented Analogous (4)", label: "Accented Analogous (4)" },
-  { value: "Complementary (2)", label: "Complementary (2)" },
-  { value: "Split Complementary (3)", label: "Split Complementary (3)" },
-  { value: "Double Split Complementary (5)", label: "Double Split Complementary (5)" },
-  { value: "Triadic (3)", label: "Triadic (3)" },
-  { value: "Tetradic (4)", label: "Tetradic (4)" },
-  { value: "Square (4)", label: "Square (4)" },
-  { value: "Compound (3)", label: "Compound (3)" },
-  { value: "Six Tone (6)", label: "Six Tone (6)" },
-  { value: "Golden Ratio (4)", label: "Golden Ratio (4)" },
-  { value: "Natural (3)", label: "Natural (3)" },
-  { value: "Vivid & Pastel (3)", label: "Vivid & Pastel (3)" },
-  { value: "Pentagram (5)", label: "Pentagram (5)" },
-  { value: "Hard Clash (3)", label: "Hard Clash (3)" },
-  { value: "Double Analogous (4)", label: "Double Analogous (4)" },
-  { value: "Full Spectrum (8)", label: "Full Spectrum (8)" },
-  { value: "Clash Complementary (3)", label: "Clash Complementary (3)" },
-  { value: "Synthwave (3)", label: "Synthwave (3)" },
-  { value: "Analogous Clash (3)", label: "Analogous Clash (3)" },
-  { value: "Deep Night (3)", label: "Deep Night (3)" },
-  { value: "Solar Flare (3)", label: "Solar Flare (3)" },
-  { value: "Oceanic (3)", label: "Oceanic (3)" },
-  { value: "Forest Edge (3)", label: "Forest Edge (3)" },
-  { value: "Cyberpunk (3)", label: "Cyberpunk (3)" },
-  { value: "Royal (3)", label: "Royal (3)" },
-  { value: "Earthy (3)", label: "Earthy (3)" },
-  { value: "Pastel Dreams (3)", label: "Pastel Dreams (3)" }
-]
+export const harmonyOptions: { value: HarmonyRule; label: string }[] = Object.entries(HarmonyRule).map(([key, value]) => ({
+  value,
+  label: value
+}));
 
-export const variantStrategyOptions: { value: VariantStrategy; label: string }[] = [
-  { value: "Tints & Shades", label: "Tints & Shades" },
-  { value: "Tones", label: "Tones" },
-  { value: "Harmonic Blend", label: "Harmonic Blend" },
-  { value: "Vibrant", label: "Vibrant" },
-  { value: "Pastel", label: "Pastel" },
-  { value: "Deep & Rich", label: "Deep & Rich" },
-  { value: "Acid Shift", label: "Acid Shift" },
-  { value: "Neon Glow", label: "Neon Glow" },
-  { value: "Metallic", label: "Metallic" },
-  { value: "Iridescent", label: "Iridescent" },
-  { value: "Clay", label: "Clay" },
-  { value: "Luminous", label: "Luminous" },
-  { value: "Toxic", label: "Toxic" },
-  { value: "Vintage", label: "Vintage" },
-  { value: "Glacial", label: "Glacial" },
-  { value: "Heatwave", label: "Heatwave" },
-  { value: "Cinematic", label: "Cinematic" },
-  { value: "Memphis", label: "Memphis" },
-  { value: "Glitch", label: "Glitch" },
-  { value: "Solarized", label: "Solarized" },
-  { value: "Nordic", label: "Nordic" },
-  { value: "Dracula", label: "Dracula" },
-  { value: "Monokai", label: "Monokai" },
-  { value: "Gruvbox", label: "Gruvbox" },
-  { value: "Shaded Blend", label: "Shaded Blend" },
-  { value: "Atmospheric", label: "Atmospheric" },
-  { value: "Glossy", label: "Glossy" },
-  { value: "X-Ray", label: "X-Ray" },
-  { value: "Crystalline", label: "Crystalline" },
-  { value: "Radioactive", label: "Radioactive" },
-  { value: "Hyper", label: "Hyper" },
-  { value: "Velvet", label: "Velvet" },
-  { value: "Warm", label: "Warm" },
-  { value: "Cool", label: "Cool" }
-]
+export const variantStrategyOptions: { value: VariantStrategy; label: string }[] = Object.entries(VariantStrategy).map(([key, value]) => ({
+  value,
+  label: value
+}));
 
 export const thematicPresets = {
-  cyberpunk: { h: [300, 320], s: [90, 100], l: [50, 60], harmony: "Analogous (3)" as HarmonyRule, strategy: "Neon Glow" as VariantStrategy },
-  cinematic: { h: [190, 220], s: [60, 80], l: [40, 55], harmony: "Split Complementary (3)" as HarmonyRule, strategy: "Cinematic" as VariantStrategy },
-  pastel: { h: [0, 360], s: [30, 60], l: [70, 90], harmony: "Analogous (3)" as HarmonyRule, strategy: "Pastel" as VariantStrategy },
-  retro: { h: [20, 50], s: [60, 85], l: [45, 65], harmony: "Tetradic (4)" as HarmonyRule, strategy: "Vintage" as VariantStrategy },
-  vivid: { h: [0, 360], s: [85, 100], l: [45, 60], harmony: "Triadic (3)" as HarmonyRule, strategy: "Vibrant" as VariantStrategy },
-  earthy: { h: [25, 75], s: [25, 50], l: [30, 50], harmony: "Natural (3)" as HarmonyRule, strategy: "Clay" as VariantStrategy },
-  popArt: { h: [0, 360], s: [80, 100], l: [50, 60], harmony: "Square (4)" as HarmonyRule, strategy: "Memphis" as VariantStrategy },
-  midnight: { h: [220, 270], s: [40, 70], l: [15, 35], harmony: "Monochromatic (1)" as HarmonyRule, strategy: "Deep & Rich" as VariantStrategy },
-  psychedelic: { h: [0, 360], s: [90, 100], l: [50, 60], harmony: "Full Spectrum (8)" as HarmonyRule, strategy: "Glitch" as VariantStrategy },
-  warm: { h: [0, 60], s: [60, 90], l: [45, 65], harmony: "Analogous (3)" as HarmonyRule, strategy: "Heatwave" as VariantStrategy },
-  cool: { h: [170, 250], s: [50, 80], l: [45, 65], harmony: "Analogous (3)" as HarmonyRule, strategy: "Glacial" as VariantStrategy },
-  subtle: { h: [0, 360], s: [10, 30], l: [70, 90], harmony: "Monochromatic (1)" as HarmonyRule, strategy: "Tints & Shades" as VariantStrategy },
-  neon: { h: [150, 180], s: [90, 100], l: [50, 60], harmony: "Analogous (3)" as HarmonyRule, strategy: "Neon Glow" as VariantStrategy }
+  cyberpunk: { h: [300, 320], s: [90, 100], l: [50, 60], harmony: HarmonyRule.ANALOGOUS, strategy: VariantStrategy.NEON },
+  cinematic: { h: [190, 220], s: [60, 80], l: [40, 55], harmony: HarmonyRule.SPLIT_COMPLEMENTARY, strategy: VariantStrategy.CINEMATIC },
+  pastel: { h: [0, 360], s: [30, 60], l: [70, 90], harmony: HarmonyRule.ANALOGOUS, strategy: VariantStrategy.PASTEL },
+  retro: { h: [20, 50], s: [60, 85], l: [45, 65], harmony: HarmonyRule.TETRADIC, strategy: VariantStrategy.VINTAGE },
+  vivid: { h: [0, 360], s: [85, 100], l: [45, 60], harmony: HarmonyRule.TRIADIC, strategy: VariantStrategy.VIBRANT },
+  earthy: { h: [25, 75], s: [25, 50], l: [30, 50], harmony: HarmonyRule.NATURAL, strategy: VariantStrategy.CLAY },
+  popArt: { h: [0, 360], s: [80, 100], l: [50, 60], harmony: HarmonyRule.SQUARE, strategy: VariantStrategy.MEMPHIS },
+  midnight: { h: [220, 270], s: [40, 70], l: [15, 35], harmony: HarmonyRule.MONOCHROMATIC, strategy: VariantStrategy.DEEP },
+  psychedelic: { h: [0, 360], s: [90, 100], l: [50, 60], harmony: HarmonyRule.FULL_SPECTRUM, strategy: VariantStrategy.GLITCH },
+  warm: { h: [0, 60], s: [60, 90], l: [45, 65], harmony: HarmonyRule.ANALOGOUS, strategy: VariantStrategy.HEATWAVE },
+  cool: { h: [170, 250], s: [50, 80], l: [45, 65], harmony: HarmonyRule.ANALOGOUS, strategy: VariantStrategy.GLACIAL },
+  subtle: { h: [0, 360], s: [10, 30], l: [70, 90], harmony: HarmonyRule.MONOCHROMATIC, strategy: VariantStrategy.TINTS_SHADES },
+  neon: { h: [150, 180], s: [90, 100], l: [50, 60], harmony: HarmonyRule.ANALOGOUS, strategy: VariantStrategy.NEON }
 }
