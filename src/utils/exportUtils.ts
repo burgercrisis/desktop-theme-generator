@@ -94,10 +94,7 @@ export const exportToOpencode9SeedJSON = (
     }
   })
 
-  const allOverrides: Record<string, string> = { ...colors }
-  Object.entries(manualOverrides).forEach(([key, value]) => {
-    allOverrides[key] = value
-  })
+  const allOverrides: Record<string, string> = { ...manualOverrides }
 
   const json: OpencodeThemeJSON = {
     $schema: "https://opencode.ai/desktop-theme.json",
