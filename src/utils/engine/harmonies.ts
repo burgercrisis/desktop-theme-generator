@@ -33,9 +33,9 @@ export const generateHarmony = (
     case HarmonyRule.TRIADIC: steps = [{ hOffset: 0 }, { hOffset: 120 }, { hOffset: 240 }]; break;
     case HarmonyRule.TETRADIC: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }, { hOffset: 180 + angle }]; break;
     case HarmonyRule.SQUARE: steps = [{ hOffset: 0 }, { hOffset: 90 }, { hOffset: 180 }, { hOffset: 270 }]; break;
+    case HarmonyRule.SIX_TONE: steps = [0, angle, angle*2, angle*3, angle*4, angle*5].map(deg => ({ hOffset: deg })); break;
     case HarmonyRule.COMPOUND: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 - angle }]; break;
     case HarmonyRule.SHADES: steps = [{ hOffset: 0 }]; break;
-    case HarmonyRule.SIX_TONE: steps = [0, angle, angle*2, angle*3, angle*4, angle*5].map(deg => ({ hOffset: deg })); break;
     case HarmonyRule.GOLDEN: steps = [{ hOffset: 0 }, { hOffset: 137.5 }, { hOffset: 275 }, { hOffset: 412.5 }]; break;
     case HarmonyRule.NATURAL: steps = [{ hOffset: -angle, sOffset: 15, lOffset: -15 }, { hOffset: 0 }, { hOffset: angle, sOffset: -10, lOffset: 15 }]; break;
     case HarmonyRule.VIVID_PASTEL: steps = [{ hOffset: 0 }, { hOffset: 180 - angle, sOffset: -40, lOffset: 25 }, { hOffset: 180 + angle, sOffset: -40, lOffset: 25 }]; break;

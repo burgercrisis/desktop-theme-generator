@@ -219,10 +219,21 @@ export interface InternalThemeColors {
   "border-hover": string;
 }
 
-export type SeedColor = {
-  id: string;
+export interface SeedColor {
   name: string;
-  value: string;
-};
+  hex: string;
+  hsl: HSL;
+}
+
+export type SeedName = 
+  | "primary" 
+  | "neutral" 
+  | "success" 
+  | "warning" 
+  | "error" 
+  | "info" 
+  | "interactive" 
+  | "diffAdd" 
+  | "diffDelete";
 
 export type OpencodeThemeColors = Record<string, string>;

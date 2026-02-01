@@ -179,7 +179,7 @@ export const generateVariants = (
       stop.s = s - (5 * t);
       stop.l = l - (5 * t);
     } else {
-      stop.l = l - (l * range * t);
+        stop.l = l - (l * range * t);
     }
 
     variants.push(createColorStop(stop.h, stop.s, stop.l, false, space, output));
@@ -347,7 +347,7 @@ export const generateVariants = (
       stop.s = s - (5 * t);
       stop.l = l + (5 * t);
     } else {
-      stop.l = l + ((100 - l) * range * t);
+        stop.l = l + ((100 - l) * range * t);
     }
 
     variants.push(createColorStop(stop.h, stop.s, stop.l, false, space, output));

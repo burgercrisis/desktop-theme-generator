@@ -50,14 +50,14 @@ export const exportToSCSS = (theme: DesktopTheme): string => {
 }
 
 export const exportToTailwind = (theme: DesktopTheme): string => {
-  const colors: Record<string, string> = {}
+  const tailwindColors: Record<string, string> = {}
   for (const [key, value] of Object.entries(theme.colors)) {
     if (typeof value === "string" && !key.startsWith("[")) {
       const kebab = key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
-      colors[kebab] = value
+      tailwindColors[kebab] = value
     }
   }
-  return `module.exports = {\n  theme: {\n    extend: {\n      colors: ${JSON.stringify(colors, null, 6)}\n    }\n  }\n}`
+  return `module.exports = {\n  theme: {\n    extend: {\n      colors: ${JSON.stringify(tailwindColors, null, 6)}\n    }\n  }\n}`
 }
 
 export const exportToOpencode9SeedJSON = (
@@ -94,8 +94,8 @@ export const exportToOpencode9SeedJSON = (
     }
   })
 
-  // Only include explicit manual overrides in the final JSON
-  const allOverrides: Record<string, string> = { ...manualOverrides }
+  // Include all calculated engine colors as the baseline, then apply manual overrides
+  const allOverrides: Record<string, string> = { ...colors, ...manualOverrides }
 
   const json: OpencodeThemeJSON = {
     $schema: "https://opencode.ai/desktop-theme.json",

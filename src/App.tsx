@@ -33,7 +33,6 @@ import {
   ColorSpace,
   OutputSpace
 } from "./types"
-import { getContrastRatio, getWCAGLevel, getContrastScore } from "./utils/colorUtils"
 import "./App.css"
 
 const getInitialState = (key: string, defaultValue: any) => {
@@ -65,6 +64,7 @@ const App: React.FC = () => {
   const [manualOverrides, setManualOverrides] = useState<Record<string, string>>(() => getInitialState("manualOverrides", {}))
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
+  const [writeError, setWriteError] = useState<string | null>(null)
 
   // Persistence effects
   React.useEffect(() => localStorage.setItem("baseColor", JSON.stringify(baseColor)), [baseColor])
@@ -115,11 +115,15 @@ const App: React.FC = () => {
     const variants: Record<string, string[]> = {}
     seeds9.forEach((seed, i) => {
       const group = paletteGroups[i % paletteGroups.length]
-      // DO NOT SORT BY LIGHTNESS. Keep the order from the engine (usually dark to light or based on strategy)
+      // Ensure the scale is complete by including the base color correctly from the engine's variants array
+      // group.variants already includes the base color (pushed in variants.ts)
+      // For Opencode mapping, we want to ensure we have a sufficient number of variants to sample from.
+      // If variantCount is low (e.g. 1), the scale is [left1, base, right1] (length 3).
+      // If variantCount is 5, the scale is [left5, left4, left3, left2, left1, base, right1, right2, right3, right4, right5] (length 11).
       variants[seed.name] = group.variants.map((v) => v.hex)
     })
     return variants
-  }, [seeds9, variantCount, contrast, variantStrategy])
+  }, [seeds9, paletteGroups])
 
   const allVariants = useMemo(() => {
     return paletteGroups.flatMap(group => [group.base, ...group.variants])
@@ -296,7 +300,7 @@ const App: React.FC = () => {
   React.useEffect(() => {
     // "Instant" feel: 200ms debounce
     const timer = setTimeout(() => {
-      if (isWritingRef.current) return
+      if (isWritingRef.current || !useOpencodeMode) return
 
       const data = JSON.parse(themeDataString);
       const currentContent = exportToOpencode9SeedJSON(
@@ -325,13 +329,16 @@ const App: React.FC = () => {
             lastWrittenRef.current = currentContent
             localStorage.setItem("lastSyncedContent", currentContent)
             setWriteStatus("success")
+            setWriteError(null)
           } else {
             setWriteStatus("error")
+            setWriteError(res.error || "Unknown error")
           }
           setTimeout(() => setWriteStatus("idle"), 2000)
         })
-        .catch(() => {
+        .catch((err) => {
           setWriteStatus("error")
+          setWriteError(err.message || "Network error")
           setTimeout(() => setWriteStatus("idle"), 2000)
         })
         .finally(() => {
@@ -340,7 +347,7 @@ const App: React.FC = () => {
     }, 200)
 
     return () => clearTimeout(timer)
-  }, [themeDataString])
+  }, [themeDataString, useOpencodeMode])
 
   const handleColorChange = useCallback((hsl: HSL) => {
     setBaseColor(hsl)
@@ -529,20 +536,25 @@ const App: React.FC = () => {
                   {/* Override count and status */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
-                        {Object.keys(manualOverrides).length} override(s) active
-                      </span>
-                      {writeStatus === "writing" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
-                          Writing...
-                        </span>
-                      )}
-                      {writeStatus === "success" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-                          ✓ Saved to custom-theme.json
-                        </span>
-                      )}
-                    </div>
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    {Object.keys(manualOverrides).length} override(s) active
+                  </span>
+                  {writeStatus === "writing" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+                      Writing...
+                    </span>
+                  )}
+                  {writeStatus === "success" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
+                      ✓ Saved to custom-theme.json
+                    </span>
+                  )}
+                  {writeStatus === "error" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400" title={writeError || "Unknown error"}>
+                      ⚠ Save Failed
+                    </span>
+                  )}
+                </div>
                     <button
                       onClick={() => {
                         setActivePreset(null)
@@ -627,7 +639,14 @@ const App: React.FC = () => {
                             {property}
                           </span>
 
-                          <div className="flex gap-0.5">
+                          {/* Calculated Preview */}
+                          <div 
+                            className="w-8 h-6 rounded border border-white/10 shrink-0"
+                            style={{ backgroundColor: currentColor }}
+                            title={`Calculated: ${currentColor}`}
+                          />
+
+                          <div className="flex gap-0.5 ml-2">
                             {/* Seeds column */}
                             {seeds9.map((seed, idx) => {
                               const isSelected = currentColor === seed.hex

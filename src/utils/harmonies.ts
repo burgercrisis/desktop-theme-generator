@@ -1,5 +1,5 @@
 import { hslToHex } from "./colorUtils"
-import { HSL, HarmonyRule, VariantStrategy, PaletteGroup, SeedColor, OpencodeThemeColors, InternalThemeColors } from "../types"
+import { HSL, HarmonyRule, VariantStrategy, SeedColor, OpencodeThemeColors } from "../types"
 
 export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
   { name: "neutral", hex: "#8e8b8b", hsl: { h: 20, s: 5, l: 55 } },
@@ -13,157 +13,11 @@ export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
   { name: "critical", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } }
 ]
 
-export const generateThemeColors = (paletteGroups: PaletteGroup[], baseColor: HSL): InternalThemeColors => {
-  const getGroup = (index: number): PaletteGroup => {
-    return paletteGroups[index] || paletteGroups[0] || {
-      base: { hsl: baseColor, hex: hslToHex(baseColor.h, baseColor.s, baseColor.l), name: 'fallback' },
-      variants: []
-    }
-  }
-
-  const primaryGroup = getGroup(0)
-  const secondaryGroup = getGroup(1)
-  const accentGroup = getGroup(2)
-  const successGroup = getGroup(3)
-  const warningGroup = getGroup(4)
-  const criticalGroup = getGroup(5)
-  const infoGroup = getGroup(6)
-
-  const primary = primaryGroup.base.hex
-  const secondary = secondaryGroup.base.hex
-  const accent = accentGroup.base.hex
-  const success = successGroup.base.hex
-  const warning = warningGroup.base.hex
-  const critical = criticalGroup.base.hex
-  const info = infoGroup.base.hex
-
-  const getAt = (arr: string[], index: number, fallback: string): string => arr[index] || fallback
-
-  const pVariants = primaryGroup.variants
-  const sVariants = secondaryGroup.variants
-  const aVariants = accentGroup.variants
-  const sucVariants = successGroup.variants
-  const warVariants = warningGroup.variants
-  const criVariants = criticalGroup.variants
-  const infVariants = infoGroup.variants
-
-  const pLight = [...pVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const pDark = [...pVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-  const sLight = [...sVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const aLight = [...aVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const aDark = [...aVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-  const sucLight = [...sucVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const sucDark = [...sucVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-  const warLight = [...warVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const warDark = [...warVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-  const criLight = [...criVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const criDark = [...criVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-  const infLight = [...infVariants].sort((a, b) => b.hsl.l - a.hsl.l).map(v => v.hex)
-  const infDark = [...infVariants].sort((a, b) => a.hsl.l - b.hsl.l).map(v => v.hex)
-
-  return {
-    "background-base": getAt(pLight, 0, primary),
-    "background-weak": getAt(pLight, 1, primary),
-    "background-strong": getAt(pLight, 2, primary),
-    "background-stronger": getAt(pLight, 3, primary),
-
-    "surface-base": getAt(pLight, 4, primary),
-    "surface-base-hover": getAt(pLight, 5, primary),
-    "surface-base-active": getAt(pLight, 6, primary),
-    "surface-base-interactive-active": getAt(aDark, 1, accent),
-    "surface-raised-base": getAt(pLight, 3, primary),
-    "surface-raised-base-hover": getAt(pLight, 4, primary),
-    "surface-raised-base-active": getAt(pLight, 5, primary),
-    "surface-raised-strong": getAt(pLight, 5, primary),
-    "surface-weak": getAt(sLight, 2, secondary),
-    "surface-weaker": getAt(sLight, 3, secondary),
-    "surface-strong": getAt(aLight, 2, accent),
-
-    "surface-brand-base": primary,
-    "surface-brand-hover": getAt(pDark, 1, primary),
-    "surface-interactive-base": getAt(aDark, 0, accent),
-    "surface-interactive-hover": getAt(aDark, 1, accent),
-    "surface-interactive-weak": getAt(aLight, 3, accent),
-    "surface-interactive-weak-hover": getAt(aLight, 2, accent),
-
-    "surface-success-base": success,
-    "surface-success-weak": getAt(sucLight, 3, success),
-    "surface-success-strong": getAt(sucDark, 1, success),
-    "surface-warning-base": warning,
-    "surface-warning-weak": getAt(warLight, 3, warning),
-    "surface-warning-strong": getAt(warDark, 1, warning),
-    "surface-critical-base": critical,
-    "surface-critical-weak": getAt(criLight, 3, critical),
-    "surface-critical-strong": getAt(criDark, 1, critical),
-    "surface-info-base": info,
-    "surface-info-weak": getAt(infLight, 3, info),
-    "surface-info-strong": getAt(infDark, 1, info),
-
-    "surface-diff-unchanged-base": "transparent",
-    "surface-diff-skip-base": getAt(pLight, 5, primary),
-    "surface-diff-add-base": getAt(sucLight, 4, success),
-    "surface-diff-add-weak": getAt(sucLight, 5, success),
-    "surface-diff-add-weaker": getAt(sucLight, 6, success),
-    "surface-diff-add-strong": getAt(sucLight, 3, success),
-    "surface-diff-add-stronger": getAt(sucLight, 2, success),
-    "surface-diff-delete-base": getAt(criLight, 4, critical),
-    "surface-diff-delete-weak": getAt(criLight, 5, critical),
-    "surface-diff-delete-weaker": getAt(criLight, 6, critical),
-    "surface-diff-delete-strong": getAt(criLight, 3, critical),
-    "surface-diff-delete-stronger": getAt(criLight, 2, critical),
-
-    "text-base": getAt(pDark, 0, primary),
-    "text-weak": getAt(pDark, 1, primary),
-    "text-weaker": getAt(pDark, 2, primary),
-    "text-strong": getAt(pDark, 0, primary),
-    "text-on-brand-base": "#FFFFFF",
-    "text-interactive-base": getAt(aDark, 0, accent),
-    "text-on-interactive-base": "#FFFFFF",
-    "text-on-success-base": "#FFFFFF",
-    "text-on-critical-base": "#FFFFFF",
-    "text-on-warning-base": "#FFFFFF",
-    "text-on-info-base": "#FFFFFF",
-    "text-diff-add-base": getAt(sucDark, 0, success),
-    "text-diff-delete-base": getAt(criDark, 0, critical),
-
-    "border-base": getAt(pLight, 4, primary),
-    "border-hover": getAt(pLight, 3, primary),
-    "border-active": getAt(pLight, 2, primary),
-    "border-selected": accent,
-    "border-weak-base": getAt(pLight, 5, primary),
-    "border-strong-base": getAt(pLight, 3, primary),
-    "border-interactive-base": getAt(aLight, 2, accent),
-    "border-success-base": getAt(sucLight, 2, success),
-    "border-warning-base": getAt(warLight, 2, warning),
-    "border-critical-base": getAt(criLight, 2, critical),
-    "border-info-base": getAt(infLight, 2, info),
-
-    "icon-base": getAt(pDark, 1, primary),
-    "icon-hover": getAt(pDark, 0, primary),
-    "icon-active": primary,
-    "icon-selected": accent,
-    "icon-brand-base": primary,
-    "icon-interactive-base": accent,
-    "icon-success-base": success,
-    "icon-warning-base": warning,
-    "icon-critical-base": critical,
-    "icon-info-base": info,
-
-    "input-base": getAt(pLight, 0, primary),
-    "input-hover": getAt(pLight, 1, primary),
-    "input-active": getAt(pLight, 2, primary),
-
-    "focus-ring": accent,
-    "scrollbar-thumb": getAt(pLight, 4, primary),
-    "scrollbar-track": getAt(pLight, 6, primary),
-    "shadow": "rgba(0,0,0,0.2)",
-    "overlay": "rgba(0,0,0,0.5)"
-  }
-}
-
 export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record<string, string[]>): OpencodeThemeColors => {
   const getFromScale = (scale: string[], position: number, fallback: string): string => {
     if (!scale || scale.length === 0) return fallback;
+    // position 0 to 1
+    // 0.5 should be the center (the base color)
     const index = Math.max(0, Math.min(scale.length - 1, Math.floor(position * scale.length)));
     return scale[index];
   }
@@ -189,145 +43,183 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
   const diffDeleteHex = seeds.find(s => s.name === "diffDelete")?.hex || errorHex
 
   const converted: OpencodeThemeColors = {
-    "background-base": getFromScale(primaryScale, 0.05, primaryHex),
-    "background-weak": getFromScale(primaryScale, 0.1, primaryHex),
-    "background-strong": getFromScale(primaryScale, 0.15, primaryHex),
-    "background-stronger": getFromScale(primaryScale, 0.2, primaryHex),
-    "surface-base": getFromScale(primaryScale, 0.25, primaryHex),
-    "surface-base-hover": getFromScale(primaryScale, 0.3, primaryHex),
-    "surface-base-active": getFromScale(primaryScale, 0.35, primaryHex),
-    "surface-base-interactive-active": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "surface-raised-base": getFromScale(primaryScale, 0.3, primaryHex),
-    "surface-raised-base-hover": getFromScale(primaryScale, 0.35, primaryHex),
-    "surface-raised-base-active": getFromScale(primaryScale, 0.4, primaryHex),
-    "surface-raised-strong": getFromScale(primaryScale, 0.4, primaryHex),
-    "surface-weak": getFromScale(neutralScale, 0.15, neutralHex),
-    "surface-weaker": getFromScale(neutralScale, 0.1, neutralHex),
-    "surface-strong": getFromScale(primaryScale, 0.45, primaryHex),
-    "surface-brand-base": primaryHex,
+    // Backgrounds - Using very low positions for dark themes
+    "background-base": getFromScale(primaryScale, 0.02, primaryHex),
+    "background-weak": getFromScale(primaryScale, 0.05, primaryHex),
+    "background-strong": getFromScale(primaryScale, 0.08, primaryHex),
+    "background-stronger": getFromScale(primaryScale, 0.12, primaryHex),
+    
+    // Surfaces
+    "surface-base": getFromScale(primaryScale, 0.15, primaryHex),
+    "surface-base-hover": getFromScale(primaryScale, 0.20, primaryHex),
+    "surface-base-active": getFromScale(primaryScale, 0.25, primaryHex),
+    "surface-base-interactive-active": getFromScale(interactiveScale, 0.4, interactiveHex),
+    
+    "surface-raised-base": getFromScale(primaryScale, 0.20, primaryHex),
+    "surface-raised-base-hover": getFromScale(primaryScale, 0.25, primaryHex),
+    "surface-raised-base-active": getFromScale(primaryScale, 0.30, primaryHex),
+    "surface-raised-strong": getFromScale(primaryScale, 0.35, primaryHex),
+    
+    "surface-weak": getFromScale(neutralScale, 0.10, neutralHex),
+    "surface-weaker": getFromScale(neutralScale, 0.05, neutralHex),
+    "surface-strong": getFromScale(primaryScale, 0.40, primaryHex),
+    
+    "surface-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
     "surface-brand-hover": getFromScale(primaryScale, 0.6, primaryHex),
+    
     "surface-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
     "surface-interactive-hover": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "surface-interactive-weak": getFromScale(interactiveScale, 0.2, interactiveHex),
-    "surface-interactive-weak-hover": getFromScale(interactiveScale, 0.3, interactiveHex),
-    "surface-success-base": successHex,
-    "surface-success-weak": getFromScale(successScale, 0.2, successHex),
+    "surface-interactive-weak": getFromScale(interactiveScale, 0.1, interactiveHex),
+    "surface-interactive-weak-hover": getFromScale(interactiveScale, 0.15, interactiveHex),
+    
+    "surface-success-base": getFromScale(successScale, 0.5, successHex),
+    "surface-success-weak": getFromScale(successScale, 0.1, successHex),
     "surface-success-strong": getFromScale(successScale, 0.8, successHex),
-    "surface-warning-base": warningHex,
-    "surface-warning-weak": getFromScale(warningScale, 0.2, warningHex),
+    
+    "surface-warning-base": getFromScale(warningScale, 0.5, warningHex),
+    "surface-warning-weak": getFromScale(warningScale, 0.1, warningHex),
     "surface-warning-strong": getFromScale(warningScale, 0.8, warningHex),
-    "surface-critical-base": errorHex,
-    "surface-critical-weak": getFromScale(errorScale, 0.2, errorHex),
+    
+    "surface-critical-base": getFromScale(errorScale, 0.5, errorHex),
+    "surface-critical-weak": getFromScale(errorScale, 0.1, errorHex),
     "surface-critical-strong": getFromScale(errorScale, 0.8, errorHex),
-    "surface-info-base": infoHex,
-    "surface-info-weak": getFromScale(infoScale, 0.2, infoHex),
+    
+    "surface-info-base": getFromScale(infoScale, 0.5, infoHex),
+    "surface-info-weak": getFromScale(infoScale, 0.1, infoHex),
     "surface-info-strong": getFromScale(infoScale, 0.8, infoHex),
+    
     "surface-diff-unchanged-base": "transparent",
-    "surface-diff-skip-base": getFromScale(primaryScale, 0.2, primaryHex),
-    "surface-diff-add-base": getFromScale(diffAddScale, 0.2, diffAddHex),
-    "surface-diff-add-weak": getFromScale(diffAddScale, 0.1, diffAddHex),
-    "surface-diff-add-weaker": getFromScale(diffAddScale, 0.05, diffAddHex),
+    "surface-diff-skip-base": getFromScale(primaryScale, 0.15, primaryHex),
+    
+    "surface-diff-add-base": getFromScale(diffAddScale, 0.15, diffAddHex),
+    "surface-diff-add-weak": getFromScale(diffAddScale, 0.08, diffAddHex),
+    "surface-diff-add-weaker": getFromScale(diffAddScale, 0.04, diffAddHex),
     "surface-diff-add-strong": getFromScale(diffAddScale, 0.4, diffAddHex),
     "surface-diff-add-stronger": getFromScale(diffAddScale, 0.6, diffAddHex),
-    "surface-diff-delete-base": getFromScale(diffDeleteScale, 0.2, diffDeleteHex),
-    "surface-diff-delete-weak": getFromScale(diffDeleteScale, 0.1, diffDeleteHex),
-    "surface-diff-delete-weaker": getFromScale(diffDeleteScale, 0.05, diffDeleteHex),
+    
+    "surface-diff-delete-base": getFromScale(diffDeleteScale, 0.15, diffDeleteHex),
+    "surface-diff-delete-weak": getFromScale(diffDeleteScale, 0.08, diffDeleteHex),
+    "surface-diff-delete-weaker": getFromScale(diffDeleteScale, 0.04, diffDeleteHex),
     "surface-diff-delete-strong": getFromScale(diffDeleteScale, 0.4, diffDeleteHex),
     "surface-diff-delete-stronger": getFromScale(diffDeleteScale, 0.6, diffDeleteHex),
-    "text-base": getFromScale(primaryScale, 0.85, primaryHex),
-    "text-weak": getFromScale(primaryScale, 0.75, primaryHex),
-    "text-weaker": getFromScale(primaryScale, 0.65, primaryHex),
-    "text-strong": getFromScale(primaryScale, 0.95, primaryHex),
+    
+    // Text
+    "text-base": getFromScale(primaryScale, 0.90, primaryHex),
+    "text-weak": getFromScale(primaryScale, 0.70, primaryHex),
+    "text-weaker": getFromScale(primaryScale, 0.50, primaryHex),
+    "text-strong": getFromScale(primaryScale, 0.98, primaryHex),
     "text-on-brand-base": "#FFFFFF",
-    "text-interactive-base": getFromScale(interactiveScale, 0.8, interactiveHex),
+    
+    "text-interactive-base": getFromScale(interactiveScale, 0.7, interactiveHex),
     "text-on-interactive-base": "#FFFFFF",
     "text-on-success-base": "#FFFFFF",
     "text-on-critical-base": "#FFFFFF",
     "text-on-warning-base": "#FFFFFF",
     "text-on-info-base": "#FFFFFF",
-    "text-diff-add-base": getFromScale(diffAddScale, 0.8, diffAddHex),
-    "text-diff-delete-base": getFromScale(diffDeleteScale, 0.8, diffDeleteHex),
-    "border-base": getFromScale(primaryScale, 0.3, primaryHex),
-    "border-weak": getFromScale(primaryScale, 0.2, primaryHex),
-    "border-strong": getFromScale(primaryScale, 0.4, primaryHex),
-    "border-selected": interactiveHex,
+    
+    "text-diff-add-base": getFromScale(diffAddScale, 0.7, diffAddHex),
+    "text-diff-delete-base": getFromScale(diffDeleteScale, 0.7, diffDeleteHex),
+    
+    // Borders
+    "border-base": getFromScale(primaryScale, 0.25, primaryHex),
+    "border-weak": getFromScale(primaryScale, 0.15, primaryHex),
+    "border-strong": getFromScale(primaryScale, 0.35, primaryHex),
+    "border-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
     "border-interactive-base": getFromScale(interactiveScale, 0.4, interactiveHex),
     "border-success-base": getFromScale(successScale, 0.4, successHex),
     "border-warning-base": getFromScale(warningScale, 0.4, warningHex),
     "border-critical-base": getFromScale(errorScale, 0.4, errorHex),
     "border-info-base": getFromScale(infoScale, 0.4, infoHex),
+    
+    // Icons
     "icon-base": getFromScale(primaryScale, 0.7, primaryHex),
-    "icon-weak": getFromScale(primaryScale, 0.6, primaryHex),
+    "icon-weak": getFromScale(primaryScale, 0.5, primaryHex),
     "icon-strong": getFromScale(primaryScale, 0.9, primaryHex),
-    "icon-brand-base": primaryHex,
-    "icon-interactive-base": interactiveHex,
-    "icon-success-base": successHex,
-    "icon-warning-base": warningHex,
-    "icon-critical-base": errorHex,
-    "icon-info-base": infoHex,
-    "primary-base": primaryHex,
+    "icon-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
+    "icon-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "icon-success-base": getFromScale(successScale, 0.5, successHex),
+    "icon-warning-base": getFromScale(warningScale, 0.5, warningHex),
+    "icon-critical-base": getFromScale(errorScale, 0.5, errorHex),
+    "icon-info-base": getFromScale(infoScale, 0.5, infoHex),
+    
+    // Base tokens
+    "primary-base": getFromScale(primaryScale, 0.5, primaryHex),
     "primary-hover": getFromScale(primaryScale, 0.6, primaryHex),
     "primary-active": getFromScale(primaryScale, 0.4, primaryHex),
     "primary-text": getFromScale(primaryScale, 0.1, primaryHex),
-    "secondary-base": infoHex,
+    
+    "secondary-base": getFromScale(infoScale, 0.5, infoHex),
     "secondary-hover": getFromScale(infoScale, 0.6, infoHex),
     "secondary-active": getFromScale(infoScale, 0.4, infoHex),
     "secondary-text": getFromScale(infoScale, 0.1, infoHex),
-    "accent-base": interactiveHex,
+    
+    "accent-base": getFromScale(interactiveScale, 0.5, interactiveHex),
     "accent-hover": getFromScale(interactiveScale, 0.6, interactiveHex),
     "accent-active": getFromScale(interactiveScale, 0.4, interactiveHex),
     "accent-text": getFromScale(interactiveScale, 0.1, interactiveHex),
-    "success-base": successHex,
+    
+    "success-base": getFromScale(successScale, 0.5, successHex),
     "success-hover": getFromScale(successScale, 0.6, successHex),
     "success-active": getFromScale(successScale, 0.4, successHex),
     "success-text": getFromScale(successScale, 0.1, successHex),
-    "warning-base": warningHex,
+    
+    "warning-base": getFromScale(warningScale, 0.5, warningHex),
     "warning-hover": getFromScale(warningScale, 0.6, warningHex),
     "warning-active": getFromScale(warningScale, 0.4, warningHex),
     "warning-text": getFromScale(warningScale, 0.1, warningHex),
-    "critical-base": errorHex,
+    
+    "critical-base": getFromScale(errorScale, 0.5, errorHex),
     "critical-hover": getFromScale(errorScale, 0.6, errorHex),
     "critical-active": getFromScale(errorScale, 0.4, errorHex),
     "critical-text": getFromScale(errorScale, 0.1, errorHex),
-    "info-base": infoHex,
+    
+    "info-base": getFromScale(infoScale, 0.5, infoHex),
     "info-hover": getFromScale(infoScale, 0.6, infoHex),
     "info-active": getFromScale(infoScale, 0.4, infoHex),
     "info-text": getFromScale(infoScale, 0.1, infoHex),
-    "interactive-base": interactiveHex,
+    
+    "interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
     "interactive-hover": getFromScale(interactiveScale, 0.6, interactiveHex),
     "interactive-active": getFromScale(interactiveScale, 0.4, interactiveHex),
     "interactive-text": getFromScale(interactiveScale, 0.1, interactiveHex),
-    "diff-add-base": getFromScale(diffAddScale, 0.2, diffAddHex),
+    
+    "diff-add-base": getFromScale(diffAddScale, 0.15, diffAddHex),
     "diff-add-foreground": getFromScale(diffAddScale, 0.8, diffAddHex),
-    "diff-delete-base": getFromScale(diffDeleteScale, 0.2, diffDeleteHex),
+    "diff-delete-base": getFromScale(diffDeleteScale, 0.15, diffDeleteHex),
     "diff-delete-foreground": getFromScale(diffDeleteScale, 0.8, diffDeleteHex),
-    "code-background": getFromScale(primaryScale, 0.05, primaryHex),
-    "code-foreground": getFromScale(primaryScale, 0.9, primaryHex),
-    "tab-active": interactiveHex,
-    "tab-inactive": getFromScale(primaryScale, 0.2, primaryHex),
-    "tab-hover": getFromScale(primaryScale, 0.3, primaryHex),
-    "line-indicator": getFromScale(primaryScale, 0.3, primaryHex),
-    "line-indicator-active": interactiveHex,
+    
+    "code-background": getFromScale(primaryScale, 0.04, primaryHex),
+    "code-foreground": getFromScale(primaryScale, 0.85, primaryHex),
+    
+    "tab-active": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "tab-inactive": getFromScale(primaryScale, 0.15, primaryHex),
+    "tab-hover": getFromScale(primaryScale, 0.2, primaryHex),
+    
+    "line-indicator": getFromScale(primaryScale, 0.2, primaryHex),
+    "line-indicator-active": getFromScale(interactiveScale, 0.5, interactiveHex),
+    
     "avatar-background": getFromScale(primaryScale, 0.4, primaryHex),
     "avatar-foreground": getFromScale(primaryScale, 0.95, primaryHex),
-    "input-base": getFromScale(primaryScale, 0.1, primaryHex),
-    "input-hover": getFromScale(primaryScale, 0.15, primaryHex),
-    "input-active": getFromScale(primaryScale, 0.2, primaryHex),
-    "scrollbar-thumb": getFromScale(primaryScale, 0.4, primaryHex),
-    "scrollbar-track": getFromScale(primaryScale, 0.1, primaryHex),
-    "focus-ring": interactiveHex,
+    
+    "input-base": getFromScale(primaryScale, 0.08, primaryHex),
+    "input-hover": getFromScale(primaryScale, 0.12, primaryHex),
+    "input-active": getFromScale(primaryScale, 0.16, primaryHex),
+    
+    "scrollbar-thumb": getFromScale(primaryScale, 0.3, primaryHex),
+    "scrollbar-track": getFromScale(primaryScale, 0.05, primaryHex),
+    "focus-ring": getFromScale(interactiveScale, 0.5, interactiveHex),
     "shadow": "rgba(0,0,0,0.5)",
     "overlay": "rgba(0,0,0,0.7)"
   }
   return converted
 }
 
-export const harmonyOptions: { value: HarmonyRule; label: string }[] = Object.entries(HarmonyRule).map(([key, value]) => ({
+export const harmonyOptions: { value: HarmonyRule; label: string }[] = Object.entries(HarmonyRule).map(([_, value]) => ({
   value,
   label: value
 }));
 
-export const variantStrategyOptions: { value: VariantStrategy; label: string }[] = Object.entries(VariantStrategy).map(([key, value]) => ({
+export const variantStrategyOptions: { value: VariantStrategy; label: string }[] = Object.entries(VariantStrategy).map(([_, value]) => ({
   value,
   label: value
 }));

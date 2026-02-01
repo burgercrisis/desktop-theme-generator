@@ -25,3 +25,6 @@ dist-ssr
 
 # Vite specific
 .vite
+.runtime/mcp-coordination-hub.sqlite
+.runtime/mcp-coordination-hub.sqlite-shm
+.runtime/mcp-coordination-hub.sqlite-wal
