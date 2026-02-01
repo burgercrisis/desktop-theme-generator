@@ -14,7 +14,7 @@ export const generateHarmony = (
   spread: number = 30,
   variantCount: number = 2,
   contrast: number = 50,
-  strategy: VariantStrategy = 'Tints & Shades',
+  strategy: VariantStrategy = VariantStrategy.TINTS_SHADES,
   space: ColorSpace = 'HSL',
   output: OutputSpace = 'sRGB'
 ): PaletteGroup[] => {
@@ -23,37 +23,38 @@ export const generateHarmony = (
   const angle = spread;
 
   switch (rule) {
-    case 'Monochromatic (1)': steps = [{ hOffset: 0 }]; break;
-    case 'Analogous (3)': steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }]; break;
-    case 'Analogous (5)': steps = [{ hOffset: -angle*2 }, { hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: angle*2 }]; break;
-    case 'Accented Analogous (4)': steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }]; break;
-    case 'Natural (3)': steps = [{ hOffset: -angle, sOffset: 15, lOffset: -15 }, { hOffset: 0 }, { hOffset: angle, sOffset: -10, lOffset: 15 }]; break;
-    case 'Complementary (2)': steps = [{ hOffset: 0 }, { hOffset: 180 }]; break;
-    case 'Split Complementary (3)': steps = [{ hOffset: 180 - angle }, { hOffset: 0 }, { hOffset: 180 + angle }]; break;
-    case 'Triadic (3)': steps = [{ hOffset: 0 }, { hOffset: 120 }, { hOffset: 240 }]; break;
-    case 'Tetradic (4)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }, { hOffset: 180 + angle }]; break;
-    case 'Square (4)': steps = [{ hOffset: 0 }, { hOffset: 90 }, { hOffset: 180 }, { hOffset: 270 }]; break;
-    case 'Double Split Complementary (5)': steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: 180 - angle }, { hOffset: 180 + angle }]; break;
-    case 'Six Tone (6)': steps = [0, angle, angle*2, angle*3, angle*4, angle*5].map(deg => ({ hOffset: deg })); break;
-    case 'Compound (3)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 - angle }]; break;
-    case 'Shades (1)': steps = [{ hOffset: 0 }]; break;
-    case 'Golden Ratio (4)': steps = [{ hOffset: 0 }, { hOffset: 137.5 }, { hOffset: 275 }, { hOffset: 412.5 }]; break;
-    case 'Vivid & Pastel (3)': steps = [{ hOffset: 0 }, { hOffset: 180 - angle, sOffset: -40, lOffset: 25 }, { hOffset: 180 + angle, sOffset: -40, lOffset: 25 }]; break;
-    case 'Pentagram (5)': steps = [0, angle, angle*2, angle*3, angle*4].map(deg => ({ hOffset: deg })); break;
-    case 'Hard Clash (3)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 360 - angle }]; break;
-    case 'Double Analogous (4)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 120 }, { hOffset: 120 + angle }]; break;
-    case 'Full Spectrum (8)': steps = Array.from({length: 8}, (_, i) => ({ hOffset: i * angle })); break;
-    case 'Clash Complementary (3)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }]; break;
-    case 'Synthwave (3)': steps = [{ hOffset: 0 }, { hOffset: 180 }, { hOffset: 180 + angle }]; break;
-    case 'Analogous Clash (3)': steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: angle * 3 }]; break;
-    case 'Deep Night (3)': steps = [{ hOffset: 0, sOffset: -20, lOffset: -30 }, { hOffset: 180, sOffset: -10, lOffset: -40 }, { hOffset: 180 + angle, sOffset: -10, lOffset: -40 }]; break;
-    case 'Solar Flare (3)': steps = [{ hOffset: 0, sOffset: 20, lOffset: 10 }, { hOffset: 30, sOffset: 15, lOffset: 5 }, { hOffset: 60, sOffset: 10, lOffset: 0 }]; break;
-    case 'Oceanic (3)': steps = [{ hOffset: 180, sOffset: 10, lOffset: -10 }, { hOffset: 210, sOffset: 5, lOffset: -5 }, { hOffset: 240, sOffset: 0, lOffset: 0 }]; break;
-    case 'Forest Edge (3)': steps = [{ hOffset: 90, sOffset: -10, lOffset: -15 }, { hOffset: 120, sOffset: -5, lOffset: -10 }, { hOffset: 150, sOffset: 0, lOffset: -5 }]; break;
-    case 'Cyberpunk (3)': steps = [{ hOffset: 0, sOffset: 30, lOffset: 5 }, { hOffset: 150, sOffset: 20, lOffset: 0 }, { hOffset: 300, sOffset: 25, lOffset: 10 }]; break;
-    case 'Royal (3)': steps = [{ hOffset: 0, sOffset: 10, lOffset: -10 }, { hOffset: 270, sOffset: 15, lOffset: -5 }, { hOffset: 50, sOffset: 20, lOffset: 10 }]; break;
-    case 'Earthy (3)': steps = [{ hOffset: 20, sOffset: -10, lOffset: -20 }, { hOffset: 40, sOffset: -15, lOffset: -15 }, { hOffset: 60, sOffset: -10, lOffset: -10 }]; break;
-    case 'Pastel Dreams (3)': steps = [{ hOffset: 0, sOffset: -40, lOffset: 30 }, { hOffset: 120, sOffset: -45, lOffset: 35 }, { hOffset: 240, sOffset: -40, lOffset: 30 }]; break;
+    case HarmonyRule.MONOCHROMATIC: steps = [{ hOffset: 0 }]; break;
+    case HarmonyRule.ANALOGOUS: steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }]; break;
+    case HarmonyRule.ANALOGOUS_5: steps = [{ hOffset: -angle*2 }, { hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: angle*2 }]; break;
+    case HarmonyRule.ACCENTED_ANALOGOUS: steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }]; break;
+    case HarmonyRule.COMPLEMENTARY: steps = [{ hOffset: 0 }, { hOffset: 180 }]; break;
+    case HarmonyRule.SPLIT_COMPLEMENTARY: steps = [{ hOffset: 180 - angle }, { hOffset: 0 }, { hOffset: 180 + angle }]; break;
+    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY: steps = [{ hOffset: -angle }, { hOffset: 0 }, { hOffset: angle }, { hOffset: 180 - angle }, { hOffset: 180 + angle }]; break;
+    case HarmonyRule.TRIADIC: steps = [{ hOffset: 0 }, { hOffset: 120 }, { hOffset: 240 }]; break;
+    case HarmonyRule.TETRADIC: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }, { hOffset: 180 + angle }]; break;
+    case HarmonyRule.SQUARE: steps = [{ hOffset: 0 }, { hOffset: 90 }, { hOffset: 180 }, { hOffset: 270 }]; break;
+    case HarmonyRule.COMPOUND: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 - angle }]; break;
+    case HarmonyRule.SHADES: steps = [{ hOffset: 0 }]; break;
+    case HarmonyRule.SIX_TONE: steps = [0, angle, angle*2, angle*3, angle*4, angle*5].map(deg => ({ hOffset: deg })); break;
+    case HarmonyRule.GOLDEN: steps = [{ hOffset: 0 }, { hOffset: 137.5 }, { hOffset: 275 }, { hOffset: 412.5 }]; break;
+    case HarmonyRule.NATURAL: steps = [{ hOffset: -angle, sOffset: 15, lOffset: -15 }, { hOffset: 0 }, { hOffset: angle, sOffset: -10, lOffset: 15 }]; break;
+    case HarmonyRule.VIVID_PASTEL: steps = [{ hOffset: 0 }, { hOffset: 180 - angle, sOffset: -40, lOffset: 25 }, { hOffset: 180 + angle, sOffset: -40, lOffset: 25 }]; break;
+    case HarmonyRule.PENTAGRAM: steps = [0, angle, angle*2, angle*3, angle*4].map(deg => ({ hOffset: deg })); break;
+    case HarmonyRule.HARD_CLASH: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 360 - angle }]; break;
+    case HarmonyRule.DOUBLE_ANALOGOUS: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 120 }, { hOffset: 120 + angle }]; break;
+    case HarmonyRule.FULL_SPECTRUM: steps = Array.from({length: 8}, (_, i) => ({ hOffset: i * angle })); break;
+    case HarmonyRule.CLASH_COMPLEMENTARY: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: 180 }]; break;
+    case HarmonyRule.SYNTHWAVE: steps = [{ hOffset: 0 }, { hOffset: 180 }, { hOffset: 180 + angle }]; break;
+    case HarmonyRule.ANALOGOUS_CLASH: steps = [{ hOffset: 0 }, { hOffset: angle }, { hOffset: angle * 3 }]; break;
+    case HarmonyRule.DEEP_NIGHT: steps = [{ hOffset: 0, sOffset: -20, lOffset: -30 }, { hOffset: 180, sOffset: -10, lOffset: -40 }, { hOffset: 180 + angle, sOffset: -10, lOffset: -40 }]; break;
+    case HarmonyRule.SOLAR_FLARE: steps = [{ hOffset: 0, sOffset: 20, lOffset: 10 }, { hOffset: 30, sOffset: 15, lOffset: 5 }, { hOffset: 60, sOffset: 10, lOffset: 0 }]; break;
+    case HarmonyRule.OCEANIC: steps = [{ hOffset: 180, sOffset: 10, lOffset: -10 }, { hOffset: 210, sOffset: 5, lOffset: -5 }, { hOffset: 240, sOffset: 0, lOffset: 0 }]; break;
+    case HarmonyRule.FOREST_EDGE: steps = [{ hOffset: 90, sOffset: -10, lOffset: -15 }, { hOffset: 120, sOffset: -5, lOffset: -10 }, { hOffset: 150, sOffset: 0, lOffset: -5 }]; break;
+    case HarmonyRule.CYBERPUNK: steps = [{ hOffset: 0, sOffset: 30, lOffset: 5 }, { hOffset: 150, sOffset: 20, lOffset: 0 }, { hOffset: 300, sOffset: 25, lOffset: 10 }]; break;
+    case HarmonyRule.ROYAL: steps = [{ hOffset: 0, sOffset: 10, lOffset: -10 }, { hOffset: 270, sOffset: 15, lOffset: -5 }, { hOffset: 50, sOffset: 20, lOffset: 10 }]; break;
+    case HarmonyRule.EARTHY: steps = [{ hOffset: 20, sOffset: -10, lOffset: -20 }, { hOffset: 40, sOffset: -15, lOffset: -15 }, { hOffset: 60, sOffset: -10, lOffset: -10 }]; break;
+    case HarmonyRule.PASTEL_DREAMS: steps = [{ hOffset: 0, sOffset: -40, lOffset: 30 }, { hOffset: 120, sOffset: -45, lOffset: 35 }, { hOffset: 240, sOffset: -40, lOffset: 30 }]; break;
+
     default: steps = [{ hOffset: 0 }];
   }
 

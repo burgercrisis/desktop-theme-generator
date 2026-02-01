@@ -1,3 +1,4 @@
+
 import { jch } from 'd3-cam02';
 import { hsluv } from 'd3-hsluv';
 import Color from 'colorjs.io';
@@ -5,18 +6,18 @@ import { HSL, RGB, OutputSpace } from '../../types';
 
 export const toOutputFormat = (color: any, space: OutputSpace): string => {
     const c = color as any;
-    const targetSpace: Record<string, string> = {
+    const targetSpace: Record<OutputSpace, string> = {
         'sRGB': 'srgb',
         'sRGB Linear': 'srgb-linear',
         'P3': 'p3',
         'P3 Linear': 'p3-linear',
         'AdobeRGB': 'a98-rgb',
         'ProPhoto RGB': 'prophoto-rgb',
-        'Rec.709': 'srgb',
+        'Rec.709': 'srgb', // closest match; primaries match sRGB, different gamma
         'Rec.2020': 'rec2020',
-        'Rec.2100 HLG': 'rec2020',
-        'Rec.2100 PQ': 'rec2020',
-        'ICtCp': 'rec2020',
+        'Rec.2100 HLG': 'rec2020', // HLG transfer not available; fallback to primaries
+        'Rec.2100 PQ': 'rec2020',  // PQ transfer not available; fallback to primaries
+        'ICtCp': 'rec2020',        // ICtCp not built-in; fallback to primaries
         'ACES 2065-1': 'aces2065-1',
         'ACEScc': 'acescc',
         'ACEScct': 'acescct',
@@ -28,7 +29,7 @@ export const toOutputFormat = (color: any, space: OutputSpace): string => {
         'XYZ D65': 'xyz-d65',
         'CMY': 'cmy',
         'CMYK': 'cmyk',
-        'RYB': 'srgb'
+        'RYB': 'srgb' // no standard color space in colorjs; fallback
     };
 
     const toPercentString = (vals: number[]) => vals.map(v => `${(v * 100).toFixed(1)}%`).join(', ');
@@ -36,31 +37,26 @@ export const toOutputFormat = (color: any, space: OutputSpace): string => {
     try {
         const mapped = targetSpace[space];
         if (mapped) {
+            // Special-case CMY/CMYK to avoid reliance on optional profiles
             if (space === 'CMY') {
-                const coords = c.to('srgb').coords;
-                if (!coords) return '#000000';
-                const rgb = coords as [number, number, number];
-                const clippedRgb = rgb.map((cVal: number) => Math.max(0, Math.min(1, cVal)));
-                const cmy = clippedRgb.map((v: number) => 1 - v);
+                const rgb = c.to('srgb').coords.map((cVal: number) => Math.max(0, Math.min(1, cVal)));
+                const cmy = rgb.map((v: number) => 1 - v);
                 return `cmy(${toPercentString(cmy)})`;
             }
             if (space === 'CMYK') {
-                const coords = c.to('srgb').coords;
-                if (!coords) return '#000000';
-                const rgb = coords as [number, number, number];
-                const clippedRgb = rgb.map((cVal: number) => Math.max(0, Math.min(1, cVal)));
-                const k = 1 - Math.max(clippedRgb[0], clippedRgb[1], clippedRgb[2]);
+                const rgb = c.to('srgb').coords.map((cVal: number) => Math.max(0, Math.min(1, cVal)));
+                const k = 1 - Math.max(rgb[0], rgb[1], rgb[2]);
                 const denom = 1 - k || 1;
-                const cVal = (1 - clippedRgb[0] - k) / denom;
-                const mVal = (1 - clippedRgb[1] - k) / denom;
-                const yVal = (1 - clippedRgb[2] - k) / denom;
-                return `cmyk(${toPercentString([cVal, mVal, yVal, k])})`;
+                const c = (1 - rgb[0] - k) / denom;
+                const m = (1 - rgb[1] - k) / denom;
+                const y = (1 - rgb[2] - k) / denom;
+                return `cmyk(${toPercentString([c, m, y, k])})`;
             }
 
             return c.to(mapped).toString();
         }
     } catch (e) {
-        // fall through
+        // fall through to sRGB hex
     }
 
     return c.to('srgb').toString({ format: 'hex' });
@@ -78,7 +74,7 @@ export const hslToDisplay = (h: number, s: number, l: number, output: OutputSpac
         const c = new Color("hsl", [h, s, l]);
         return toOutputFormat(c, output);
     } catch (e) { return "#000000"; }
-};
+}
 
 export const jchToHex = (J: number, C: number, h: number): string => {
     const safeJ = Math.max(0, Math.min(100, J));
@@ -107,7 +103,7 @@ export const jchToDisplay = (J: number, C: number, h: number, output: OutputSpac
         const c = new Color(hex);
         return toOutputFormat(c, output);
     } catch(e) { return hex; }
-};
+}
 
 export const hsluvToHex = (h: number, s: number, l: number): string => {
     const safeS = Math.max(0, Math.min(100, s));
@@ -190,7 +186,7 @@ export const lchToHex = (l: number, s: number, h: number, mode: 'D50'|'D65' = 'D
     } catch(e) { return hslToHex(h, Math.min(100, s), l); }
 };
 
-export const luvToHex = (l: number, s: number, h: number, _mode: 'LCh'|'Luv' = 'LCh'): string => {
+export const luvToHex = (l: number, s: number, h: number, mode: 'LCh'|'Luv' = 'LCh'): string => {
      try {
           let c = new Color('lchuv', [l, s, h]);
           if (!c.inGamut('srgb')) c = c.toGamut({ space: 'srgb' });
@@ -224,13 +220,10 @@ export const hslToRgb = (h: number, s: number, l: number): RGB => {
   try {
       const c = new Color("hsl", [h, s, l]);
       const rgb = c.to("srgb");
-      const coords = rgb.coords;
-      if (!coords) return { r: 0, g: 0, b: 0 };
-      const [r, g, b] = coords as [number, number, number];
       return {
-          r: Math.round(r * 255),
-          g: Math.round(g * 255),
-          b: Math.round(b * 255)
+          r: Math.round(rgb.coords[0] * 255),
+          g: Math.round(rgb.coords[1] * 255),
+          b: Math.round(rgb.coords[2] * 255)
       };
   } catch(e) { return { r:0, g:0, b:0 }; }
 };
@@ -238,13 +231,10 @@ export const hslToRgb = (h: number, s: number, l: number): RGB => {
 export const hexToRgb = (hex: string): RGB => {
   try {
       const c = new Color(hex).to("srgb");
-      const coords = c.coords;
-      if (!coords) return { r: 0, g: 0, b: 0 };
-      const [r, g, b] = coords as [number, number, number];
        return {
-          r: Math.round(r * 255),
-          g: Math.round(g * 255),
-          b: Math.round(b * 255)
+          r: Math.round(c.coords[0] * 255),
+          g: Math.round(c.coords[1] * 255),
+          b: Math.round(c.coords[2] * 255)
       };
   } catch(e) { return {r:0,g:0,b:0}; }
 };
@@ -252,13 +242,10 @@ export const hexToRgb = (hex: string): RGB => {
 export const hexToHsl = (hex: string): HSL => {
   try {
       const c = new Color(hex).to("hsl");
-      const coords = c.coords;
-      if (!coords) return { h: 0, s: 0, l: 0 };
-      const [h, s, l] = coords as [number, number, number];
       return {
-          h: h || 0,
-          s: s || 0,
-          l: l || 0
+          h: c.coords[0] || 0,
+          s: c.coords[1] || 0,
+          l: c.coords[2] || 0
       };
   } catch(e) { return { h:0, s:0, l:0 }; }
 };
@@ -266,13 +253,10 @@ export const hexToHsl = (hex: string): HSL => {
 export const rgbToHsl = (r: number, g: number, b: number): HSL => {
     try {
         const c = new Color("srgb", [r/255, g/255, b/255]).to("hsl");
-        const coords = c.coords;
-        if (!coords) return { h: 0, s: 0, l: 0 };
-        const [h, s, l] = coords as [number, number, number];
         return {
-            h: h || 0,
-            s: s || 0,
-            l: l || 0
+            h: c.coords[0] || 0,
+            s: c.coords[1] || 0,
+            l: c.coords[2] || 0
         };
     } catch(e) { return { h:0, s:0, l:0 }; }
 };

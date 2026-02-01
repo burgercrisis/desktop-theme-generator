@@ -1,7 +1,8 @@
+
 export interface HSL {
-  h: number;
-  s: number;
-  l: number;
+  h: number; // 0-360
+  s: number; // 0-100
+  l: number; // 0-100
 }
 
 export interface RGB {
@@ -10,12 +11,29 @@ export interface RGB {
   b: number;
 }
 
-export type OutputSpace =
-  | 'sRGB'
-  | 'sRGB Linear'
-  | 'P3'
+export type ColorSpace = 
+  | 'HSL' 
+  | 'HSV'
+  | 'HWB'
+  | 'CAM02' 
+  | 'HSLuv' 
+  | 'OkLCh' 
+  | 'LCh D50' 
+  | 'LCh D65' 
+  | 'IPT' 
+  | 'LCh(uv)'
+  | 'XYZ D50'
+  | 'XYZ D65'
+  | 'CMY'
+  | 'CMYK'
+  | 'RYB';
+
+export type OutputSpace = 
+  | 'sRGB' 
+  | 'P3' 
+  | 'AdobeRGB' 
+  | 'sRGB Linear' 
   | 'P3 Linear'
-  | 'AdobeRGB'
   | 'ProPhoto RGB'
   | 'Rec.709'
   | 'Rec.2020'
@@ -35,81 +53,82 @@ export type OutputSpace =
   | 'CMYK'
   | 'RYB';
 
-export type HarmonyRule =
-  | 'Monochromatic (1)'
-  | 'Analogous (3)'
-  | 'Analogous (5)'
-  | 'Accented Analogous (4)'
-  | 'Complementary (2)'
-  | 'Split Complementary (3)'
-  | 'Double Split Complementary (5)'
-  | 'Triadic (3)'
-  | 'Tetradic (4)'
-  | 'Square (4)'
-  | 'Compound (3)'
-  | 'Shades (1)'
-  | 'Six Tone (6)'
-  | 'Golden Ratio (4)'
-  | 'Natural (3)'
-  | 'Vivid & Pastel (3)'
-  | 'Pentagram (5)'
-  | 'Hard Clash (3)'
-  | 'Double Analogous (4)'
-  | 'Full Spectrum (8)'
-  | 'Clash Complementary (3)'
-  | 'Synthwave (3)'
-  | 'Analogous Clash (3)'
-  | 'Deep Night (3)'
-  | 'Solar Flare (3)'
-  | 'Oceanic (3)'
-  | 'Forest Edge (3)'
-  | 'Cyberpunk (3)'
-  | 'Royal (3)'
-  | 'Earthy (3)'
-  | 'Pastel Dreams (3)';
+export enum HarmonyRule {
+  MONOCHROMATIC = 'Monochromatic (1)',
+  ANALOGOUS = 'Analogous (3)',
+  ANALOGOUS_5 = 'Analogous (5)',
+  ACCENTED_ANALOGOUS = 'Accented Analogous (4)',
+  COMPLEMENTARY = 'Complementary (2)',
+  SPLIT_COMPLEMENTARY = 'Split Complementary (3)',
+  DOUBLE_SPLIT_COMPLEMENTARY = 'Double Split Complementary (5)',
+  TRIADIC = 'Triadic (3)',
+  TETRADIC = 'Tetradic (4)',
+  SQUARE = 'Square (4)',
+  COMPOUND = 'Compound (3)',
+  SHADES = 'Shades (1)',
+  SIX_TONE = 'Six Tone (6)',
+  GOLDEN = 'Golden Ratio (4)',
+  NATURAL = 'Natural (3)',
+  VIVID_PASTEL = 'Vivid & Pastel (3)',
+  PENTAGRAM = 'Pentagram (5)',
+  HARD_CLASH = 'Hard Clash (3)',
+  DOUBLE_ANALOGOUS = 'Double Analogous (4)',
+  FULL_SPECTRUM = 'Full Spectrum (8)',
+  CLASH_COMPLEMENTARY = 'Clash Complementary (3)',
+  SYNTHWAVE = 'Synthwave (3)',
+  ANALOGOUS_CLASH = 'Analogous Clash (3)',
+  // Extended rules from generator
+  DEEP_NIGHT = 'Deep Night (3)',
+  SOLAR_FLARE = 'Solar Flare (3)',
+  OCEANIC = 'Oceanic (3)',
+  FOREST_EDGE = 'Forest Edge (3)',
+  CYBERPUNK = 'Cyberpunk (3)',
+  ROYAL = 'Royal (3)',
+  EARTHY = 'Earthy (3)',
+  PASTEL_DREAMS = 'Pastel Dreams (3)'
+}
 
-export type VariantStrategy =
-  | 'Tints & Shades'
-  | 'Tones'
-  | 'Harmonic Blend'
-  | 'Vibrant'
-  | 'Shaded Blend'
-  | 'Atmospheric'
-  | 'Pastel'
-  | 'Deep & Rich'
-  | 'Acid Shift'
-  | 'Neon Glow'
-  | 'Metallic'
-  | 'Iridescent'
-  | 'Clay'
-  | 'Glossy'
-  | 'X-Ray'
-  | 'Crystalline'
-  | 'Radioactive'
-  | 'Hyper'
-  | 'Luminous'
-  | 'Velvet'
-  | 'Toxic'
-  | 'Vintage'
-  | 'Warm'
-  | 'Cool'
-  | 'Glacial'
-  | 'Heatwave'
-  | 'Cinematic'
-  | 'Memphis'
-  | 'Glitch'
-  | 'Solarized'
-  | 'Nordic'
-  | 'Dracula'
-  | 'Monokai'
-  | 'Gruvbox';
-
-export type ColorSpace = 'HSL' | 'CAM02' | 'HSLuv' | 'LCh D50' | 'LCh D65' | 'OkLCh' | 'IPT' | 'LCh(uv)';
+export enum VariantStrategy {
+  TINTS_SHADES = 'Tints & Shades',
+  TONES = 'Tones',
+  BLEND = 'Harmonic Blend',
+  VIBRANT = 'Vibrant',
+  SHADED_BLEND = 'Shaded Blend',
+  ATMOSPHERIC = 'Atmospheric',
+  PASTEL = 'Pastel',
+  DEEP = 'Deep & Rich',
+  ACID = 'Acid Shift',
+  NEON = 'Neon Glow',
+  METALLIC = 'Metallic',
+  IRIDESCENT = 'Iridescent',
+  CLAY = 'Clay',
+  GLOSSY = 'Glossy',
+  X_RAY = 'X-Ray',
+  CRYSTALLINE = 'Crystalline',
+  RADIOACTIVE = 'Radioactive',
+  HYPER = 'Hyper',
+  LUMINOUS = 'Luminous',
+  VELVET = 'Velvet',
+  TOXIC = 'Toxic',
+  VINTAGE = 'Vintage',
+  WARM = 'Warm',
+  COOL = 'Cool',
+  GLACIAL = 'Glacial',
+  HEATWAVE = 'Heatwave',
+  CINEMATIC = 'Cinematic',
+  MEMPHIS = 'Memphis',
+  GLITCH = 'Glitch',
+  SOLARIZED = 'Solarized',
+  NORDIC = 'Nordic',
+  DRACULA = 'Dracula',
+  MONOKAI = 'Monokai',
+  GRUVBOX = 'Gruvbox'
+}
 
 export interface ColorStop {
   hsl: HSL;
   hex: string;
-  displayString?: string;
+  displayString: string;
   name?: string;
   isBase?: boolean;
   cam02?: { j: number, c: number, h: number };
@@ -198,85 +217,12 @@ export interface InternalThemeColors {
   // Border
   "border-base": string;
   "border-hover": string;
-  "border-active": string;
-  "border-selected": string;
-  "border-weak-base": string;
-  "border-strong-base": string;
-  "border-interactive-base": string;
-  "border-success-base": string;
-  "border-warning-base": string;
-  "border-critical-base": string;
-  "border-info-base": string;
-
-  // Icon
-  "icon-base": string;
-  "icon-hover": string;
-  "icon-active": string;
-  "icon-selected": string;
-  "icon-brand-base": string;
-  "icon-interactive-base": string;
-  "icon-success-base": string;
-  "icon-warning-base": string;
-  "icon-critical-base": string;
-  "icon-info-base": string;
-
-  // Inputs
-  "input-base": string;
-  "input-hover": string;
-  "input-active": string;
-
-  // Other
-  "focus-ring": string;
-  "scrollbar-thumb": string;
-  "scrollbar-track": string;
-  "shadow": string;
-  "overlay": string;
 }
 
-// Opencode-compatible theme colors with kebab-case naming
-export interface OpencodeThemeColors {
-  [key: string]: string;
-}
-
-export type SeedName = 
-  | 'neutral' 
-  | 'primary' 
-  | 'success' 
-  | 'warning' 
-  | 'error' 
-  | 'info' 
-  | 'interactive' 
-  | 'accent'
-  | 'critical'
-  | 'diffAdd' 
-  | 'diffDelete';
-
-export interface SeedColor {
-  name: SeedName;
-  hsl: HSL;
-  hex: string;
-}
-
-export interface OpencodeThemeExport {
-  name: string;
-  id: string;
-  light: {
-    seeds: Record<SeedName, string>;
-    overrides: Partial<OpencodeThemeColors>;
-  };
-  dark: {
-    seeds: Record<SeedName, string>;
-    overrides: Partial<OpencodeThemeColors>;
-  };
-}
-
-export interface ThemePreset {
+export type SeedColor = {
   id: string;
   name: string;
-  baseColor: HSL;
-  harmony: HarmonyRule;
-  variantStrategy: VariantStrategy;
-  variantCount: number;
-  contrast: number;
-  spread: number;
-}
+  value: string;
+};
+
+export type OpencodeThemeColors = Record<string, string>;
