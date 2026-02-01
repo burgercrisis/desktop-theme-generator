@@ -127,11 +127,7 @@ export const writeOpencode9ThemeFile = async (
   const jsonContent = exportToOpencode9SeedJSON(name, colors, seeds, overrides)
   const json = JSON.parse(jsonContent)
 
-  const apiUrls = [
-    "/api/write-theme",
-    "http://localhost:3032/api/write-theme",
-    "http://127.0.0.1:3032/api/write-theme",
-  ]
+  const apiUrls = ["/api/write-theme"]
 
   let lastError = null
 
