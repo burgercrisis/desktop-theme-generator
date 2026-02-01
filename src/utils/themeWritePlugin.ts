@@ -19,16 +19,10 @@ export const themeWritePlugin = (options: ThemeWriteOptions): Plugin => {
     name: "vite-plugin-theme-write",
 
     configureServer(server) {
-      console.log("[Theme Write Plugin] configureServer called")
       // Use a custom middleware that runs before Vite's internal ones
       server.middlewares.use((req: any, res: any, next: any) => {
         const fullUrl = req.url || ""
         const url = fullUrl.split("?")[0]
-        
-        // Log all requests to /api/
-        if (url.startsWith("/api/")) {
-          console.log(`[Theme Write Plugin] API Request: ${req.method} ${fullUrl} (Host: ${req.headers.host})`)
-        }
 
         // 1. Handle /api/test
         if (url === "/api/test" || url === "/api/test/") {

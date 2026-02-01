@@ -94,10 +94,8 @@ export const exportToOpencode9SeedJSON = (
     }
   })
 
-  const allOverrides: Record<string, string> = { ...colors }
-  Object.entries(manualOverrides).forEach(([key, value]) => {
-    allOverrides[key] = value
-  })
+  // Only include explicit manual overrides in the final JSON
+  const allOverrides: Record<string, string> = { ...manualOverrides }
 
   const json: OpencodeThemeJSON = {
     $schema: "https://opencode.ai/desktop-theme.json",
@@ -149,14 +147,9 @@ export const writeOpencode9ThemeFile = async (
       })
 
       if (response.ok) {
-        const result = await response.json()
-        console.log("[writeOpencode9ThemeFile] Success:", result)
         return { success: true }
-      } else {
-        console.error(`[writeOpencode9ThemeFile] Failed to fetch ${apiUrl}: ${response.status} ${response.statusText}`)
       }
     } catch (error: any) {
-      console.error(`[writeOpencode9ThemeFile] Error fetching ${apiUrl}:`, error)
       lastError = error
     }
   }
