@@ -28,8 +28,8 @@ export const hslToHex = (h: number, s: number, l: number): string => {
   }
 
   const toHex = (n: number) => {
-    const hex = Math.round((n + m) * 255).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
+    const hex = Math.max(0, Math.min(255, Math.round((n + m) * 255))).toString(16);
+    return hex.padStart(2, '0').toUpperCase();
   };
 
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;

@@ -11,6 +11,12 @@ interface ColorWheelProps {
 const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const hslRef = useRef(hsl);
+
+  // Update ref whenever hsl prop changes
+  useEffect(() => {
+    hslRef.current = hsl;
+  }, [hsl]);
 
   const wheelSize = 320;
   const center = wheelSize / 2;
@@ -33,11 +39,11 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
     const saturation = ratio * 100;
 
     onChange({
-      ...hsl,
+      ...hslRef.current,
       h: Math.round(angle * 100) / 100,
       s: Math.round(saturation * 100) / 100
     });
-  }, [hsl, onChange]);
+  }, [onChange]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();

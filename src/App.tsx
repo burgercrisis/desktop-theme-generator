@@ -3,10 +3,8 @@ import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import {
   generateHarmony,
-  generateVariants,
-  generateThemeColors,
-  generateOpencodeSeeds,
-  generate9SeedHarmony,
+} from "./utils/engine/harmonies"
+import {
   generateOpencodeThemeColors,
   harmonyOptions,
   variantStrategyOptions,
@@ -21,6 +19,7 @@ import {
   downloadFile,
   exportFormats,
   writeCustomThemeFile,
+  writeOpencode9ThemeFile,
 } from "./utils/exportUtils"
 import { opencodePresets, getPresetOverrides } from "./utils/themePresets"
 import { HSL, HarmonyRule, VariantStrategy, DesktopTheme, OpencodeThemeColors } from "./types"
@@ -37,29 +36,63 @@ const App: React.FC = () => {
   const [themeName, setThemeName] = useState("My Theme")
   const [, setCopiedHex] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"palette" | "export">("palette")
-  const [useOpencodeMode, setUseOpencodeMode] = useState(true)
 
   // Matrix Router state
-  const [matrixMode, setMatrixMode] = useState(false)
-  const [manualOverrides, setManualOverrides] = useState<Record<string, string>>({})
+  const [matrixMode, setMatrixMode] = useState(() => getInitialState("matrixMode", false))
+  const [manualOverrides, setManualOverrides] = useState<Record<string, string>>(() => getInitialState("manualOverrides", {}))
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
 
-  // Generate 9 seeds for Opencode mode
-  const seeds9 = useMemo(() => {
-    if (useOpencodeMode) {
-      return generate9SeedHarmony(baseColor, harmony, spread)
-    }
-    return generateOpencodeSeeds(baseColor)
-  }, [baseColor, harmony, spread, useOpencodeMode])
+  // Persistence effects
+  React.useEffect(() => localStorage.setItem("baseColor", JSON.stringify(baseColor)), [baseColor])
+  React.useEffect(() => localStorage.setItem("harmony", JSON.stringify(harmony)), [harmony])
+  React.useEffect(() => localStorage.setItem("spread", JSON.stringify(spread)), [spread])
+  React.useEffect(() => localStorage.setItem("variantCount", JSON.stringify(variantCount)), [variantCount])
+  React.useEffect(() => localStorage.setItem("contrast", JSON.stringify(contrast)), [contrast])
+  React.useEffect(() => localStorage.setItem("variantStrategy", JSON.stringify(variantStrategy)), [variantStrategy])
+  React.useEffect(() => localStorage.setItem("colorSpace", JSON.stringify(colorSpace)), [colorSpace])
+  React.useEffect(() => localStorage.setItem("outputSpace", JSON.stringify(outputSpace)), [outputSpace])
+  React.useEffect(() => localStorage.setItem("themeName", JSON.stringify(themeName)), [themeName])
+  React.useEffect(() => localStorage.setItem("matrixMode", JSON.stringify(matrixMode)), [matrixMode])
+  React.useEffect(() => localStorage.setItem("manualOverrides", JSON.stringify(manualOverrides)), [manualOverrides])
 
-  // Generate variants for each seed (for matrix mode)
+  // Holistic palette generation using the new modular engine
+  const paletteGroups = useMemo(() => {
+    return generateHarmony(
+      baseColor, 
+      harmony, 
+      spread, 
+      variantCount, 
+      contrast, 
+      variantStrategy,
+      colorSpace,
+      outputSpace
+    )
+  }, [baseColor, harmony, spread, variantCount, contrast, variantStrategy, colorSpace, outputSpace])
+
+  // Generate 9 seeds for Opencode mode (from palette groups)
+  const seeds9 = useMemo<SeedColor[]>(() => {
+    // Take first 9 groups or pad if fewer
+    const groups = paletteGroups.slice(0, 9)
+    const seedNames: SeedName[] = ["primary", "neutral", "success", "warning", "error", "info", "interactive", "diffAdd", "diffDelete"]
+    
+    return seedNames.map((name, i) => {
+      const group = groups[i % groups.length]
+      return {
+        name,
+        hex: group.base.hex,
+        hsl: group.base.hsl
+      }
+    })
+  }, [paletteGroups])
+
+  // Generate variants map for Opencode mapping
   const seedVariants = useMemo(() => {
     const variants: Record<string, string[]> = {}
-    seeds9.forEach((seed) => {
-      const allVariants = generateVariants(seed.hsl, variantCount, contrast, variantStrategy)
-      const sorted = [...allVariants].sort((a, b) => b.hsl.l - a.hsl.l)
-      variants[seed.name] = sorted.map((v) => v.hex)
+    seeds9.forEach((seed, i) => {
+      const group = paletteGroups[i % paletteGroups.length]
+      // DO NOT SORT BY LIGHTNESS. Keep the order from the engine (usually dark to light or based on strategy)
+      variants[seed.name] = group.variants.map((v) => v.hex)
     })
     return variants
   }, [seeds9, variantCount, contrast, variantStrategy])
@@ -157,117 +190,225 @@ const App: React.FC = () => {
   const paletteGroups = useMemo(() => generateHarmony(baseColor, harmony, spread), [baseColor, harmony, spread])
 
   const allVariants = useMemo(() => {
-    return paletteGroups.map((group, idx) => {
-      const prevHsl = paletteGroups[idx === 0 ? paletteGroups.length - 1 : idx - 1].base.hsl
-      const nextHsl = paletteGroups[(idx + 1) % paletteGroups.length].base.hsl
-      return {
-        group,
-        variants: generateVariants(group.base.hsl, variantCount, contrast, variantStrategy, prevHsl, nextHsl),
-      }
-    })
-  }, [paletteGroups, variantCount, contrast, variantStrategy])
+    return paletteGroups.flatMap(group => [group.base, ...group.variants])
+  }, [paletteGroups])
 
-  const theme = useMemo<DesktopTheme>(() => {
-    const colors = generateThemeColors(paletteGroups, baseColor)
-    const allColors = allVariants.flatMap((av) => [av.group.base, ...av.variants])
-
+  // Generate theme colors (unified Opencode mapping)
+  const themeColors = useMemo<OpencodeThemeColors>(() => {
+    const colors = generateOpencodeThemeColors(seeds9, seedVariants)
+    
+    // Apply manual overrides
     const hasOverrides = Object.keys(manualOverrides).length > 0
-    const colorsWithOverrides = hasOverrides ? { ...colors } : colors
-
     if (hasOverrides) {
-      for (const [property, color] of Object.entries(manualOverrides)) {
-        if (property in colorsWithOverrides) {
-          colorsWithOverrides[property as keyof typeof colorsWithOverrides] = color
-        }
-      }
+      return { ...colors, ...manualOverrides }
     }
+    
+    return colors
+  }, [seeds9, seedVariants, manualOverrides])
 
+  // Desktop theme object for export/preview
+  const theme = useMemo<DesktopTheme>(() => {
     return {
       name: themeName,
-      colors: colorsWithOverrides,
-      palette: allColors,
+      colors: themeColors as InternalThemeColors,
+      palette: allVariants,
     }
-  }, [paletteGroups, allVariants, themeName, baseColor, manualOverrides])
+  }, [themeName, themeColors, allVariants])
 
   // Matrix Router properties - Opencode UI tokens
   const MATRIX_PROPERTIES = [
+    // Backgrounds
     "background-base",
     "background-weak",
     "background-strong",
     "background-stronger",
+
+    // Surfaces
     "surface-base",
     "surface-base-hover",
     "surface-base-active",
+    "surface-base-interactive-active",
+    "surface-inset-base",
+    "surface-inset-base-hover",
+    "surface-inset-strong",
+    "surface-inset-strong-hover",
     "surface-raised-base",
+    "surface-float-base",
+    "surface-float-base-hover",
     "surface-raised-base-hover",
     "surface-raised-base-active",
     "surface-raised-strong",
+    "surface-raised-strong-hover",
+    "surface-raised-stronger",
+    "surface-raised-stronger-hover",
     "surface-weak",
     "surface-weaker",
     "surface-strong",
+    "surface-brand-base",
+    "surface-brand-hover",
+    "surface-interactive-base",
+    "surface-interactive-hover",
+    "surface-interactive-weak",
+    "surface-interactive-weak-hover",
+    "surface-success-base",
+    "surface-success-weak",
+    "surface-success-strong",
+    "surface-warning-base",
+    "surface-warning-weak",
+    "surface-warning-strong",
+    "surface-critical-base",
+    "surface-critical-weak",
+    "surface-critical-strong",
+    "surface-info-base",
+    "surface-info-weak",
+    "surface-info-strong",
+
+    // Diff Surfaces
+    "surface-diff-unchanged-base",
+    "surface-diff-skip-base",
+    "surface-diff-add-base",
+    "surface-diff-add-weak",
+    "surface-diff-add-weaker",
+    "surface-diff-add-strong",
+    "surface-diff-add-stronger",
+    "surface-diff-delete-base",
+    "surface-diff-delete-weak",
+    "surface-diff-delete-weaker",
+    "surface-diff-delete-strong",
+    "surface-diff-delete-stronger",
+
+    // Text
     "text-base",
     "text-weak",
     "text-weaker",
     "text-strong",
+    "text-invert-base",
+    "text-invert-weak",
+    "text-invert-weaker",
+    "text-invert-strong",
+    "text-interactive-base",
     "text-on-brand-base",
+    "text-on-interactive-base",
+    "text-on-interactive-weak",
+    "text-on-success-base",
+    "text-on-critical-base",
+    "text-on-critical-weak",
+    "text-on-critical-strong",
+    "text-on-warning-base",
+    "text-on-info-base",
+    "text-diff-add-base",
+    "text-diff-delete-base",
+    "text-diff-delete-strong",
+    "text-diff-add-strong",
+
+    // Borders
     "border-base",
-    "border-weak",
-    "border-strong",
+    "border-hover",
+    "border-active",
     "border-selected",
+    "border-disabled",
+    "border-focus",
+    "border-weak-base",
+    "border-strong-base",
+    "border-interactive-base",
+    "border-interactive-hover",
+    "border-interactive-active",
+    "border-interactive-selected",
+    "border-success-base",
+    "border-warning-base",
+    "border-critical-base",
+    "border-info-base",
+
+    // Icons
     "icon-base",
-    "icon-weak",
-    "icon-strong",
-    "primary-base",
-    "primary-hover",
-    "primary-active",
-    "primary-text",
-    "secondary-base",
-    "secondary-hover",
-    "secondary-active",
-    "secondary-text",
-    "accent-base",
-    "accent-hover",
-    "accent-active",
-    "accent-text",
-    "success-base",
-    "success-hover",
-    "success-active",
-    "success-text",
-    "warning-base",
-    "warning-hover",
-    "warning-active",
-    "warning-text",
-    "critical-base",
-    "critical-hover",
-    "critical-active",
-    "critical-text",
-    "info-base",
-    "info-hover",
-    "info-active",
-    "info-text",
-    "interactive-base",
-    "interactive-hover",
-    "interactive-active",
-    "interactive-text",
-    "diff-add-base",
-    "diff-add-foreground",
-    "diff-delete-base",
-    "diff-delete-foreground",
-    "code-background",
-    "code-foreground",
-    "tab-active",
-    "tab-inactive",
-    "tab-hover",
-    "line-indicator",
-    "line-indicator-active",
-    "avatar-background",
-    "avatar-foreground",
+    "icon-hover",
+    "icon-active",
+    "icon-selected",
+    "icon-disabled",
+    "icon-focus",
+    "icon-weak-base",
+    "icon-strong-base",
+    "icon-interactive-base",
+    "icon-success-base",
+    "icon-warning-base",
+    "icon-critical-base",
+    "icon-info-base",
+
+    // Inputs
+    "input-base",
+    "input-hover",
+    "input-active",
+
+    // Other
+    "focus-ring",
     "scrollbar-thumb",
     "scrollbar-track",
-    "focus-ring",
     "shadow",
     "overlay",
   ]
+
+  // Write to Opencode when manualOverrides, seeds, colors, or strategy change
+  const lastWrittenRef = React.useRef<string>(localStorage.getItem("lastSyncedContent") || "")
+  const isWritingRef = React.useRef<boolean>(false)
+
+  // Use a simpler dependency array for the effect to avoid unnecessary triggers
+  const themeDataString = useMemo(() => {
+    return JSON.stringify({
+      themeName,
+      themeColors,
+      seeds9,
+      manualOverrides
+    });
+  }, [themeName, themeColors, seeds9, manualOverrides]);
+
+  React.useEffect(() => {
+    // "Instant" feel: 200ms debounce
+    const timer = setTimeout(() => {
+      if (isWritingRef.current) return
+
+      const data = JSON.parse(themeDataString);
+      const currentContent = exportToOpencode9SeedJSON(
+        data.themeName, 
+        data.themeColors, 
+        data.seeds9, 
+        data.manualOverrides
+      )
+      
+      // CRITICAL: If content is same as what we know is on disk, STOP.
+      if (currentContent === lastWrittenRef.current) {
+        return
+      }
+
+      setWriteStatus("writing")
+      isWritingRef.current = true
+      
+      writeOpencode9ThemeFile(
+        data.themeName, 
+        data.themeColors, 
+        data.seeds9, 
+        data.manualOverrides
+      )
+        .then((res) => {
+          if (res.success) {
+            lastWrittenRef.current = currentContent
+            localStorage.setItem("lastSyncedContent", currentContent)
+            setWriteStatus("success")
+          } else {
+            setWriteStatus("error")
+          }
+          setTimeout(() => setWriteStatus("idle"), 2000)
+        })
+        .catch(() => {
+          setWriteStatus("error")
+          setTimeout(() => setWriteStatus("idle"), 2000)
+        })
+        .finally(() => {
+          isWritingRef.current = false
+        })
+    }, 200)
+
+    return () => clearTimeout(timer)
+  }, [themeDataString])
 
   const handleColorChange = useCallback((hsl: HSL) => {
     setBaseColor(hsl)
@@ -283,29 +424,7 @@ const App: React.FC = () => {
     const overrides = getPresetOverrides(presetId)
     setManualOverrides(overrides)
     setActivePreset(presetId)
-    setWriteStatus("writing")
-
-    // Create a DesktopTheme from the current theme and apply overrides
-    const themeWithOverrides: DesktopTheme = {
-      ...theme,
-      colors: {
-        ...theme.colors,
-        ...overrides,
-      },
-    }
-
-    // Write to custom-theme.json
-    writeCustomThemeFile(themeWithOverrides)
-      .then(() => {
-        setWriteStatus("success")
-        setTimeout(() => setWriteStatus("idle"), 2000)
-      })
-      .catch((err) => {
-        console.error("Failed to write custom theme:", err)
-        setWriteStatus("error")
-        setTimeout(() => setWriteStatus("idle"), 2000)
-      })
-  }, [theme])
+  }, [])
 
   const handleExport = useCallback(
     (format: string) => {
@@ -338,7 +457,7 @@ const App: React.FC = () => {
         formatInfo?.mime || "text/plain",
       )
     },
-    [theme, themeName, opencodeTheme, seeds9],
+    [theme, themeName, themeColors, seeds9, manualOverrides],
   )
 
   const randomizeAll = useCallback(() => {
@@ -388,20 +507,20 @@ const App: React.FC = () => {
     <div className="min-h-screen text-gray-100" style={{ backgroundColor: "#0d0d0d" }}>
       <header className="px-6 py-3 border-b flex items-center justify-between" style={{ backgroundColor: "#141414", borderColor: "rgba(255,255,255,0.08)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold" style={{ backgroundColor: theme.colors.primary }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold" style={{ backgroundColor: theme.colors["surface-brand-base"] || "#6366f1" }}>
             <span style={{ color: "#ffffff" }}>O</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold tracking-tight" style={{ color: theme.colors.foreground }}>
+            <h1 className="text-base font-semibold tracking-tight" style={{ color: theme.colors["text-base"] || "#ffffff" }}>
               Desktop Theme Generator
             </h1>
-            <p className="text-[11px]" style={{ color: theme.colors.foreground, opacity: 0.5 }}>
+            <p className="text-[11px]" style={{ color: theme.colors["text-weak"] || "#ffffff", opacity: 0.5 }}>
               Generate beautiful desktop themes with the color wheel
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <input
+            <input
             type="text"
             value={themeName}
             onChange={(e) => setThemeName(e.target.value)}
@@ -409,7 +528,7 @@ const App: React.FC = () => {
             style={{
               backgroundColor: "transparent",
               borderColor: "rgba(255,255,255,0.1)",
-              color: theme.colors.foreground,
+              color: theme.colors["text-base"] || "#ffffff",
             }}
             placeholder="Theme name"
           />
@@ -418,8 +537,8 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("palette")}
               className="px-4 py-1.5 text-sm font-medium transition-colors"
               style={{
-                backgroundColor: activeTab === "palette" ? theme.colors.primary : "transparent",
-                color: activeTab === "palette" ? "#ffffff" : theme.colors.foreground,
+                backgroundColor: activeTab === "palette" ? (theme.colors["surface-brand-base"] || "#6366f1") : "transparent",
+                color: activeTab === "palette" ? "#ffffff" : (theme.colors["text-base"] || "#ffffff"),
               }}
             >
               Palette
@@ -428,8 +547,8 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("export")}
               className="px-4 py-1.5 text-sm font-medium transition-colors"
               style={{
-                backgroundColor: activeTab === "export" ? theme.colors.primary : "transparent",
-                color: activeTab === "export" ? "#ffffff" : theme.colors.foreground,
+                backgroundColor: activeTab === "export" ? (theme.colors["surface-brand-base"] || "#6366f1") : "transparent",
+                color: activeTab === "export" ? "#ffffff" : (theme.colors["text-base"] || "#ffffff"),
               }}
             >
               Export
@@ -444,7 +563,7 @@ const App: React.FC = () => {
             {/* Color Wheel */}
             <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors.foreground }}>Color Wheel</h2>
+                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Color Wheel</h2>
               </div>
               <ColorWheel hsl={baseColor} paletteGroups={paletteGroups} onChange={handleColorChange} />
             </div>
@@ -452,19 +571,8 @@ const App: React.FC = () => {
             {/* Matrix Router */}
             <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               <div className="px-4 py-2.5 border-b flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors.foreground }}>Matrix Router</h2>
+                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Matrix Router</h2>
                 <div className="flex items-center gap-2">
-                  {/* Opencode Mode Toggle */}
-                  <button
-                    onClick={() => setUseOpencodeMode(!useOpencodeMode)}
-                    style={{
-                      backgroundColor: useOpencodeMode ? "rgba(34, 197, 94, 0.2)" : "rgba(255,255,255,0.05)",
-                      color: useOpencodeMode ? "#22c55e" : "rgba(255,255,255,0.6)",
-                    }}
-                    className="text-xs px-3 py-1 rounded transition-colors"
-                  >
-                    {useOpencodeMode ? "◉ 9-Seed" : "○ 7-Seed"}
-                  </button>
                   <button
                     onClick={() => setMatrixMode(!matrixMode)}
                     style={{
@@ -493,7 +601,7 @@ const App: React.FC = () => {
                       )}
                       {writeStatus === "success" && (
                         <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-                          ✓ Saved to custom-theme.css
+                          ✓ Saved to custom-theme.json
                         </span>
                       )}
                     </div>
@@ -516,9 +624,9 @@ const App: React.FC = () => {
                         WCAG Compliance
                       </span>
                       {(() => {
-                        const textOnBg = getContrastScore(opencodeTheme["background-base"], opencodeTheme["text-base"])
-                        const primaryText = getContrastScore(opencodeTheme["primary-base"], opencodeTheme["primary-text"])
-                        const textOnSurface = getContrastScore(opencodeTheme["surface-base"], opencodeTheme["text-base"])
+                        const textOnBg = getContrastScore(themeColors["background-base"], themeColors["text-base"])
+                        const primaryText = getContrastScore(themeColors["surface-brand-base"], themeColors["text-on-brand-base"])
+                        const textOnSurface = getContrastScore(themeColors["surface-base"], themeColors["text-base"])
                         const allPass = textOnBg.pass && primaryText.pass && textOnSurface.pass
                         return (
                           <span className={`text-xs px-2 py-0.5 rounded ${allPass ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
@@ -532,7 +640,7 @@ const App: React.FC = () => {
                   {/* Seeds Row */}
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-xs uppercase tracking-wider w-24" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      {useOpencodeMode ? "Seeds (9)" : "Seeds (7)"}
+                      9-Seed Palette
                     </span>
                     <div className="flex gap-1">
                       {seeds9.map((seed, idx) => (
@@ -556,9 +664,7 @@ const App: React.FC = () => {
                   {/* Matrix Grid */}
                   <div className="space-y-1 max-h-[600px] overflow-y-auto">
                     {MATRIX_PROPERTIES.map((property) => {
-                      const currentColor = useOpencodeMode
-                        ? opencodeTheme[property as keyof OpencodeThemeColors]
-                        : theme.colors[property as keyof typeof theme.colors]
+                      const currentColor = themeColors[property as keyof OpencodeThemeColors]
                       const isOverridden = property in manualOverrides
 
                       return (
@@ -569,26 +675,6 @@ const App: React.FC = () => {
                               delete updated[property]
                               setManualOverrides(updated)
                               setActivePreset(null)
-
-                              // Write updated overrides
-                              if (Object.keys(updated).length > 0) {
-                                setWriteStatus("writing")
-                                const themeWithOverrides = {
-                                  ...theme,
-                                  colors: { ...theme.colors, ...updated },
-                                }
-                                writeCustomThemeFile(themeWithOverrides)
-                                  .then(() => {
-                                    setWriteStatus("success")
-                                    setTimeout(() => setWriteStatus("idle"), 2000)
-                                  })
-                                  .catch(() => {
-                                    setWriteStatus("error")
-                                    setTimeout(() => setWriteStatus("idle"), 2000)
-                                  })
-                              } else {
-                                setWriteStatus("idle")
-                              }
                             }}
                             className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
                               isOverridden
@@ -619,20 +705,6 @@ const App: React.FC = () => {
                                     const newOverrides = { ...manualOverrides, [property]: seed.hex }
                                     setManualOverrides(newOverrides)
                                     setActivePreset(null)
-                                    setWriteStatus("writing")
-                                    const themeWithOverrides = {
-                                      ...theme,
-                                      colors: { ...theme.colors, ...newOverrides },
-                                    }
-                                    writeCustomThemeFile(themeWithOverrides)
-                                      .then(() => {
-                                        setWriteStatus("success")
-                                        setTimeout(() => setWriteStatus("idle"), 2000)
-                                      })
-                                      .catch(() => {
-                                        setWriteStatus("error")
-                                        setTimeout(() => setWriteStatus("idle"), 2000)
-                                      })
                                   }}
                                   className={`w-8 h-6 rounded transition-all relative ${
                                     isSelected ? "ring-2 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110" : "hover:scale-105"
@@ -666,7 +738,7 @@ const App: React.FC = () => {
             {/* Configuration */}
             <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors.foreground }}>Configuration</h2>
+                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Configuration</h2>
               </div>
               <div className="p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
@@ -679,7 +751,7 @@ const App: React.FC = () => {
                       style={{
                         backgroundColor: "transparent",
                         borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors.foreground,
+                        color: theme.colors["text-base"] || "#ffffff",
                       }}
                     >
                       {harmonyOptions.map((opt) => (
@@ -698,7 +770,7 @@ const App: React.FC = () => {
                       style={{
                         backgroundColor: "transparent",
                         borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors.foreground,
+                        color: theme.colors["text-base"] || "#ffffff",
                       }}
                     >
                       {variantStrategyOptions.map((opt) => (
@@ -765,7 +837,7 @@ const App: React.FC = () => {
             {/* Randomizers */}
             <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors.foreground }}>Randomizers</h2>
+                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Randomizers</h2>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-3 gap-2 mb-3">
@@ -885,7 +957,7 @@ const App: React.FC = () => {
           <div className="lg:col-span-7 space-y-4">
             {activeTab === "palette" ? (
               <>
-                <ThemePreview theme={useOpencodeMode ? opencodeTheme : theme.colors} />
+                <ThemePreview theme={themeColors} />
 
                 {/* Opencode Theme Presets */}
                 <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
@@ -922,68 +994,37 @@ const App: React.FC = () => {
 
                 <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-800">
-                    <h2 className="text-sm font-semibold">{useOpencodeMode ? "9-Seed Palette" : "Generated Palette"}</h2>
+                    <h2 className="text-sm font-semibold">9-Seed Palette</h2>
                   </div>
                   <div className="p-4">
-                    {useOpencodeMode ? (
-                      <div className="grid grid-cols-3 gap-4">
-                        {seeds9.map((seed, idx) => {
-                          const variants = seedVariants[seed.name] || []
-                          return (
-                            <div key={idx} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-6 h-6 rounded-full border border-gray-600"
-                                  style={{ backgroundColor: seed.hex }}
-                                />
-                                <span className="text-xs font-medium capitalize">{seed.name}</span>
-                                <span className="text-[10px] text-gray-500">{seed.hex}</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1">
-                                {variants.slice(0, 5).map((hex, vIdx) => (
-                                  <button
-                                    key={vIdx}
-                                    onClick={() => handleCopy(hex)}
-                                    className="w-6 h-6 rounded transition-transform hover:scale-110"
-                                    style={{ backgroundColor: hex }}
-                                    title={hex}
-                                  />
-                                ))}
-                              </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      {seeds9.map((seed, idx) => {
+                        const variants = seedVariants[seed.name] || []
+                        return (
+                          <div key={idx} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-6 h-6 rounded-full border border-gray-600"
+                                style={{ backgroundColor: seed.hex }}
+                              />
+                              <span className="text-xs font-medium capitalize">{seed.name}</span>
+                              <span className="text-[10px] text-gray-500">{seed.hex}</span>
                             </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      allVariants.map((av, idx) => (
-                        <div key={idx} className="mb-6 last:mb-0">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div
-                              className="w-6 h-6 rounded-full border border-gray-600"
-                              style={{ backgroundColor: av.group.base.hex }}
-                            />
-                            <span className="text-sm font-medium capitalize">{av.group.base.name}</span>
+                            <div className="flex flex-wrap gap-1">
+                              {variants.slice(0, 5).map((hex, vIdx) => (
+                                <button
+                                  key={vIdx}
+                                  onClick={() => handleCopy(hex)}
+                                  className="w-6 h-6 rounded transition-transform hover:scale-110"
+                                  style={{ backgroundColor: hex }}
+                                  title={hex}
+                                />
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-1">
-                            {av.variants.map((variant, vIdx) => (
-                              <button
-                                key={vIdx}
-                                onClick={() => handleCopy(variant.hex)}
-                                className="group relative w-10 h-10 rounded-lg transition-transform hover:scale-110 hover:z-10"
-                                style={{ backgroundColor: variant.hex }}
-                              >
-                                <span
-                                  className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] bg-gray-900 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                  style={{ color: variant.hex }}
-                                >
-                                  {variant.hex}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))
-                    )}
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -992,17 +1033,17 @@ const App: React.FC = () => {
                     <h2 className="text-sm font-semibold">Theme Colors</h2>
                   </div>
                   <div className="p-4 grid grid-cols-2 gap-3">
-                    {Object.entries(useOpencodeMode ? opencodeTheme : theme.colors).map(([key, value]) => (
+                    {Object.entries(themeColors).map(([key, value]) => (
                       <div key={key} className="flex items-center gap-3 p-2 rounded-lg bg-gray-800">
                         <div
                           className="w-10 h-10 rounded-lg border border-gray-600 flex-shrink-0"
-                          style={{ backgroundColor: value }}
+                          style={{ backgroundColor: value as string }}
                         />
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-medium capitalize">{key}</div>
-                          <div className="text-[10px] text-gray-400 font-mono truncate">{value}</div>
+                          <div className="text-[10px] text-gray-400 font-mono truncate">{value as string}</div>
                         </div>
-                        <button onClick={() => handleCopy(value)} className="p-1.5 hover:bg-gray-700 rounded transition-colors">
+                        <button onClick={() => handleCopy(value as string)} className="p-1.5 hover:bg-gray-700 rounded transition-colors">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                               strokeLinecap="round"
@@ -1038,8 +1079,6 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
-
-            <ThemePreview theme={useOpencodeMode ? opencodeTheme : theme.colors} />
           </div>
         </div>
       </main>

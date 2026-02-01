@@ -60,26 +60,105 @@ export const exportToTailwind = (theme: DesktopTheme): string => {
   return `module.exports = {\n  theme: {\n    extend: {\n      colors: ${JSON.stringify(colors, null, 6)}\n    }\n  }\n}`
 }
 
-export const exportToOpencode9SeedJSON = (name: string, colors: OpencodeThemeColors, seeds: SeedColor[]): string => {
+export const exportToOpencode9SeedJSON = (
+  name: string,
+  colors: OpencodeThemeColors,
+  seeds: SeedColor[],
+  manualOverrides: Record<string, string> = {}
+): string => {
   const seedMap: Record<string, string> = {}
+  
+  // Required keys for Opencode ThemeSeedColors
+  const requiredSeeds = [
+    'neutral', 'primary', 'success', 'warning', 'error', 
+    'info', 'interactive', 'diffAdd', 'diffDelete'
+  ]
+
   seeds.forEach(s => {
-    seedMap[s.name] = s.hex
+    const targetName = s.name as string
+    if (targetName === 'critical') {
+      seedMap['diffDelete'] = s.hex
+      if (!seedMap['error']) seedMap['error'] = s.hex
+    } else if (targetName === 'accent') {
+      seedMap['diffAdd'] = s.hex
+    } else {
+      seedMap[targetName] = s.hex
+    }
   })
 
-  const json = {
+  // Ensure all required seeds have a value (fallback to neutral if missing)
+  const neutralHex = seedMap['neutral'] || '#888888'
+  requiredSeeds.forEach(key => {
+    if (!seedMap[key]) {
+      seedMap[key] = neutralHex
+    }
+  })
+
+  const allOverrides: Record<string, string> = { ...colors }
+  Object.entries(manualOverrides).forEach(([key, value]) => {
+    allOverrides[key] = value
+  })
+
+  const json: OpencodeThemeJSON = {
     $schema: "https://opencode.ai/desktop-theme.json",
     name,
-    id: name.toLowerCase().replace(/\s+/g, "-"),
+    id: "custom-theme",
     light: {
       seeds: seedMap,
-      overrides: colors
+      overrides: allOverrides
     },
     dark: {
       seeds: seedMap,
-      overrides: colors
+      overrides: allOverrides
     }
   }
   return JSON.stringify(json, null, 2)
+}
+
+/**
+ * Write custom theme file to Opencode as JSON (9-Seed Mode)
+ */
+export const writeOpencode9ThemeFile = async (
+  name: string,
+  colors: OpencodeThemeColors,
+  seeds: SeedColor[],
+  overrides: Record<string, string>
+): Promise<{ success: boolean; error?: string }> => {
+  const jsonContent = exportToOpencode9SeedJSON(name, colors, seeds, overrides)
+  const json = JSON.parse(jsonContent)
+
+  const apiUrls = [
+    "/api/write-theme",
+    "http://localhost:3032/api/write-theme",
+    "http://127.0.0.1:3032/api/write-theme",
+  ]
+
+  let lastError = null
+
+  for (const apiUrl of apiUrls) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          json,
+          themeName: name,
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log("[writeOpencode9ThemeFile] Success:", result)
+        return { success: true }
+      }
+    } catch (error: any) {
+      lastError = error
+    }
+  }
+
+  return { success: false, error: lastError?.message || "Failed to write theme file" }
 }
 
 /**

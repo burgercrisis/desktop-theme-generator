@@ -10,12 +10,13 @@ const __dirname = path.dirname(__filename)
 // Resolve the Opencode desktop public directory path
 // From desktop-theme-generator, go up to opencode/packages/app/public
 const opencodePublicPath = path.resolve(__dirname, "../opencode/packages/app/public")
+const opencodeThemesPath = path.resolve(__dirname, "../opencode/packages/ui/src/theme/themes")
 
 export default defineConfig({
   plugins: [
     react(),
     themeWritePlugin({
-      themeDir: opencodePublicPath,
+      themeDirs: [opencodePublicPath, opencodeThemesPath],
       filename: "custom-theme.json",
     }),
   ],
