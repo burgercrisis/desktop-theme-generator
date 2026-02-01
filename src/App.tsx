@@ -6,10 +6,12 @@ import {
 } from "./utils/engine/harmonies"
 import {
   generateOpencodeThemeColors,
+  generateOpencodeSeeds,
   harmonyOptions,
   variantStrategyOptions,
   thematicPresets,
 } from "./utils/harmonies"
+import { generateVariants } from "./utils/engine/variants"
 import {
   exportToCSS,
   exportToJSON,
@@ -94,36 +96,28 @@ const App: React.FC = () => {
     )
   }, [baseColor, harmony, spread, variantCount, contrast, variantStrategy, colorSpace, outputSpace])
 
-  // Generate 9 seeds for Opencode mode (from palette groups)
+  // Generate 9 seeds for Opencode mode (functional seeds)
   const seeds9 = useMemo<SeedColor[]>(() => {
-    // Take first 9 groups or pad if fewer
-    const groups = paletteGroups.slice(0, 9)
-    const seedNames: SeedName[] = ["primary", "neutral", "success", "warning", "error", "info", "interactive", "diffAdd", "diffDelete"]
-    
-    return seedNames.map((name, i) => {
-      const group = groups[i % groups.length]
-      return {
-        name,
-        hex: group.base.hex,
-        hsl: group.base.hsl
-      }
-    })
-  }, [paletteGroups])
+    return generateOpencodeSeeds(baseColor)
+  }, [baseColor])
 
-  // Generate variants map for Opencode mapping
+  // Generate variants map for Opencode mapping (Engine-powered)
   const seedVariants = useMemo(() => {
     const variants: Record<string, string[]> = {}
-    seeds9.forEach((seed, i) => {
-      const group = paletteGroups[i % paletteGroups.length]
-      // Ensure the scale is complete by including the base color correctly from the engine's variants array
-      // group.variants already includes the base color (pushed in variants.ts)
-      // For Opencode mapping, we want to ensure we have a sufficient number of variants to sample from.
-      // If variantCount is low (e.g. 1), the scale is [left1, base, right1] (length 3).
-      // If variantCount is 5, the scale is [left5, left4, left3, left2, left1, base, right1, right2, right3, right4, right5] (length 11).
-      variants[seed.name] = group.variants.map((v) => v.hex)
+    seeds9.forEach((seed) => {
+      // Use the engine to generate variants for each functional seed
+      const variantsForSeed = generateVariants(
+        seed.hsl,
+        variantCount,
+        contrast,
+        variantStrategy,
+        colorSpace,
+        outputSpace
+      )
+      variants[seed.name] = variantsForSeed.map((v) => v.hex)
     })
     return variants
-  }, [seeds9, paletteGroups])
+  }, [seeds9, variantCount, contrast, variantStrategy, colorSpace, outputSpace])
 
   const allVariants = useMemo(() => {
     return paletteGroups.flatMap(group => [group.base, ...group.variants])
@@ -796,6 +790,38 @@ const App: React.FC = () => {
                 <div className="space-y-4 pt-2">
                   <div>
                     <div className="flex justify-between items-center mb-2">
+                      <label className="text-[10px] uppercase tracking-wide opacity-50">Saturation</label>
+                      <span className="text-xs font-mono opacity-60">{Math.round(baseColor.s)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={baseColor.s}
+                      onChange={(e) => setBaseColor({ ...baseColor, s: parseInt(e.target.value) })}
+                      className="w-full"
+                      style={{ accentColor: theme.colors["surface-brand-base"] }}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-[10px] uppercase tracking-wide opacity-50">Brightness</label>
+                      <span className="text-xs font-mono opacity-60">{Math.round(baseColor.l)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={baseColor.l}
+                      onChange={(e) => setBaseColor({ ...baseColor, l: parseInt(e.target.value) })}
+                      className="w-full"
+                      style={{ accentColor: theme.colors["surface-brand-base"] }}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
                       <label className="text-[10px] uppercase tracking-wide opacity-50">Spread / Angle</label>
                       <span className="text-xs font-mono opacity-60">{spread}°</span>
                     </div>
@@ -806,7 +832,7 @@ const App: React.FC = () => {
                       value={spread}
                       onChange={(e) => setSpread(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accentColor: theme.colors.accent }}
+                      style={{ accentColor: theme.colors["surface-interactive-base"] }}
                     />
                   </div>
 
@@ -822,7 +848,7 @@ const App: React.FC = () => {
                       value={variantCount}
                       onChange={(e) => setVariantCount(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accentColor: theme.colors.secondary }}
+                      style={{ accentColor: theme.colors["surface-success-base"] }}
                     />
                   </div>
 
@@ -838,7 +864,7 @@ const App: React.FC = () => {
                       value={contrast}
                       onChange={(e) => setContrast(parseInt(e.target.value))}
                       className="w-full"
-                      style={{ accentColor: theme.colors.primary }}
+                      style={{ accentColor: theme.colors["surface-warning-base"] }}
                     />
                   </div>
                 </div>

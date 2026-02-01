@@ -2,15 +2,15 @@ import { hslToHex } from "./colorUtils"
 import { HSL, HarmonyRule, VariantStrategy, SeedColor, OpencodeThemeColors } from "../types"
 
 export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
-  { name: "neutral", hex: "#8e8b8b", hsl: { h: 20, s: 5, l: 55 } },
   { name: "primary", hex: hslToHex(baseColor.h, baseColor.s, baseColor.l), hsl: baseColor },
+  { name: "neutral", hex: "#8e8b8b", hsl: { h: baseColor.h, s: 5, l: 55 } },
   { name: "interactive", hex: hslToHex((baseColor.h + 30) % 360, Math.min(100, baseColor.s + 30), 50), hsl: { h: (baseColor.h + 30) % 360, s: Math.min(100, baseColor.s + 30), l: 50 } },
   { name: "success", hex: "#12c905", hsl: { h: 115, s: 70, l: 40 } },
+  { name: "warning", hex: "#ffb224", hsl: { h: 40, s: 95, l: 50 } },
   { name: "error", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } },
   { name: "info", hex: "#a753ae", hsl: { h: 295, s: 55, l: 52 } },
-  { name: "warning", hex: "#ffb224", hsl: { h: 40, s: 95, l: 50 } },
-  { name: "accent", hex: hslToHex((baseColor.h + 180) % 360, Math.min(100, baseColor.s + 20), 55), hsl: { h: (baseColor.h + 180) % 360, s: Math.min(100, baseColor.s + 20), l: 55 } },
-  { name: "critical", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } }
+  { name: "diffAdd", hex: "#12c905", hsl: { h: 115, s: 70, l: 40 } },
+  { name: "diffDelete", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } }
 ]
 
 export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record<string, string[]>): OpencodeThemeColors => {

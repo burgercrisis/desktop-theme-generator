@@ -95,11 +95,11 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
   const wheelBackground = useMemo(() => {
     const stops: string[] = [];
     for (let h = 0; h <= 360; h += 8) {
-      const hex = hslToHex(h, 100, 50);
+      const hex = hslToHex(h, 100, hsl.l);
       stops.push(`${hex} ${h}deg`);
     }
     return `conic-gradient(${stops.join(', ')})`;
-  }, []);
+  }, [hsl.l]);
 
   const getPosition = (h: number, s: number) => {
     const rad = (h - 90) * (Math.PI / 180);
@@ -158,7 +158,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
     return lines;
   }, [paletteGroups, center]);
 
-  const centerColor = hslToHex(hsl.h, 0, hsl.l);
+  const centerColor = hslToHex(hsl.h, hsl.s, hsl.l);
 
   return (
     <div className="relative flex items-center justify-center p-4 select-none">
@@ -182,7 +182,8 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
         />
 
         <svg width={wheelSize} height={wheelSize} className="absolute inset-0 pointer-events-none">
-          <circle cx={center} cy={center} r={innerRadius} fill={centerColor} fillOpacity="0.3" />
+          <circle cx={center} cy={center} r={innerRadius} fill={centerColor} />
+          <circle cx={center} cy={center} r={innerRadius} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
         </svg>
 
         {paletteGroups.map((group, idx) => {
