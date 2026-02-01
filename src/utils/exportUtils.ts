@@ -127,7 +127,11 @@ export const writeOpencode9ThemeFile = async (
   const jsonContent = exportToOpencode9SeedJSON(name, colors, seeds, overrides)
   const json = JSON.parse(jsonContent)
 
-  const apiUrls = ["/api/write-theme"]
+  const apiUrls = [
+    "http://127.0.0.1:3032/api/write-theme",
+    "/api/write-theme",
+    "http://localhost:3032/api/write-theme",
+  ]
 
   let lastError = null
 
@@ -148,8 +152,11 @@ export const writeOpencode9ThemeFile = async (
         const result = await response.json()
         console.log("[writeOpencode9ThemeFile] Success:", result)
         return { success: true }
+      } else {
+        console.error(`[writeOpencode9ThemeFile] Failed to fetch ${apiUrl}: ${response.status} ${response.statusText}`)
       }
     } catch (error: any) {
+      console.error(`[writeOpencode9ThemeFile] Error fetching ${apiUrl}:`, error)
       lastError = error
     }
   }
