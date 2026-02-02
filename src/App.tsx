@@ -175,6 +175,11 @@ const App: React.FC = () => {
     return generateOpencodeThemeColors(darkSeeds9, hexVariants, true)
   }, [darkSeeds9, seedVariantsDark])
 
+  // Active variants for Matrix selection
+  const activeVariantsMap = useMemo(() => {
+    return activeMode === "light" ? seedVariantsLight : seedVariantsDark
+  }, [activeMode, seedVariantsLight, seedVariantsDark])
+
   // Active theme colors for UI display/preview
   const themeColors = useMemo<OpencodeThemeColors>(() => {
     const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
@@ -657,25 +662,34 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Seeds Row */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xs uppercase tracking-wider w-24" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      9-Seed Palette
+                  {/* Full Palette Overview */}
+                  <div className="flex flex-col gap-2 mb-6">
+                    <span className="text-xs uppercase tracking-wider opacity-50 font-semibold">
+                      Full Theme Palette
                     </span>
-                    <div className="flex gap-1">
-                      {seeds9.map((seed, idx) => (
-                        <div
-                          key={idx}
-                          className="w-8 h-8 rounded border flex flex-col items-center justify-center"
-                          style={{
-                            backgroundColor: seed.hex,
-                            borderColor: "rgba(255,255,255,0.2)",
-                          }}
-                          title={`${seed.name}: ${seed.hex}`}
-                        >
-                          <span className="text-[8px] font-bold" style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
-                            {seed.name.charAt(0).toUpperCase()}
-                          </span>
+                    <div className="flex flex-col gap-1.5">
+                      {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
+                        <div key={seedName} className="flex items-center gap-2">
+                          <span className="text-[10px] w-16 opacity-60 capitalize">{seedName}</span>
+                          <div className="flex gap-1">
+                            {variants.map((variant, vIdx) => (
+                              <div
+                                key={`${seedName}-${vIdx}`}
+                                className={`w-8 h-8 rounded border flex items-center justify-center transition-transform hover:scale-110`}
+                                style={{
+                                  backgroundColor: variant.hex,
+                                  borderColor: "rgba(255,255,255,0.2)",
+                                }}
+                                title={`${seedName} variant ${vIdx}: ${variant.hex}`}
+                              >
+                                {variant.isBase && (
+                                  <span className="text-[8px] font-bold" style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                                    ●
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -716,43 +730,40 @@ const App: React.FC = () => {
                             title={`Calculated: ${currentColor}`}
                           />
 
-                          <div className="flex gap-0.5 ml-2">
-                            {/* Seeds column */}
-                            {seeds9.map((seed, idx) => {
-                              const isSelected = currentColor === seed.hex
-                              const whiteContrast = getContrastRatio(seed.hex, "#ffffff")
-                              const blackContrast = getContrastRatio(seed.hex, "#000000")
-                              const bestContrast = Math.max(whiteContrast, blackContrast)
-                              const wcagLevel = getWCAGLevel(bestContrast)
+                          <div className="flex flex-wrap gap-1 ml-2 max-w-[400px]">
+                            {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
+                              <div key={`${property}-${seedName}`} className="flex gap-0.5 p-0.5 rounded bg-white/5">
+                                {variants.map((variant, idx) => {
+                                  const isSelected = currentColor === variant.hex
+                                  const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
+                                  const blackContrast = getContrastRatio(variant.hex, "#000000")
+                                  const bestContrast = Math.max(whiteContrast, blackContrast)
+                                  const wcagLevel = getWCAGLevel(bestContrast)
 
-                              return (
-                                <button
-                                  key={`seed-${idx}`}
-                                  onClick={() => {
-                                    const newOverrides = { ...manualOverrides, [property]: seed.hex }
-                                    setManualOverrides(newOverrides)
-                                    setActivePreset(null)
-                                  }}
-                                  className={`w-8 h-6 rounded transition-all relative ${
-                                    isSelected ? "ring-2 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110" : "hover:scale-105"
-                                  }`}
-                                  style={{ backgroundColor: seed.hex }}
-                                  title={`${seed.name}: ${seed.hex} (${bestContrast.toFixed(1)}:1 ${wcagLevel})`}
-                                >
-                                  <div
-                                    className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
-                                      bestContrast >= 7
-                                        ? "bg-green-400"
-                                        : bestContrast >= 4.5
-                                          ? "bg-green-400"
-                                          : bestContrast >= 3
-                                            ? "bg-yellow-400"
-                                            : "bg-red-400"
-                                    }`}
-                                  />
-                                </button>
-                              )
-                            })}
+                                  return (
+                                    <button
+                                      key={`${property}-${seedName}-${idx}`}
+                                      onClick={() => {
+                                        const newOverrides = { ...manualOverrides, [property]: variant.hex }
+                                        setManualOverrides(newOverrides)
+                                        setActivePreset(null)
+                                      }}
+                                      className={`w-5 h-4 rounded-sm transition-all relative ${
+                                        isSelected ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110 z-10" : "hover:scale-105"
+                                      }`}
+                                      style={{ backgroundColor: variant.hex }}
+                                      title={`${seedName} variant ${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1 ${wcagLevel})`}
+                                    >
+                                      {variant.isBase && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                          <div className="w-0.5 h-0.5 rounded-full bg-white opacity-40" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )
