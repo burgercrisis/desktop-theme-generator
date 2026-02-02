@@ -12,6 +12,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const hslRef = useRef(hsl);
+  const lastUpdateRef = useRef<number>(0);
 
   // Update ref whenever hsl prop changes
   useEffect(() => {
@@ -23,8 +24,14 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
   const outerRadius = 145;
   const innerRadius = 55;
 
-  const handleInteraction = useCallback((clientX: number, clientY: number) => {
+  const handleInteraction = useCallback((clientX: number, clientY: number, force = false) => {
     if (!containerRef.current) return;
+    
+    // Throttle updates to ~60fps (16ms) unless forced
+    const now = Date.now();
+    if (!force && now - lastUpdateRef.current < 16) return;
+    lastUpdateRef.current = now;
+
     const rect = containerRef.current.getBoundingClientRect();
     
     const x = clientX - (rect.left + rect.width / 2);
@@ -48,13 +55,13 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ hsl, paletteGroups, onChange })
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
-    handleInteraction(e.clientX, e.clientY);
+    handleInteraction(e.clientX, e.clientY, true);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
     setIsDragging(true);
-    handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
+    handleInteraction(e.touches[0].clientX, e.touches[0].clientY, true);
   };
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react"
+import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import { getContrastScore, getContrastRatio, getWCAGLevel, hexToHsl } from "./utils/colorUtils"
@@ -84,45 +84,67 @@ const App: React.FC = () => {
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
   const [writeError, setWriteError] = useState<string | null>(null)
 
-  // Persistence effects
-  React.useEffect(() => localStorage.setItem("baseColor", JSON.stringify(baseColor)), [baseColor])
-  React.useEffect(() => localStorage.setItem("harmony", JSON.stringify(harmony)), [harmony])
-  React.useEffect(() => localStorage.setItem("spread", JSON.stringify(spread)), [spread])
-  React.useEffect(() => localStorage.setItem("variantCount", JSON.stringify(variantCount)), [variantCount])
-  React.useEffect(() => localStorage.setItem("saturation", JSON.stringify(saturation)), [saturation])
-  React.useEffect(() => localStorage.setItem("lightBrightness", JSON.stringify(lightBrightness)), [lightBrightness])
-  React.useEffect(() => localStorage.setItem("darkBrightness", JSON.stringify(darkBrightness)), [darkBrightness])
-  React.useEffect(() => localStorage.setItem("lightContrast", JSON.stringify(lightContrast)), [lightContrast])
-  React.useEffect(() => localStorage.setItem("darkContrast", JSON.stringify(darkContrast)), [darkContrast])
-  React.useEffect(() => localStorage.setItem("variantStrategy", JSON.stringify(variantStrategy)), [variantStrategy])
-  React.useEffect(() => localStorage.setItem("colorSpace", JSON.stringify(colorSpace)), [colorSpace])
-  React.useEffect(() => localStorage.setItem("outputSpace", JSON.stringify(outputSpace)), [outputSpace])
-  React.useEffect(() => localStorage.setItem("useOpencodeMode", JSON.stringify(useOpencodeMode)), [useOpencodeMode])
-  React.useEffect(() => localStorage.setItem("themeName", JSON.stringify(themeName)), [themeName])
-  React.useEffect(() => localStorage.setItem("matrixMode", JSON.stringify(matrixMode)), [matrixMode])
-  React.useEffect(() => localStorage.setItem("manualOverrides", JSON.stringify(manualOverrides)), [manualOverrides])
-  React.useEffect(() => localStorage.setItem("seedOverrides", JSON.stringify(seedOverrides)), [seedOverrides])
+  // DEFERRED INPUTS: Use React 18 Deferred Value to keep sliders/wheel snappy
+  // while offloading heavy palette & WCAG calculations to background priority
+  const deferredBaseColor = useDeferredValue(baseColor)
+  const deferredHarmony = useDeferredValue(harmony)
+  const deferredSpread = useDeferredValue(spread)
+  const deferredVariantCount = useDeferredValue(variantCount)
+  const deferredSaturation = useDeferredValue(saturation)
+  const deferredLightBrightness = useDeferredValue(lightBrightness)
+  const deferredDarkBrightness = useDeferredValue(darkBrightness)
+  const deferredLightContrast = useDeferredValue(lightContrast)
+  const deferredDarkContrast = useDeferredValue(darkContrast)
+  const deferredVariantStrategy = useDeferredValue(variantStrategy)
+  const deferredManualOverrides = useDeferredValue(manualOverrides)
+  const deferredSeedOverrides = useDeferredValue(seedOverrides)
+
+  // Persistence effect: Consolidated and DEBOUNCED to reduce localStorage I/O overhead
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const stateToSave = {
+        baseColor, harmony, spread, variantCount, saturation,
+        lightBrightness, darkBrightness, lightContrast, darkContrast,
+        variantStrategy, colorSpace, outputSpace, useOpencodeMode,
+        themeName, matrixMode, manualOverrides, seedOverrides
+      }
+      Object.entries(stateToSave).forEach(([key, value]) => {
+        try {
+          localStorage.setItem(key, JSON.stringify(value))
+        } catch (e) {
+          console.warn(`[App] Failed to save ${key} to localStorage:`, e)
+        }
+      })
+    }, 1000) // Increase debounce to 1s to be safe
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    baseColor, harmony, spread, variantCount, saturation,
+    lightBrightness, darkBrightness, lightContrast, darkContrast,
+    variantStrategy, colorSpace, outputSpace, useOpencodeMode,
+    themeName, matrixMode, manualOverrides, seedOverrides
+  ])
 
   // Holistic palette generation using the new modular engine
   const paletteGroups = useMemo(() => {
     return generateHarmony(
-      baseColor, 
-      harmony, 
-      spread, 
-      variantCount, 
-      activeMode === "light" ? lightContrast : darkContrast, 
-      activeMode === "light" ? lightBrightness : darkBrightness,
-      variantStrategy,
+      deferredBaseColor, 
+      deferredHarmony, 
+      deferredSpread, 
+      deferredVariantCount, 
+      activeMode === "light" ? deferredLightContrast : deferredDarkContrast, 
+      activeMode === "light" ? deferredLightBrightness : deferredDarkBrightness,
+      deferredVariantStrategy,
       colorSpace,
       outputSpace
     )
-  }, [baseColor, harmony, spread, variantCount, activeMode, lightContrast, darkContrast, lightBrightness, darkBrightness, variantStrategy, colorSpace, outputSpace])
+  }, [deferredBaseColor, deferredHarmony, deferredSpread, deferredVariantCount, activeMode, deferredLightContrast, deferredDarkContrast, deferredLightBrightness, deferredDarkBrightness, deferredVariantStrategy, colorSpace, outputSpace])
 
   // Generate 9 seeds for Opencode mode (functional seeds) - Separate for Light/Dark
   const lightSeeds9 = useMemo<SeedColor[]>(() => {
-    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
+    const baseSeeds = generateOpencodeSeeds(deferredBaseColor, deferredHarmony, deferredSpread, deferredLightBrightness)
     return baseSeeds.map(seed => {
-      const overrideHex = seedOverrides.light?.[seed.name]
+      const overrideHex = deferredSeedOverrides.light?.[seed.name]
       if (overrideHex) {
         return {
           ...seed,
@@ -132,12 +154,12 @@ const App: React.FC = () => {
       }
       return seed
     })
-  }, [baseColor, harmony, spread, lightBrightness, seedOverrides.light])
+  }, [deferredBaseColor, deferredHarmony, deferredSpread, deferredLightBrightness, deferredSeedOverrides.light])
 
   const darkSeeds9 = useMemo<SeedColor[]>(() => {
-    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
+    const baseSeeds = generateOpencodeSeeds(deferredBaseColor, deferredHarmony, deferredSpread, deferredDarkBrightness)
     return baseSeeds.map(seed => {
-      const overrideHex = seedOverrides.dark?.[seed.name]
+      const overrideHex = deferredSeedOverrides.dark?.[seed.name]
       if (overrideHex) {
         return {
           ...seed,
@@ -147,7 +169,7 @@ const App: React.FC = () => {
       }
       return seed
     })
-  }, [baseColor, harmony, spread, darkBrightness, seedOverrides.dark])
+  }, [deferredBaseColor, deferredHarmony, deferredSpread, deferredDarkBrightness, deferredSeedOverrides.dark])
 
   // Active seeds for UI display/preview
   const seeds9 = useMemo<SeedColor[]>(() => {
@@ -160,9 +182,9 @@ const App: React.FC = () => {
     lightSeeds9.forEach((seed) => {
       const variantsForSeed = generateVariants(
         seed.hsl,
-        variantCount,
-        lightContrast,
-        variantStrategy,
+        deferredVariantCount,
+        deferredLightContrast,
+        deferredVariantStrategy,
         colorSpace,
         outputSpace,
         50 // Always 50 because seed.hsl already has mode brightness baked in
@@ -170,16 +192,16 @@ const App: React.FC = () => {
       variants[seed.name] = variantsForSeed
     })
     return variants
-  }, [lightSeeds9, variantCount, lightContrast, variantStrategy, colorSpace, outputSpace])
+  }, [lightSeeds9, deferredVariantCount, deferredLightContrast, deferredVariantStrategy, colorSpace, outputSpace])
 
   const seedVariantsDark = useMemo(() => {
     const variants: Record<string, ColorStop[]> = {}
     darkSeeds9.forEach((seed) => {
       const variantsForSeed = generateVariants(
         seed.hsl,
-        variantCount,
-        darkContrast,
-        variantStrategy,
+        deferredVariantCount,
+        deferredDarkContrast,
+        deferredVariantStrategy,
         colorSpace,
         outputSpace,
         50 // Always 50 because seed.hsl already has mode brightness baked in
@@ -187,7 +209,7 @@ const App: React.FC = () => {
       variants[seed.name] = variantsForSeed
     })
     return variants
-  }, [darkSeeds9, variantCount, darkContrast, variantStrategy, colorSpace, outputSpace])
+  }, [darkSeeds9, deferredVariantCount, deferredDarkContrast, deferredVariantStrategy, colorSpace, outputSpace])
 
   // Generate theme colors for both modes
   const lightThemeColors = useMemo<OpencodeThemeColors>(() => {
@@ -216,7 +238,7 @@ const App: React.FC = () => {
   // Active theme colors for UI display/preview
   const themeColors = useMemo<OpencodeThemeColors>(() => {
     const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
-    const currentOverrides = manualOverrides[activeMode] || {}
+    const currentOverrides = deferredManualOverrides[activeMode] || {}
     
     // Apply manual overrides
     const hasOverrides = Object.keys(currentOverrides).length > 0
@@ -225,7 +247,7 @@ const App: React.FC = () => {
     }
     
     return baseColors
-  }, [activeMode, lightThemeColors, darkThemeColors, manualOverrides])
+  }, [activeMode, lightThemeColors, darkThemeColors, deferredManualOverrides])
 
   // WCAG Compliance Pairs - Comprehensive list for checker
   const wcagPairs = useMemo(() => {
@@ -297,6 +319,8 @@ const App: React.FC = () => {
 
     return pairs
   }, [themeColors])
+
+  const deferredWcagPairs = useDeferredValue(wcagPairs)
 
   // Desktop theme object for export/preview
   const theme = useMemo<DesktopTheme>(() => {
@@ -499,31 +523,18 @@ const App: React.FC = () => {
   const lastWrittenRef = React.useRef<string>(localStorage.getItem("lastSyncedContent") || "")
   const isWritingRef = React.useRef<boolean>(false)
 
-  // Use a simpler dependency array for the effect to avoid unnecessary triggers
-  const themeDataString = useMemo(() => {
-    return JSON.stringify({
-      themeName,
-      lightThemeColors,
-      darkThemeColors,
-      lightSeeds9,
-      darkSeeds9,
-      manualOverrides
-    });
-  }, [themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides]);
-
   React.useEffect(() => {
     // "Instant" feel: 200ms debounce
     const timer = setTimeout(() => {
       if (isWritingRef.current || !useOpencodeMode) return
 
-      const data = JSON.parse(themeDataString);
       const currentContent = exportToOpencode9SeedJSON(
-        data.themeName, 
-        data.lightThemeColors,
-        data.darkThemeColors,
-        data.lightSeeds9, 
-        data.darkSeeds9,
-        data.manualOverrides
+        themeName, 
+        lightThemeColors,
+        darkThemeColors,
+        lightSeeds9, 
+        darkSeeds9,
+        manualOverrides
       )
       
       // CRITICAL: If content is same as what we know is on disk, STOP.
@@ -535,12 +546,12 @@ const App: React.FC = () => {
       isWritingRef.current = true
       
       writeOpencode9ThemeFile(
-        data.themeName, 
-        data.lightThemeColors,
-        data.darkThemeColors,
-        data.lightSeeds9, 
-        data.darkSeeds9,
-        data.manualOverrides
+        themeName, 
+        lightThemeColors,
+        darkThemeColors,
+        lightSeeds9, 
+        darkSeeds9,
+        manualOverrides
       )
         .then((res) => {
           if (res.success) {
@@ -565,7 +576,7 @@ const App: React.FC = () => {
     }, 200)
 
     return () => clearTimeout(timer)
-  }, [themeDataString, useOpencodeMode])
+  }, [themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides, useOpencodeMode])
 
   const handleColorChange = useCallback((hsl: HSL) => {
     setBaseColor(hsl)
@@ -831,7 +842,7 @@ const App: React.FC = () => {
                         <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
                           WCAG 2.1 Compliance Details
                         </span>
-                        <span className="text-[10px] opacity-50">Comprehensive check of {wcagPairs.length} color pairs</span>
+                        <span className="text-[10px] opacity-50">Comprehensive check of {deferredWcagPairs.length} color pairs</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
@@ -847,11 +858,11 @@ const App: React.FC = () => {
 
                     <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                       <div className="space-y-4">
-                        {Array.from(new Set(wcagPairs.map(p => p.category))).map(category => (
+                        {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
                           <div key={category} className="space-y-2">
                             <h3 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-1 border-b border-indigo-500/20 pb-1 mb-2">{category}</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {wcagPairs.filter(p => p.category === category).map(pair => {
+                              {deferredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = getContrastScore(pair.bg, pair.fg)
                                 const threshold = pair.isNonText ? 3 : 4.5
                                 const isFailing = score.ratio < threshold

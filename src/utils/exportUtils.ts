@@ -103,6 +103,8 @@ export const exportToOpencode9SeedJSON = (
   const darkSeedMap = getSeedMap(darkSeeds)
 
   // Include all calculated engine colors as the baseline, then apply manual overrides
+  // We filter the baseline to only include keys that exist in the OpencodeThemeColors type
+  // and then merge in the manual overrides which might contain custom keys.
   const lightOverrides: Record<string, string> = { ...lightColors, ...(manualOverrides.light || {}) }
   const darkOverrides: Record<string, string> = { ...darkColors, ...(manualOverrides.dark || {}) }
 
