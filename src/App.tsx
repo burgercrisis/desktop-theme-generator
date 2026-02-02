@@ -317,6 +317,34 @@ const App: React.FC = () => {
     addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background")
     addPair("Diff", "Diff Strong", "surface-diff-add-strong", "text-base", "Base text on strong diff background")
 
+    // --- SYNTAX HIGHLIGHTING ---
+    const syntaxTokens = [
+      "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 
+      "syntax-string", "syntax-number", "syntax-type", "syntax-operator", 
+      "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", 
+      "syntax-property", "syntax-constant"
+    ]
+    syntaxTokens.forEach(token => {
+      const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
+      addPair("Syntax", label, "background-base", token, `Syntax ${label} on editor background`)
+    })
+
+    // --- MARKDOWN ---
+    const markdownTokens = [
+      "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text",
+      "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong"
+    ]
+    markdownTokens.forEach(token => {
+      const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
+      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`)
+    })
+
+    // --- INDICATORS & UI ---
+    addPair("UI Elements", "Line Indicator", "background-base", "line-indicator", "Line indicator contrast", true)
+    addPair("UI Elements", "Line Indicator Active", "background-base", "line-indicator-active", "Active line indicator contrast", true)
+    addPair("UI Elements", "Tab Active", "background-base", "tab-active", "Active tab indicator contrast", true)
+    addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast")
+
     return pairs
   }, [themeColors])
 
@@ -448,18 +476,62 @@ const App: React.FC = () => {
     "icon-focus",
     "icon-weak-base",
     "icon-strong-base",
+    "icon-brand-base",
     "icon-interactive-base",
     "icon-success-base",
     "icon-warning-base",
     "icon-critical-base",
     "icon-info-base",
+    "icon-diff-add-base",
+    "icon-diff-delete-base",
 
-    // Inputs
-    "input-base",
-    "input-hover",
+    // Syntax
+    "syntax-comment",
+    "syntax-keyword",
+    "syntax-function",
+    "syntax-variable",
+    "syntax-string",
+    "syntax-number",
+    "syntax-type",
+    "syntax-operator",
+    "syntax-punctuation",
+    "syntax-object",
+    "syntax-regexp",
+    "syntax-primitive",
+    "syntax-property",
+    "syntax-constant",
+    "syntax-success",
+    "syntax-warning",
+    "syntax-critical",
+    "syntax-info",
+    "syntax-diff-add",
+    "syntax-diff-delete",
+
+    // Markdown
+    "markdown-text",
+    "markdown-heading",
+    "markdown-link",
+    "markdown-link-text",
+    "markdown-code",
+    "markdown-block-quote",
+    "markdown-emph",
+    "markdown-strong",
+    "markdown-horizontal-rule",
+    "markdown-list-item",
+
+    // Indicators & UI Extras
+    "line-indicator",
+    "line-indicator-active",
+    "line-indicator-hover",
+    "code-background",
+    "code-foreground",
+    "tab-active",
+    "tab-inactive",
+    "tab-hover",
+    "avatar-background",
+    "avatar-foreground",
     "input-active",
-
-    // Other
+    "input-disabled",
     "focus-ring",
     "scrollbar-thumb",
     "scrollbar-track",

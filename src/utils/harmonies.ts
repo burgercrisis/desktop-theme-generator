@@ -207,25 +207,35 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
     "surface-brand-hover": getFromScale(primaryScale, isDark ? 0.6 : 0.4, primaryHex),
+    "surface-brand-active": getFromScale(primaryScale, isDark ? 0.4 : 0.6, primaryHex),
     
     "surface-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
     "surface-interactive-hover": getFromScale(interactiveScale, isDark ? 0.6 : 0.4, interactiveHex),
+    "surface-interactive-active": getFromScale(interactiveScale, isDark ? 0.4 : 0.6, interactiveHex),
     "surface-interactive-weak": getFromScale(interactiveScale, pos(0.1), interactiveHex),
     "surface-interactive-weak-hover": getFromScale(interactiveScale, pos(0.15), interactiveHex),
     
     "surface-success-base": getFromScale(successScale, 0.5, successHex),
+    "surface-success-hover": getFromScale(successScale, isDark ? 0.6 : 0.4, successHex),
+    "surface-success-active": getFromScale(successScale, isDark ? 0.4 : 0.6, successHex),
     "surface-success-weak": getFromScale(successScale, pos(0.1), successHex),
     "surface-success-strong": getFromScale(successScale, pos(0.8), successHex),
     
     "surface-warning-base": getFromScale(warningScale, 0.5, warningHex),
+    "surface-warning-hover": getFromScale(warningScale, isDark ? 0.6 : 0.4, warningHex),
+    "surface-warning-active": getFromScale(warningScale, isDark ? 0.4 : 0.6, warningHex),
     "surface-warning-weak": getFromScale(warningScale, pos(0.1), warningHex),
     "surface-warning-strong": getFromScale(warningScale, pos(0.8), warningHex),
     
     "surface-critical-base": getFromScale(errorScale, 0.5, errorHex),
+    "surface-critical-hover": getFromScale(errorScale, isDark ? 0.6 : 0.4, errorHex),
+    "surface-critical-active": getFromScale(errorScale, isDark ? 0.4 : 0.6, errorHex),
     "surface-critical-weak": getFromScale(errorScale, pos(0.1), errorHex),
     "surface-critical-strong": getFromScale(errorScale, pos(0.8), errorHex),
     
     "surface-info-base": getFromScale(infoScale, 0.5, infoHex),
+    "surface-info-hover": getFromScale(infoScale, isDark ? 0.6 : 0.4, infoHex),
+    "surface-info-active": getFromScale(infoScale, isDark ? 0.4 : 0.6, infoHex),
     "surface-info-weak": getFromScale(infoScale, pos(0.1), infoHex),
     "surface-info-strong": getFromScale(infoScale, pos(0.8), infoHex),
     
@@ -306,6 +316,43 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "icon-critical-base": getFromScale(errorScale, 0.5, errorHex),
     "icon-info-base": getFromScale(infoScale, 0.5, infoHex),
     
+    "icon-diff-add-base": getFromScale(diffAddScale, 0.6, diffAddHex),
+    "icon-diff-delete-base": getFromScale(diffDeleteScale, 0.6, diffDeleteHex),
+    
+    // Syntax
+    "syntax-comment": getFromScale(primaryScale, pos(0.4), primaryHex),
+    "syntax-keyword": getFromScale(infoScale, pos(0.6), infoHex),
+    "syntax-function": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "syntax-variable": getFromScale(primaryScale, pos(0.8), primaryHex),
+    "syntax-string": getFromScale(successScale, pos(0.6), successHex),
+    "syntax-number": getFromScale(warningScale, pos(0.6), warningHex),
+    "syntax-type": getFromScale(infoScale, pos(0.7), infoHex),
+    "syntax-operator": getFromScale(interactiveScale, pos(0.4), interactiveHex),
+    "syntax-punctuation": getFromScale(primaryScale, pos(0.5), primaryHex),
+    "syntax-object": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "syntax-regexp": getFromScale(warningScale, pos(0.7), warningHex),
+    "syntax-primitive": getFromScale(warningScale, pos(0.5), warningHex),
+    "syntax-property": getFromScale(infoScale, pos(0.5), infoHex),
+    "syntax-constant": getFromScale(interactiveScale, pos(0.7), interactiveHex),
+    "syntax-success": getFromScale(successScale, pos(0.6), successHex),
+    "syntax-warning": getFromScale(warningScale, pos(0.6), warningHex),
+    "syntax-critical": getFromScale(errorScale, pos(0.6), errorHex),
+    "syntax-info": getFromScale(infoScale, pos(0.6), infoHex),
+    "syntax-diff-add": getFromScale(successScale, pos(0.6), successHex),
+    "syntax-diff-delete": getFromScale(errorScale, pos(0.6), errorHex),
+
+    // Markdown
+    "markdown-text": getFromScale(primaryScale, pos(0.8), primaryHex),
+    "markdown-heading": getFromScale(infoScale, pos(0.7), infoHex),
+    "markdown-link": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "markdown-link-text": getFromScale(interactiveScale, pos(0.5), interactiveHex),
+    "markdown-code": getFromScale(successScale, pos(0.6), successHex),
+    "markdown-block-quote": getFromScale(warningScale, pos(0.5), warningHex),
+    "markdown-emph": getFromScale(warningScale, pos(0.5), warningHex),
+    "markdown-strong": getFromScale(warningScale, pos(0.7), warningHex),
+    "markdown-horizontal-rule": getFromScale(primaryScale, pos(0.3), primaryHex),
+    "markdown-list-item": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+
     // Base tokens
     "primary-base": getFromScale(primaryScale, 0.5, primaryHex),
     "primary-hover": getFromScale(primaryScale, isDark ? 0.6 : 0.4, primaryHex),
@@ -352,22 +399,24 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "diff-delete-base": getFromScale(diffDeleteScale, 0.15, diffDeleteHex),
     "diff-delete-foreground": getFromScale(diffDeleteScale, 0.8, diffDeleteHex),
     
-    "code-background": getFromScale(primaryScale, 0.04, primaryHex),
-    "code-foreground": getFromScale(primaryScale, 0.85, primaryHex),
+    "code-background": getFromScale(primaryScale, pos(0.04), primaryHex),
+    "code-foreground": getFromScale(primaryScale, pos(0.85), primaryHex),
     
     "tab-active": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "tab-inactive": getFromScale(primaryScale, 0.15, primaryHex),
-    "tab-hover": getFromScale(primaryScale, 0.2, primaryHex),
+    "tab-inactive": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "tab-hover": getFromScale(primaryScale, pos(0.2), primaryHex),
     
-    "line-indicator": getFromScale(primaryScale, 0.2, primaryHex),
+    "line-indicator": getFromScale(primaryScale, pos(0.2), primaryHex),
     "line-indicator-active": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "line-indicator-hover": getFromScale(primaryScale, pos(0.3), primaryHex),
     
-    "avatar-background": getFromScale(primaryScale, 0.4, primaryHex),
-    "avatar-foreground": getFromScale(primaryScale, 0.95, primaryHex),
+    "avatar-background": getFromScale(primaryScale, pos(0.4), primaryHex),
+    "avatar-foreground": getFromScale(primaryScale, pos(0.95), primaryHex),
     
-    "input-base": getFromScale(primaryScale, 0.08, primaryHex),
-    "input-hover": getFromScale(primaryScale, 0.12, primaryHex),
-    "input-active": getFromScale(primaryScale, 0.16, primaryHex),
+    "input-base": getFromScale(primaryScale, pos(0.08), primaryHex),
+    "input-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
+    "input-active": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "input-disabled": getFromScale(neutralScale, pos(0.05), neutralHex),
     
     "scrollbar-thumb": getFromScale(primaryScale, 0.3, primaryHex),
     "scrollbar-track": getFromScale(primaryScale, 0.05, primaryHex),
