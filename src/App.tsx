@@ -646,18 +646,36 @@ const App: React.FC = () => {
                   <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
-                        WCAG Compliance
+                        WCAG 2.1 Compliance
                       </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       {(() => {
-                        const textOnBg = getContrastScore(themeColors["background-base"], themeColors["text-base"])
-                        const primaryText = getContrastScore(themeColors["surface-brand-base"], themeColors["text-on-brand-base"])
-                        const textOnSurface = getContrastScore(themeColors["surface-base"], themeColors["text-base"])
-                        const allPass = textOnBg.pass && primaryText.pass && textOnSurface.pass
-                        return (
-                          <span className={`text-xs px-2 py-0.5 rounded ${allPass ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-                            {allPass ? "✓ AA Compliant" : "⚠ Review Needed"}
-                          </span>
-                        )
+                        const pairs = [
+                          { label: "Main Text", bg: themeColors["background-base"], fg: themeColors["text-base"] },
+                          { label: "Brand Text", bg: themeColors["surface-brand-base"], fg: themeColors["text-on-brand-base"] },
+                          { label: "Surface Text", bg: themeColors["surface-base"], fg: themeColors["text-base"] },
+                          { label: "Success Text", bg: themeColors["surface-success-base"], fg: themeColors["text-on-success-base"] },
+                        ]
+                        return pairs.map(pair => {
+                          const score = getContrastScore(pair.bg, pair.fg)
+                          return (
+                            <div key={pair.label} className="flex items-center justify-between bg-white/5 p-1.5 rounded">
+                              <span className="text-[10px] opacity-60">{pair.label}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-mono">{score.ratio}:1</span>
+                                <span className={`text-[9px] px-1 rounded ${
+                                  score.level === 'AAA' ? "bg-green-500/30 text-green-300" :
+                                  score.level === 'AA' ? "bg-blue-500/30 text-blue-300" :
+                                  score.level === 'AA Large' ? "bg-yellow-500/30 text-yellow-300" :
+                                  "bg-red-500/30 text-red-300"
+                                }`}>
+                                  {score.level}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })
                       })()}
                     </div>
                   </div>
@@ -739,6 +757,7 @@ const App: React.FC = () => {
                                   const blackContrast = getContrastRatio(variant.hex, "#000000")
                                   const bestContrast = Math.max(whiteContrast, blackContrast)
                                   const wcagLevel = getWCAGLevel(bestContrast)
+                                  const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
 
                                   return (
                                     <button
@@ -748,16 +767,20 @@ const App: React.FC = () => {
                                         setManualOverrides(newOverrides)
                                         setActivePreset(null)
                                       }}
-                                      className={`w-5 h-4 rounded-sm transition-all relative ${
+                                      className={`w-5 h-4 rounded-sm transition-all relative flex items-center justify-center ${
                                         isSelected ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110 z-10" : "hover:scale-105"
                                       }`}
                                       style={{ backgroundColor: variant.hex }}
                                       title={`${seedName} variant ${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1 ${wcagLevel})`}
                                     >
                                       {variant.isBase && (
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                          <div className="w-0.5 h-0.5 rounded-full bg-white opacity-40" />
-                                        </div>
+                                        <div className="w-0.5 h-0.5 rounded-full bg-white opacity-40" />
+                                      )}
+                                      {isSelected && (
+                                        <div 
+                                          className="w-1.5 h-1.5 rounded-full" 
+                                          style={{ backgroundColor: contrastColor }}
+                                        />
                                       )}
                                     </button>
                                   )

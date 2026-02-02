@@ -95,9 +95,7 @@ export const adjustSaturation = (hex: string, amount: number): string => {
 };
 
 export const getContrastColor = (hex: string): string => {
-  const rgb = hexToRgb(hex);
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-  return luminance > 0.5 ? '#000000' : '#ffffff';
+  return getWCAGTextColor(hex);
 };
 
 export const interpolateColor = (color1: string, color2: string, factor: number): string => {
