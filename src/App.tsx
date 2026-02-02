@@ -245,15 +245,17 @@ const App: React.FC = () => {
     
     backgrounds.forEach(bg => {
       coreTexts.forEach(fg => {
-        addPair("Core Typography", `${fg.split('-')[1]} on ${bg.split('-')[1]}`, bg, fg, `${fg} on ${bg}`)
+        addPair("Core Typography", `${fg.split("-")[1]} on ${bg.split("-")[1]}`, bg, fg, `${fg} on ${bg}`)
       })
     })
 
-    // --- SURFACES ---
+    // --- SURFACES & HOVERS ---
     const mainSurfaces = ["surface-base", "surface-raised-base", "surface-float-base", "surface-weak", "surface-strong"]
     mainSurfaces.forEach(bg => {
-      addPair("Surfaces", `Base text on ${bg.split('-')[1]}`, bg, "text-base", `text-base on ${bg}`)
+      addPair("Surfaces", `Base text on ${bg.split("-")[1]}`, bg, "text-base", `text-base on ${bg}`)
     })
+    addPair("Surfaces", "Text on Hover", "surface-base-hover", "text-base", "Text on surface-base-hover")
+    addPair("Surfaces", "Text on Raised Hover", "surface-raised-base-hover", "text-base", "Text on surface-raised-base-hover")
 
     // --- BRAND & INTERACTIVE ---
     addPair("Brand & Action", "On Brand", "surface-brand-base", "text-on-brand-base", "Text on Brand Surface")
@@ -261,23 +263,37 @@ const App: React.FC = () => {
     addPair("Brand & Action", "On Interactive", "surface-interactive-base", "text-on-interactive-base", "Text on Interactive Surface")
     addPair("Brand & Action", "On Interactive Weak", "surface-interactive-weak", "text-on-interactive-weak", "Text on Interactive Weak Surface")
     addPair("Brand & Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background")
+    addPair("Brand & Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true)
+    addPair("Brand & Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true)
 
     // --- SEMANTIC STATES ---
-    addPair("Semantic", "Success", "surface-success-base", "text-on-success-base", "Success state contrast")
-    addPair("Semantic", "Warning", "surface-warning-base", "text-on-warning-base", "Warning state contrast")
-    addPair("Semantic", "Critical", "surface-critical-base", "text-on-critical-base", "Critical state contrast")
-    addPair("Semantic", "Info", "surface-info-base", "text-on-info-base", "Info state contrast")
+    const semanticTypes = ["success", "warning", "critical", "info"]
+    semanticTypes.forEach(type => {
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text`, `surface-${type}-base`, `text-on-${type}-base`, `${type} state text contrast`)
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true)
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true)
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Weak`, `surface-${type}-weak`, `text-on-${type}-base`, `Text on weak ${type} surface`)
+    })
+
+    // --- INPUTS ---
+    addPair("Inputs", "Input Text", "input-base", "text-base", "Text inside input field")
+    addPair("Inputs", "Input Border", "background-base", "border-base", "Input border on background", true)
+    addPair("Inputs", "Input Placeholder", "input-base", "text-weaker", "Placeholder text contrast")
+    addPair("Inputs", "Input Hover", "input-hover", "text-base", "Text in hovered input")
 
     // --- UI COMPONENTS (NON-TEXT 3:1) ---
     addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true)
     addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true)
-    addPair("UI Components", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true)
     addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true)
-    addPair("UI Components", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true)
+    addPair("UI Components", "Weak Icon", "background-base", "icon-weak-base", "Weak icon on background", true)
+    addPair("UI Components", "Invert Text", "background-stronger", "text-invert-base", "Inverted text contrast")
 
     // --- DIFF STATES ---
     addPair("Diff", "Add Text", "surface-diff-add-base", "text-diff-add-base", "Diff Add text contrast")
     addPair("Diff", "Delete Text", "surface-diff-delete-base", "text-diff-delete-base", "Diff Delete text contrast")
+    addPair("Diff", "Add Weak", "surface-diff-add-weak", "text-diff-add-base", "Add text on weak background")
+    addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background")
+    addPair("Diff", "Diff Strong", "surface-diff-add-strong", "text-base", "Base text on strong diff background")
 
     return pairs
   }, [themeColors])
