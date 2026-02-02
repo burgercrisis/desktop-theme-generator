@@ -1,19 +1,73 @@
 import { hslToHex } from "./colorUtils"
 import { HSL, HarmonyRule, VariantStrategy, SeedColor, OpencodeThemeColors } from "../types"
 
-export const generateOpencodeSeeds = (baseColor: HSL): SeedColor[] => [
-  { name: "primary", hex: hslToHex(baseColor.h, baseColor.s, baseColor.l), hsl: baseColor },
-  { name: "neutral", hex: "#8e8b8b", hsl: { h: baseColor.h, s: 5, l: 55 } },
-  { name: "interactive", hex: hslToHex((baseColor.h + 30) % 360, Math.min(100, baseColor.s + 30), 50), hsl: { h: (baseColor.h + 30) % 360, s: Math.min(100, baseColor.s + 30), l: 50 } },
-  { name: "success", hex: "#12c905", hsl: { h: 115, s: 70, l: 40 } },
-  { name: "warning", hex: "#ffb224", hsl: { h: 40, s: 95, l: 50 } },
-  { name: "error", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } },
-  { name: "info", hex: "#a753ae", hsl: { h: 295, s: 55, l: 52 } },
-  { name: "diffAdd", hex: "#12c905", hsl: { h: 115, s: 70, l: 40 } },
-  { name: "diffDelete", hex: "#fc533a", hsl: { h: 5, s: 85, l: 52 } }
-]
+export const generateOpencodeSeeds = (
+  baseColor: HSL, 
+  harmony: HarmonyRule = HarmonyRule.ANALOGOUS, 
+  spread: number = 30,
+  brightness: number = 50
+): SeedColor[] => {
+  const { h, s, l } = baseColor;
+  const lOffset = brightness - 50;
+  
+  // Helper to get harmony colors
+  const getHarmonyHue = (offset: number) => (h + offset + 360) % 360;
+  // Helper to apply brightness to HSL and return hex
+  const toHex = (hh: number, ss: number, ll: number) => {
+    const finalL = Math.max(0, Math.min(100, ll + lOffset));
+    return hslToHex(hh, ss, finalL);
+  };
+  const toHsl = (hh: number, ss: number, ll: number): HSL => ({
+    h: hh,
+    s: ss,
+    l: Math.max(0, Math.min(100, ll + lOffset))
+  });
 
-export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record<string, string[]>): OpencodeThemeColors => {
+  let interactiveHue = (h + 30) % 360;
+  let infoHue = 295;
+
+  // Adjust interactive and info based on harmony
+  switch (harmony) {
+    case HarmonyRule.COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(180);
+      break;
+    case HarmonyRule.ANALOGOUS:
+    case HarmonyRule.ANALOGOUS_5:
+      interactiveHue = getHarmonyHue(spread);
+      break;
+    case HarmonyRule.TRIADIC:
+      interactiveHue = getHarmonyHue(120);
+      infoHue = getHarmonyHue(240);
+      break;
+    case HarmonyRule.TETRADIC:
+    case HarmonyRule.SQUARE:
+      interactiveHue = getHarmonyHue(90);
+      infoHue = getHarmonyHue(180);
+      break;
+    case HarmonyRule.SPLIT_COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(180 - spread);
+      infoHue = getHarmonyHue(180 + spread);
+      break;
+  }
+
+  // Use global saturation for all semantic seeds to make the control "feel" alive
+  const semanticSat = Math.max(10, s); 
+  const neutralSat = Math.min(15, s * 0.2);
+
+  return [
+    { name: "primary", hex: toHex(h, s, l), hsl: toHsl(h, s, l) },
+    { name: "neutral", hex: toHex(h, neutralSat, 55), hsl: toHsl(h, neutralSat, 55) },
+    { name: "interactive", hex: toHex(interactiveHue, Math.min(100, s + 20), 50), hsl: toHsl(interactiveHue, Math.min(100, s + 20), 50) },
+    { name: "success", hex: toHex(115, semanticSat, 40), hsl: toHsl(115, semanticSat, 40) },
+    { name: "warning", hex: toHex(40, semanticSat, 50), hsl: toHsl(40, semanticSat, 50) },
+    { name: "error", hex: toHex(5, semanticSat, 52), hsl: toHsl(5, semanticSat, 52) },
+    { name: "info", hex: toHex(infoHue, semanticSat, 52), hsl: toHsl(infoHue, semanticSat, 52) },
+    { name: "diffAdd", hex: toHex(115, semanticSat, 40), hsl: toHsl(115, semanticSat, 40) },
+    { name: "diffDelete", hex: toHex(5, semanticSat, 52), hsl: toHsl(5, semanticSat, 52) }
+  ]
+}
+
+export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record<string, string[]>, isDark: boolean): OpencodeThemeColors => {
   const getFromScale = (scale: string[], position: number, fallback: string): string => {
     if (!scale || scale.length === 0) return fallback;
     // position 0 to 1
@@ -42,99 +96,102 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
   const diffAddHex = seeds.find(s => s.name === "diffAdd")?.hex || successHex
   const diffDeleteHex = seeds.find(s => s.name === "diffDelete")?.hex || errorHex
 
+  // Invert positions if light mode
+  const pos = (p: number) => isDark ? p : 1 - p;
+
   const converted: OpencodeThemeColors = {
-    // Backgrounds - Using very low positions for dark themes
-    "background-base": getFromScale(primaryScale, 0.02, primaryHex),
-    "background-weak": getFromScale(primaryScale, 0.05, primaryHex),
-    "background-strong": getFromScale(primaryScale, 0.08, primaryHex),
-    "background-stronger": getFromScale(primaryScale, 0.12, primaryHex),
+    // Backgrounds
+    "background-base": getFromScale(primaryScale, pos(0.02), primaryHex),
+    "background-weak": getFromScale(primaryScale, pos(0.05), primaryHex),
+    "background-strong": getFromScale(primaryScale, pos(0.08), primaryHex),
+    "background-stronger": getFromScale(primaryScale, pos(0.12), primaryHex),
     
     // Surfaces
-    "surface-base": getFromScale(primaryScale, 0.15, primaryHex),
-    "surface-base-hover": getFromScale(primaryScale, 0.20, primaryHex),
-    "surface-base-active": getFromScale(primaryScale, 0.25, primaryHex),
-    "surface-base-interactive-active": getFromScale(interactiveScale, 0.4, interactiveHex),
+    "surface-base": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "surface-base-hover": getFromScale(primaryScale, pos(0.20), primaryHex),
+    "surface-base-active": getFromScale(primaryScale, pos(0.25), primaryHex),
+    "surface-base-interactive-active": getFromScale(interactiveScale, pos(0.4), interactiveHex),
     
-    "surface-raised-base": getFromScale(primaryScale, 0.20, primaryHex),
-    "surface-raised-base-hover": getFromScale(primaryScale, 0.25, primaryHex),
-    "surface-raised-base-active": getFromScale(primaryScale, 0.30, primaryHex),
-    "surface-raised-strong": getFromScale(primaryScale, 0.35, primaryHex),
+    "surface-raised-base": getFromScale(primaryScale, pos(0.20), primaryHex),
+    "surface-raised-base-hover": getFromScale(primaryScale, pos(0.25), primaryHex),
+    "surface-raised-base-active": getFromScale(primaryScale, pos(0.30), primaryHex),
+    "surface-raised-strong": getFromScale(primaryScale, pos(0.35), primaryHex),
     
-    "surface-weak": getFromScale(neutralScale, 0.10, neutralHex),
-    "surface-weaker": getFromScale(neutralScale, 0.05, neutralHex),
-    "surface-strong": getFromScale(primaryScale, 0.40, primaryHex),
+    "surface-weak": getFromScale(neutralScale, pos(0.10), neutralHex),
+    "surface-weaker": getFromScale(neutralScale, pos(0.05), neutralHex),
+    "surface-strong": getFromScale(primaryScale, pos(0.40), primaryHex),
     
     "surface-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
-    "surface-brand-hover": getFromScale(primaryScale, 0.6, primaryHex),
+    "surface-brand-hover": getFromScale(primaryScale, isDark ? 0.6 : 0.4, primaryHex),
     
     "surface-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "surface-interactive-hover": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "surface-interactive-weak": getFromScale(interactiveScale, 0.1, interactiveHex),
-    "surface-interactive-weak-hover": getFromScale(interactiveScale, 0.15, interactiveHex),
+    "surface-interactive-hover": getFromScale(interactiveScale, isDark ? 0.6 : 0.4, interactiveHex),
+    "surface-interactive-weak": getFromScale(interactiveScale, pos(0.1), interactiveHex),
+    "surface-interactive-weak-hover": getFromScale(interactiveScale, pos(0.15), interactiveHex),
     
     "surface-success-base": getFromScale(successScale, 0.5, successHex),
-    "surface-success-weak": getFromScale(successScale, 0.1, successHex),
-    "surface-success-strong": getFromScale(successScale, 0.8, successHex),
+    "surface-success-weak": getFromScale(successScale, pos(0.1), successHex),
+    "surface-success-strong": getFromScale(successScale, pos(0.8), successHex),
     
     "surface-warning-base": getFromScale(warningScale, 0.5, warningHex),
-    "surface-warning-weak": getFromScale(warningScale, 0.1, warningHex),
-    "surface-warning-strong": getFromScale(warningScale, 0.8, warningHex),
+    "surface-warning-weak": getFromScale(warningScale, pos(0.1), warningHex),
+    "surface-warning-strong": getFromScale(warningScale, pos(0.8), warningHex),
     
     "surface-critical-base": getFromScale(errorScale, 0.5, errorHex),
-    "surface-critical-weak": getFromScale(errorScale, 0.1, errorHex),
-    "surface-critical-strong": getFromScale(errorScale, 0.8, errorHex),
+    "surface-critical-weak": getFromScale(errorScale, pos(0.1), errorHex),
+    "surface-critical-strong": getFromScale(errorScale, pos(0.8), errorHex),
     
     "surface-info-base": getFromScale(infoScale, 0.5, infoHex),
-    "surface-info-weak": getFromScale(infoScale, 0.1, infoHex),
-    "surface-info-strong": getFromScale(infoScale, 0.8, infoHex),
+    "surface-info-weak": getFromScale(infoScale, pos(0.1), infoHex),
+    "surface-info-strong": getFromScale(infoScale, pos(0.8), infoHex),
     
     "surface-diff-unchanged-base": "transparent",
-    "surface-diff-skip-base": getFromScale(primaryScale, 0.15, primaryHex),
+    "surface-diff-skip-base": getFromScale(primaryScale, pos(0.15), primaryHex),
     
-    "surface-diff-add-base": getFromScale(diffAddScale, 0.15, diffAddHex),
-    "surface-diff-add-weak": getFromScale(diffAddScale, 0.08, diffAddHex),
-    "surface-diff-add-weaker": getFromScale(diffAddScale, 0.04, diffAddHex),
-    "surface-diff-add-strong": getFromScale(diffAddScale, 0.4, diffAddHex),
-    "surface-diff-add-stronger": getFromScale(diffAddScale, 0.6, diffAddHex),
+    "surface-diff-add-base": getFromScale(diffAddScale, pos(0.15), diffAddHex),
+    "surface-diff-add-weak": getFromScale(diffAddScale, pos(0.08), diffAddHex),
+    "surface-diff-add-weaker": getFromScale(diffAddScale, pos(0.04), diffAddHex),
+    "surface-diff-add-strong": getFromScale(diffAddScale, pos(0.4), diffAddHex),
+    "surface-diff-add-stronger": getFromScale(diffAddScale, pos(0.6), diffAddHex),
     
-    "surface-diff-delete-base": getFromScale(diffDeleteScale, 0.15, diffDeleteHex),
-    "surface-diff-delete-weak": getFromScale(diffDeleteScale, 0.08, diffDeleteHex),
-    "surface-diff-delete-weaker": getFromScale(diffDeleteScale, 0.04, diffDeleteHex),
-    "surface-diff-delete-strong": getFromScale(diffDeleteScale, 0.4, diffDeleteHex),
-    "surface-diff-delete-stronger": getFromScale(diffDeleteScale, 0.6, diffDeleteHex),
+    "surface-diff-delete-base": getFromScale(diffDeleteScale, pos(0.15), diffDeleteHex),
+    "surface-diff-delete-weak": getFromScale(diffDeleteScale, pos(0.08), diffDeleteHex),
+    "surface-diff-delete-weaker": getFromScale(diffDeleteScale, pos(0.04), diffDeleteHex),
+    "surface-diff-delete-strong": getFromScale(diffDeleteScale, pos(0.4), diffDeleteHex),
+    "surface-diff-delete-stronger": getFromScale(diffDeleteScale, pos(0.6), diffDeleteHex),
     
     // Text
-    "text-base": getFromScale(primaryScale, 0.90, primaryHex),
-    "text-weak": getFromScale(primaryScale, 0.70, primaryHex),
-    "text-weaker": getFromScale(primaryScale, 0.50, primaryHex),
-    "text-strong": getFromScale(primaryScale, 0.98, primaryHex),
+    "text-base": getFromScale(primaryScale, pos(0.90), primaryHex),
+    "text-weak": getFromScale(primaryScale, pos(0.70), primaryHex),
+    "text-weaker": getFromScale(primaryScale, pos(0.50), primaryHex),
+    "text-strong": getFromScale(primaryScale, pos(0.98), primaryHex),
     "text-on-brand-base": "#FFFFFF",
     
-    "text-interactive-base": getFromScale(interactiveScale, 0.7, interactiveHex),
+    "text-interactive-base": getFromScale(interactiveScale, pos(0.7), interactiveHex),
     "text-on-interactive-base": "#FFFFFF",
     "text-on-success-base": "#FFFFFF",
     "text-on-critical-base": "#FFFFFF",
     "text-on-warning-base": "#FFFFFF",
     "text-on-info-base": "#FFFFFF",
     
-    "text-diff-add-base": getFromScale(diffAddScale, 0.7, diffAddHex),
-    "text-diff-delete-base": getFromScale(diffDeleteScale, 0.7, diffDeleteHex),
+    "text-diff-add-base": getFromScale(diffAddScale, pos(0.7), diffAddHex),
+    "text-diff-delete-base": getFromScale(diffDeleteScale, pos(0.7), diffDeleteHex),
     
     // Borders
-    "border-base": getFromScale(primaryScale, 0.25, primaryHex),
-    "border-weak": getFromScale(primaryScale, 0.15, primaryHex),
-    "border-strong": getFromScale(primaryScale, 0.35, primaryHex),
+    "border-base": getFromScale(primaryScale, pos(0.25), primaryHex),
+    "border-weak": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "border-strong": getFromScale(primaryScale, pos(0.35), primaryHex),
     "border-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "border-interactive-base": getFromScale(interactiveScale, 0.4, interactiveHex),
-    "border-success-base": getFromScale(successScale, 0.4, successHex),
-    "border-warning-base": getFromScale(warningScale, 0.4, warningHex),
-    "border-critical-base": getFromScale(errorScale, 0.4, errorHex),
-    "border-info-base": getFromScale(infoScale, 0.4, infoHex),
+    "border-interactive-base": getFromScale(interactiveScale, pos(0.4), interactiveHex),
+    "border-success-base": getFromScale(successScale, pos(0.4), successHex),
+    "border-warning-base": getFromScale(warningScale, pos(0.4), warningHex),
+    "border-critical-base": getFromScale(errorScale, pos(0.4), errorHex),
+    "border-info-base": getFromScale(infoScale, pos(0.4), infoHex),
     
     // Icons
-    "icon-base": getFromScale(primaryScale, 0.7, primaryHex),
-    "icon-weak": getFromScale(primaryScale, 0.5, primaryHex),
-    "icon-strong": getFromScale(primaryScale, 0.9, primaryHex),
+    "icon-base": getFromScale(primaryScale, pos(0.7), primaryHex),
+    "icon-weak": getFromScale(primaryScale, pos(0.5), primaryHex),
+    "icon-strong": getFromScale(primaryScale, pos(0.9), primaryHex),
     "icon-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
     "icon-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
     "icon-success-base": getFromScale(successScale, 0.5, successHex),
@@ -144,9 +201,9 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     // Base tokens
     "primary-base": getFromScale(primaryScale, 0.5, primaryHex),
-    "primary-hover": getFromScale(primaryScale, 0.6, primaryHex),
-    "primary-active": getFromScale(primaryScale, 0.4, primaryHex),
-    "primary-text": getFromScale(primaryScale, 0.1, primaryHex),
+    "primary-hover": getFromScale(primaryScale, isDark ? 0.6 : 0.4, primaryHex),
+    "primary-active": getFromScale(primaryScale, isDark ? 0.4 : 0.6, primaryHex),
+    "primary-text": getFromScale(primaryScale, pos(0.1), primaryHex),
     
     "secondary-base": getFromScale(infoScale, 0.5, infoHex),
     "secondary-hover": getFromScale(infoScale, 0.6, infoHex),

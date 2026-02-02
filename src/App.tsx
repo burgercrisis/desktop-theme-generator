@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
+import { getContrastScore, getContrastRatio, getWCAGLevel } from "./utils/colorUtils"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -52,7 +53,12 @@ const App: React.FC = () => {
   const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
   const [spread, setSpread] = useState(() => getInitialState("spread", 30))
   const [variantCount, setVariantCount] = useState(() => getInitialState("variantCount", 2))
-  const [contrast, setContrast] = useState(() => getInitialState("contrast", 50))
+  const [saturation, setSaturation] = useState(() => getInitialState("saturation", 50))
+  const [lightBrightness, setLightBrightness] = useState(() => getInitialState("lightBrightness", 50))
+  const [darkBrightness, setDarkBrightness] = useState(() => getInitialState("darkBrightness", 50))
+  const [lightContrast, setLightContrast] = useState(() => getInitialState("lightContrast", 50))
+  const [darkContrast, setDarkContrast] = useState(() => getInitialState("darkContrast", 50))
+  const [activeMode, setActiveMode] = useState<"light" | "dark">("dark")
   const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>(() => getInitialState("variantStrategy", VariantStrategy.TINTS_SHADES))
   const [colorSpace, setColorSpace] = useState<ColorSpace>(() => getInitialState("colorSpace", "HSL"))
   const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
@@ -73,7 +79,11 @@ const App: React.FC = () => {
   React.useEffect(() => localStorage.setItem("harmony", JSON.stringify(harmony)), [harmony])
   React.useEffect(() => localStorage.setItem("spread", JSON.stringify(spread)), [spread])
   React.useEffect(() => localStorage.setItem("variantCount", JSON.stringify(variantCount)), [variantCount])
-  React.useEffect(() => localStorage.setItem("contrast", JSON.stringify(contrast)), [contrast])
+  React.useEffect(() => localStorage.setItem("saturation", JSON.stringify(saturation)), [saturation])
+  React.useEffect(() => localStorage.setItem("lightBrightness", JSON.stringify(lightBrightness)), [lightBrightness])
+  React.useEffect(() => localStorage.setItem("darkBrightness", JSON.stringify(darkBrightness)), [darkBrightness])
+  React.useEffect(() => localStorage.setItem("lightContrast", JSON.stringify(lightContrast)), [lightContrast])
+  React.useEffect(() => localStorage.setItem("darkContrast", JSON.stringify(darkContrast)), [darkContrast])
   React.useEffect(() => localStorage.setItem("variantStrategy", JSON.stringify(variantStrategy)), [variantStrategy])
   React.useEffect(() => localStorage.setItem("colorSpace", JSON.stringify(colorSpace)), [colorSpace])
   React.useEffect(() => localStorage.setItem("outputSpace", JSON.stringify(outputSpace)), [outputSpace])
@@ -89,61 +99,107 @@ const App: React.FC = () => {
       harmony, 
       spread, 
       variantCount, 
-      contrast, 
+      activeMode === "light" ? lightContrast : darkContrast, 
+      activeMode === "light" ? lightBrightness : darkBrightness,
       variantStrategy,
       colorSpace,
       outputSpace
     )
-  }, [baseColor, harmony, spread, variantCount, contrast, variantStrategy, colorSpace, outputSpace])
+  }, [baseColor, harmony, spread, variantCount, activeMode, lightContrast, darkContrast, lightBrightness, darkBrightness, variantStrategy, colorSpace, outputSpace])
 
-  // Generate 9 seeds for Opencode mode (functional seeds)
+  // Generate 9 seeds for Opencode mode (functional seeds) - Separate for Light/Dark
+  const lightSeeds9 = useMemo<SeedColor[]>(() => {
+    return generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
+  }, [baseColor, harmony, spread, lightBrightness])
+
+  const darkSeeds9 = useMemo<SeedColor[]>(() => {
+    return generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
+  }, [baseColor, harmony, spread, darkBrightness])
+
+  // Active seeds for UI display/preview
   const seeds9 = useMemo<SeedColor[]>(() => {
-    return generateOpencodeSeeds(baseColor)
-  }, [baseColor])
+    return activeMode === "light" ? lightSeeds9 : darkSeeds9
+  }, [activeMode, lightSeeds9, darkSeeds9])
 
-  // Generate variants map for Opencode mapping (Engine-powered)
-  const seedVariants = useMemo(() => {
-    const variants: Record<string, string[]> = {}
-    seeds9.forEach((seed) => {
-      // Use the engine to generate variants for each functional seed
+  // Generate variants map for Opencode mapping (Engine-powered) - Separate for Light/Dark
+  const seedVariantsLight = useMemo(() => {
+    const variants: Record<string, ColorStop[]> = {}
+    lightSeeds9.forEach((seed) => {
       const variantsForSeed = generateVariants(
         seed.hsl,
         variantCount,
-        contrast,
+        lightContrast,
         variantStrategy,
         colorSpace,
-        outputSpace
+        outputSpace,
+        50 // We already applied brightness to the seed, so variants are centered around the brightened seed
       )
-      variants[seed.name] = variantsForSeed.map((v) => v.hex)
+      variants[seed.name] = variantsForSeed
     })
     return variants
-  }, [seeds9, variantCount, contrast, variantStrategy, colorSpace, outputSpace])
+  }, [lightSeeds9, variantCount, lightContrast, variantStrategy, colorSpace, outputSpace])
 
-  const allVariants = useMemo(() => {
-    return paletteGroups.flatMap(group => [group.base, ...group.variants])
-  }, [paletteGroups])
+  const seedVariantsDark = useMemo(() => {
+    const variants: Record<string, ColorStop[]> = {}
+    darkSeeds9.forEach((seed) => {
+      const variantsForSeed = generateVariants(
+        seed.hsl,
+        variantCount,
+        darkContrast,
+        variantStrategy,
+        colorSpace,
+        outputSpace,
+        50 // We already applied brightness to the seed
+      )
+      variants[seed.name] = variantsForSeed
+    })
+    return variants
+  }, [darkSeeds9, variantCount, darkContrast, variantStrategy, colorSpace, outputSpace])
 
-  // Generate theme colors (unified Opencode mapping)
+  // Generate theme colors for both modes
+  const lightThemeColors = useMemo<OpencodeThemeColors>(() => {
+    // Map variants to hex strings for theme color generation
+    const hexVariants: Record<string, string[]> = {}
+    Object.entries(seedVariantsLight).forEach(([name, stops]) => {
+      hexVariants[name] = stops.map(s => s.hex)
+    })
+    return generateOpencodeThemeColors(lightSeeds9, hexVariants, false)
+  }, [lightSeeds9, seedVariantsLight])
+
+  const darkThemeColors = useMemo<OpencodeThemeColors>(() => {
+    // Map variants to hex strings for theme color generation
+    const hexVariants: Record<string, string[]> = {}
+    Object.entries(seedVariantsDark).forEach(([name, stops]) => {
+      hexVariants[name] = stops.map(s => s.hex)
+    })
+    return generateOpencodeThemeColors(darkSeeds9, hexVariants, true)
+  }, [darkSeeds9, seedVariantsDark])
+
+  // Active theme colors for UI display/preview
   const themeColors = useMemo<OpencodeThemeColors>(() => {
-    const colors = generateOpencodeThemeColors(seeds9, seedVariants)
+    const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
     
     // Apply manual overrides
     const hasOverrides = Object.keys(manualOverrides).length > 0
     if (hasOverrides) {
-      return { ...colors, ...manualOverrides }
+      return { ...baseColors, ...manualOverrides }
     }
     
-    return colors
-  }, [seeds9, seedVariants, manualOverrides])
+    return baseColors
+  }, [activeMode, lightThemeColors, darkThemeColors, manualOverrides])
 
   // Desktop theme object for export/preview
   const theme = useMemo<DesktopTheme>(() => {
+    // For general preview, we use the active mode's variants
+    const currentVariants = activeMode === "light" ? seedVariantsLight : seedVariantsDark
+    const flatVariants = Object.values(currentVariants).flat()
+
     return {
       name: themeName,
       colors: themeColors as InternalThemeColors,
-      palette: allVariants,
+      palette: flatVariants,
     }
-  }, [themeName, themeColors, allVariants])
+  }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
 
   // Matrix Router properties - Opencode UI tokens
   const MATRIX_PROPERTIES = [
@@ -285,11 +341,13 @@ const App: React.FC = () => {
   const themeDataString = useMemo(() => {
     return JSON.stringify({
       themeName,
-      themeColors,
-      seeds9,
+      lightThemeColors,
+      darkThemeColors,
+      lightSeeds9,
+      darkSeeds9,
       manualOverrides
     });
-  }, [themeName, themeColors, seeds9, manualOverrides]);
+  }, [themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides]);
 
   React.useEffect(() => {
     // "Instant" feel: 200ms debounce
@@ -299,8 +357,10 @@ const App: React.FC = () => {
       const data = JSON.parse(themeDataString);
       const currentContent = exportToOpencode9SeedJSON(
         data.themeName, 
-        data.themeColors, 
-        data.seeds9, 
+        data.lightThemeColors,
+        data.darkThemeColors,
+        data.lightSeeds9, 
+        data.darkSeeds9,
         data.manualOverrides
       )
       
@@ -314,8 +374,10 @@ const App: React.FC = () => {
       
       writeOpencode9ThemeFile(
         data.themeName, 
-        data.themeColors, 
-        data.seeds9, 
+        data.lightThemeColors,
+        data.darkThemeColors,
+        data.lightSeeds9, 
+        data.darkSeeds9,
         data.manualOverrides
       )
         .then((res) => {
@@ -345,6 +407,7 @@ const App: React.FC = () => {
 
   const handleColorChange = useCallback((hsl: HSL) => {
     setBaseColor(hsl)
+    setSaturation(Math.round(hsl.s))
   }, [])
 
   const handleCopy = useCallback((hex: string) => {
@@ -369,7 +432,7 @@ const App: React.FC = () => {
       }
 
       if (format === "opencode9") {
-        const content = exportToOpencode9SeedJSON(themeName, themeColors, seeds9, manualOverrides)
+        const content = exportToOpencode9SeedJSON(themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides)
         const formatInfo = exportFormats.find((f: any) => f.id === format)
         downloadFile(
           content,
@@ -390,15 +453,17 @@ const App: React.FC = () => {
         formatInfo?.mime || "text/plain",
       )
     },
-    [theme, themeName, themeColors, seeds9, manualOverrides],
+    [theme, themeName, lightThemeColors, darkThemeColors, seeds9, manualOverrides],
   )
 
   const randomizeAll = useCallback(() => {
-    setBaseColor({
-      h: Math.floor(Math.random() * 360),
-      s: 40 + Math.floor(Math.random() * 60),
-      l: 40 + Math.floor(Math.random() * 30),
-    })
+    const h = Math.floor(Math.random() * 360)
+    const s = 40 + Math.floor(Math.random() * 60)
+    const l = 40 + Math.floor(Math.random() * 30)
+    
+    setBaseColor({ h, s, l })
+    setSaturation(s)
+    
     const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
     const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
     
@@ -406,23 +471,32 @@ const App: React.FC = () => {
     setVariantStrategy(randomStrategy)
     setVariantCount(1 + Math.floor(Math.random() * 4))
     setSpread(15 + Math.floor(Math.random() * 45))
-    setContrast(20 + Math.floor(Math.random() * 70))
+    setLightContrast(20 + Math.floor(Math.random() * 70))
+    setDarkContrast(20 + Math.floor(Math.random() * 70))
+    setLightBrightness(30 + Math.floor(Math.random() * 40))
+    setDarkBrightness(30 + Math.floor(Math.random() * 40))
   }, [])
 
   const invertBase = useCallback(() => {
-    setBaseColor((prev) => ({
-      h: (prev.h + 180) % 360,
-      s: prev.s,
-      l: 100 - prev.l,
-    }))
+    setBaseColor((prev) => {
+      const newColor = {
+        h: (prev.h + 180) % 360,
+        s: prev.s,
+        l: 100 - prev.l,
+      }
+      setSaturation(Math.round(newColor.s))
+      return newColor
+    })
   }, [])
 
   const chaosMode = useCallback(() => {
-    setBaseColor({
-      h: Math.floor(Math.random() * 360),
-      s: Math.random() > 0.5 ? 80 + Math.random() * 20 : Math.random() * 30,
-      l: Math.random() > 0.5 ? 70 + Math.random() * 30 : Math.random() * 30,
-    })
+    const h = Math.floor(Math.random() * 360)
+    const s = Math.random() > 0.5 ? 80 + Math.random() * 20 : Math.random() * 30
+    const l = Math.random() > 0.5 ? 70 + Math.random() * 30 : Math.random() * 30
+    
+    setBaseColor({ h, s, l })
+    setSaturation(Math.round(s))
+    
     const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
     const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
     
@@ -434,10 +508,12 @@ const App: React.FC = () => {
 
   const applyThemePreset = useCallback((presetName: keyof typeof thematicPresets) => {
     const preset = thematicPresets[presetName]
-    const h = preset.h[0] + Math.random() * (preset.h[1] - preset.h[0])
-    const s = preset.s[0] + Math.random() * (preset.s[1] - preset.s[0])
-    const l = preset.l[0] + Math.random() * (preset.l[1] - preset.l[0])
-    setBaseColor({ h: Math.round(h), s: Math.round(s), l: Math.round(l) })
+    const h = Math.round(preset.h[0] + Math.random() * (preset.h[1] - preset.h[0]))
+    const s = Math.round(preset.s[0] + Math.random() * (preset.s[1] - preset.s[0]))
+    const l = Math.round(preset.l[0] + Math.random() * (preset.l[1] - preset.l[0]))
+    
+    setBaseColor({ h, s, l })
+    setSaturation(s)
     setHarmony(preset.harmony)
     setVariantStrategy(preset.strategy)
   }, [])
@@ -788,33 +864,92 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Saturation</label>
-                      <span className="text-xs font-mono opacity-60">{Math.round(baseColor.s)}%</span>
+                  <div className="p-3 rounded-lg bg-gray-800/30 border border-white/5 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <button
+                        onClick={() => setActiveMode("dark")}
+                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
+                          activeMode === "dark" 
+                          ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" 
+                          : "bg-gray-800 text-gray-500 border border-transparent hover:bg-gray-700"
+                        }`}
+                      >
+                        🌙 Dark Mode
+                      </button>
+                      <button
+                        onClick={() => setActiveMode("light")}
+                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
+                          activeMode === "light" 
+                          ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" 
+                          : "bg-gray-800 text-gray-500 border border-transparent hover:bg-gray-700"
+                        }`}
+                      >
+                        ☀️ Light Mode
+                      </button>
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={baseColor.s}
-                      onChange={(e) => setBaseColor({ ...baseColor, s: parseInt(e.target.value) })}
-                      className="w-full"
-                      style={{ accentColor: theme.colors["surface-brand-base"] }}
-                    />
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] uppercase tracking-wide opacity-50">
+                          {activeMode === "light" ? "Light" : "Dark"} Brightness
+                        </label>
+                        <span className="text-xs font-mono opacity-60">
+                          {activeMode === "light" ? lightBrightness : darkBrightness}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={activeMode === "light" ? lightBrightness : darkBrightness}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          if (activeMode === "light") setLightBrightness(val)
+                          else setDarkBrightness(val)
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] uppercase tracking-wide opacity-50">
+                          {activeMode === "light" ? "Light" : "Dark"} Contrast
+                        </label>
+                        <span className="text-xs font-mono opacity-60">
+                          {activeMode === "light" ? lightContrast : darkContrast}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={activeMode === "light" ? lightContrast : darkContrast}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          if (activeMode === "light") setLightContrast(val)
+                          else setDarkContrast(val)
+                        }}
+                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Brightness</label>
-                      <span className="text-xs font-mono opacity-60">{Math.round(baseColor.l)}%</span>
+                      <label className="text-[10px] uppercase tracking-wide opacity-50">Global Saturation</label>
+                      <span className="text-xs font-mono opacity-60">{saturation}%</span>
                     </div>
                     <input
                       type="range"
                       min="0"
                       max="100"
-                      value={baseColor.l}
-                      onChange={(e) => setBaseColor({ ...baseColor, l: parseInt(e.target.value) })}
+                      value={saturation}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value)
+                        setSaturation(val)
+                        setBaseColor(prev => ({ ...prev, s: val }))
+                      }}
                       className="w-full"
                       style={{ accentColor: theme.colors["surface-brand-base"] }}
                     />
@@ -849,22 +984,6 @@ const App: React.FC = () => {
                       onChange={(e) => setVariantCount(parseInt(e.target.value))}
                       className="w-full"
                       style={{ accentColor: theme.colors["surface-success-base"] }}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Contrast / Range</label>
-                      <span className="text-xs font-mono opacity-60">{contrast}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="10"
-                      max="100"
-                      value={contrast}
-                      onChange={(e) => setContrast(parseInt(e.target.value))}
-                      className="w-full"
-                      style={{ accentColor: theme.colors["surface-warning-base"] }}
                     />
                   </div>
                 </div>
@@ -1035,8 +1154,9 @@ const App: React.FC = () => {
                   </div>
                   <div className="p-4">
                     <div className="grid grid-cols-3 gap-4">
-                      {seeds9.map((seed, idx) => {
-                        const variants = seedVariants[seed.name] || []
+                      {seeds9.map((seed: SeedColor, idx: number) => {
+                        const currentSeedVariants = activeMode === "light" ? seedVariantsLight : seedVariantsDark
+                        const variants = currentSeedVariants[seed.name] || []
                         return (
                           <div key={idx} className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -1048,13 +1168,13 @@ const App: React.FC = () => {
                               <span className="text-[10px] text-gray-500">{seed.hex}</span>
                             </div>
                             <div className="flex flex-wrap gap-1">
-                              {variants.slice(0, 5).map((hex, vIdx) => (
+                              {variants.slice(0, 5).map((stop, vIdx) => (
                                 <button
                                   key={vIdx}
-                                  onClick={() => handleCopy(hex)}
+                                  onClick={() => handleCopy(stop.hex)}
                                   className="w-6 h-6 rounded transition-transform hover:scale-110"
-                                  style={{ backgroundColor: hex }}
-                                  title={hex}
+                                  style={{ backgroundColor: stop.hex }}
+                                  title={stop.hex}
                                 />
                               ))}
                             </div>

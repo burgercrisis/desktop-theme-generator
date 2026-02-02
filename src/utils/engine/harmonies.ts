@@ -14,6 +14,7 @@ export const generateHarmony = (
   spread: number = 30,
   variantCount: number = 2,
   contrast: number = 50,
+  brightness: number = 50,
   strategy: VariantStrategy = VariantStrategy.TINTS_SHADES,
   space: ColorSpace = 'HSL',
   output: OutputSpace = 'sRGB'
@@ -76,7 +77,7 @@ export const generateHarmony = (
 
     return {
       base: createColorStop(currentBase.h, currentBase.s, currentBase.l, isMainBase, space, output),
-      variants: generateVariants(currentBase, variantCount, contrast, strategy, space, output, prevBase, nextBase)
+      variants: generateVariants(currentBase, variantCount, contrast, strategy, space, output, brightness, prevBase, nextBase)
     };
   });
 };

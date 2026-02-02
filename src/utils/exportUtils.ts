@@ -62,55 +62,65 @@ export const exportToTailwind = (theme: DesktopTheme): string => {
 
 export const exportToOpencode9SeedJSON = (
   name: string,
-  colors: OpencodeThemeColors,
-  seeds: SeedColor[],
+  lightColors: OpencodeThemeColors,
+  darkColors: OpencodeThemeColors,
+  lightSeeds: SeedColor[],
+  darkSeeds: SeedColor[],
   manualOverrides: Record<string, string> = {}
 ): string => {
-  const seedMap: Record<string, string> = {}
-  
-  // Required keys for Opencode ThemeSeedColors
-  const requiredSeeds = [
-    'neutral', 'primary', 'success', 'warning', 'error', 
-    'info', 'interactive', 'diffAdd', 'diffDelete'
-  ]
+  const getSeedMap = (seeds: SeedColor[]) => {
+    const seedMap: Record<string, string> = {}
+    
+    // Required keys for Opencode ThemeSeedColors
+    const requiredSeeds = [
+      'neutral', 'primary', 'success', 'warning', 'error', 
+      'info', 'interactive', 'diffAdd', 'diffDelete'
+    ]
 
-  seeds.forEach(s => {
-    const targetName = s.name as string
-    if (targetName === 'critical') {
-      seedMap['diffDelete'] = s.hex
-      if (!seedMap['error']) seedMap['error'] = s.hex
-    } else if (targetName === 'accent') {
-      seedMap['diffAdd'] = s.hex
-    } else {
-      seedMap[targetName] = s.hex
-    }
-  })
+    seeds.forEach(s => {
+      const targetName = s.name as string
+      if (targetName === 'critical') {
+        seedMap['diffDelete'] = s.hex
+        if (!seedMap['error']) seedMap['error'] = s.hex
+      } else if (targetName === 'accent') {
+        seedMap['diffAdd'] = s.hex
+      } else {
+        seedMap[targetName] = s.hex
+      }
+    })
 
-  // Ensure all required seeds have a value (fallback to neutral if missing)
-  const neutralHex = seedMap['neutral'] || '#888888'
-  requiredSeeds.forEach(key => {
-    if (!seedMap[key]) {
-      seedMap[key] = neutralHex
-    }
-  })
+    // Ensure all required seeds have a value (fallback to neutral if missing)
+    const neutralHex = seedMap['neutral'] || '#888888'
+    requiredSeeds.forEach(key => {
+      if (!seedMap[key]) {
+        seedMap[key] = neutralHex
+      }
+    })
+    return seedMap
+  }
+
+  const lightSeedMap = getSeedMap(lightSeeds)
+  const darkSeedMap = getSeedMap(darkSeeds)
 
   // Include all calculated engine colors as the baseline, then apply manual overrides
-  const allOverrides: Record<string, string> = { ...colors, ...manualOverrides }
+  const lightOverrides: Record<string, string> = { ...lightColors, ...manualOverrides }
+  const darkOverrides: Record<string, string> = { ...darkColors, ...manualOverrides }
 
-  const json: OpencodeThemeJSON = {
-    $schema: "https://opencode.ai/desktop-theme.json",
-    name,
-    id: "custom-theme",
+  const opencodeTheme: OpencodeThemeJSON = {
+    $schema: "https://raw.githubusercontent.com/opencode/opencode-desktop/main/schemas/theme.schema.json",
+    name: name,
+    id: name.toLowerCase().replace(/\s+/g, '-'),
     light: {
-      seeds: seedMap,
-      overrides: allOverrides
+      seeds: lightSeedMap,
+      overrides: lightOverrides
     },
     dark: {
-      seeds: seedMap,
-      overrides: allOverrides
+      seeds: darkSeedMap,
+      overrides: darkOverrides
     }
   }
-  return JSON.stringify(json, null, 2)
+
+  return JSON.stringify(opencodeTheme, null, 2)
 }
 
 /**
@@ -118,11 +128,13 @@ export const exportToOpencode9SeedJSON = (
  */
 export const writeOpencode9ThemeFile = async (
   name: string,
-  colors: OpencodeThemeColors,
-  seeds: SeedColor[],
+  lightColors: OpencodeThemeColors,
+  darkColors: OpencodeThemeColors,
+  lightSeeds: SeedColor[],
+  darkSeeds: SeedColor[],
   overrides: Record<string, string>
 ): Promise<{ success: boolean; error?: string }> => {
-  const jsonContent = exportToOpencode9SeedJSON(name, colors, seeds, overrides)
+  const jsonContent = exportToOpencode9SeedJSON(name, lightColors, darkColors, lightSeeds, darkSeeds, overrides)
   const json = JSON.parse(jsonContent)
 
   const apiUrls = [

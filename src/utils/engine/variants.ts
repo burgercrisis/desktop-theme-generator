@@ -8,12 +8,14 @@ export const generateVariants = (
   strategy: VariantStrategy,
   space: ColorSpace,
   output: OutputSpace,
+  brightness: number = 50,
   prevHsl?: HSL,
   nextHsl?: HSL
 ): ColorStop[] => {
   const variants: ColorStop[] = [];
   const { h, s, l } = baseHsl;
   const range = contrast / 100;
+  const lOffset = (brightness - 50);
   const steps = count;
   
   const isExtendedSpace = (space === 'CAM02' || space.startsWith('LCh') || space.startsWith('Ok') || space === 'IPT');
@@ -182,11 +184,11 @@ export const generateVariants = (
         stop.l = l - (l * range * t);
     }
 
-    variants.push(createColorStop(stop.h, stop.s, stop.l, false, space, output));
+    variants.push(createColorStop(stop.h, stop.s, Math.max(0, Math.min(100, stop.l + lOffset)), false, space, output));
   }
 
   // Base
-  variants.push(createColorStop(h, s, l, true, space, output));
+  variants.push(createColorStop(h, s, Math.max(0, Math.min(100, l + lOffset)), true, space, output));
 
   // --- RIGHT SIDE ---
   for (let i = 1; i <= steps; i++) {
@@ -350,7 +352,7 @@ export const generateVariants = (
         stop.l = l + ((100 - l) * range * t);
     }
 
-    variants.push(createColorStop(stop.h, stop.s, stop.l, false, space, output));
+    variants.push(createColorStop(stop.h, stop.s, Math.max(0, Math.min(100, stop.l + lOffset)), false, space, output));
   }
 
   return variants;
