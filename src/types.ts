@@ -162,7 +162,7 @@ export interface InternalThemeColors {
   "surface-base-interactive-active": string;
   "surface-inset-base": string;
   "surface-inset-base-hover": string;
-  "surface-inset-active": string;
+  "surface-inset-base-active": string;
   "surface-inset-strong": string;
   "surface-inset-strong-hover": string;
   "surface-raised-base": string;
@@ -174,10 +174,14 @@ export interface InternalThemeColors {
   "surface-raised-stronger-hover": string;
   "surface-float-base": string;
   "surface-float-base-hover": string;
-  "surface-float-active": string;
+  "surface-float-base-active": string;
+  "surface-float-strong": string;
+  "surface-float-strong-hover": string;
+  "surface-float-strong-active": string;
   "surface-weak": string;
   "surface-weaker": string;
   "surface-strong": string;
+  "surface-raised-stronger-non-alpha": string;
   "surface-brand-base": string;
   "surface-brand-hover": string;
   "surface-brand-active": string;
@@ -221,6 +225,12 @@ export interface InternalThemeColors {
   "surface-diff-delete-strong": string;
   "surface-diff-delete-stronger": string;
 
+  "surface-diff-hidden-base": string;
+  "surface-diff-hidden-weak": string;
+  "surface-diff-hidden-weaker": string;
+  "surface-diff-hidden-strong": string;
+  "surface-diff-hidden-stronger": string;
+
   // Text
   "text-base": string;
   "text-weak": string;
@@ -231,15 +241,24 @@ export interface InternalThemeColors {
   "text-invert-weaker": string;
   "text-invert-strong": string;
   "text-on-brand-base": string;
+  "text-on-brand-weak": string;
+  "text-on-brand-weaker": string;
+  "text-on-brand-strong": string;
   "text-interactive-base": string;
   "text-on-interactive-base": string;
   "text-on-interactive-weak": string;
   "text-on-success-base": string;
+  "text-on-success-weak": string;
+  "text-on-success-strong": string;
   "text-on-warning-base": string;
+  "text-on-warning-weak": string;
+  "text-on-warning-strong": string;
   "text-on-critical-base": string;
   "text-on-critical-weak": string;
   "text-on-critical-strong": string;
   "text-on-info-base": string;
+  "text-on-info-weak": string;
+  "text-on-info-strong": string;
   "text-diff-add-base": string;
   "text-diff-add-strong": string;
   "text-diff-delete-base": string;
@@ -251,6 +270,12 @@ export interface InternalThemeColors {
   "input-active": string;
   "input-disabled": string;
 
+  // Button
+  "button-secondary-base": string;
+  "button-secondary-hover": string;
+  "button-ghost-hover": string;
+  "button-ghost-hover2": string;
+
   // Border
   "border-base": string;
   "border-hover": string;
@@ -259,15 +284,40 @@ export interface InternalThemeColors {
   "border-disabled": string;
   "border-focus": string;
   "border-weak-base": string;
+  "border-weak-hover": string;
+  "border-weak-active": string;
+  "border-weak-selected": string;
+  "border-weak-disabled": string;
+  "border-weak-focus": string;
+  "border-weaker-base": string;
+  "border-weaker-hover": string;
+  "border-weaker-active": string;
+  "border-weaker-selected": string;
+  "border-weaker-disabled": string;
+  "border-weaker-focus": string;
   "border-strong-base": string;
+  "border-strong-hover": string;
+  "border-strong-active": string;
+  "border-strong-selected": string;
+  "border-strong-disabled": string;
+  "border-strong-focus": string;
   "border-interactive-base": string;
   "border-interactive-hover": string;
   "border-interactive-active": string;
   "border-interactive-selected": string;
   "border-success-base": string;
+  "border-success-hover": string;
+  "border-success-selected": string;
   "border-warning-base": string;
+  "border-warning-hover": string;
+  "border-warning-selected": string;
   "border-critical-base": string;
+  "border-critical-hover": string;
+  "border-critical-selected": string;
   "border-info-base": string;
+  "border-info-hover": string;
+  "border-info-selected": string;
+  "border-color": string;
 
   // Icon
   "icon-base": string;
@@ -276,8 +326,19 @@ export interface InternalThemeColors {
   "icon-selected": string;
   "icon-disabled": string;
   "icon-focus": string;
+  "icon-invert-base": string;
   "icon-weak-base": string;
+  "icon-weak-hover": string;
+  "icon-weak-active": string;
+  "icon-weak-selected": string;
+  "icon-weak-disabled": string;
+  "icon-weak-focus": string;
   "icon-strong-base": string;
+  "icon-strong-hover": string;
+  "icon-strong-active": string;
+  "icon-strong-selected": string;
+  "icon-strong-disabled": string;
+  "icon-strong-focus": string;
   "icon-brand-base": string;
   "icon-interactive-base": string;
   "icon-success-base": string;
@@ -285,101 +346,33 @@ export interface InternalThemeColors {
   "icon-critical-base": string;
   "icon-info-base": string;
   "icon-diff-add-base": string;
+  "icon-diff-add-hover": string;
+  "icon-diff-add-active": string;
   "icon-diff-delete-base": string;
+  "icon-diff-delete-hover": string;
+  "icon-diff-modified-base": string;
 
-  // Syntax
-  "syntax-comment": string;
-  "syntax-keyword": string;
-  "syntax-function": string;
-  "syntax-variable": string;
-  "syntax-string": string;
-  "syntax-number": string;
-  "syntax-type": string;
-  "syntax-operator": string;
-  "syntax-punctuation": string;
-  "syntax-object": string;
-  "syntax-regexp": string;
-  "syntax-primitive": string;
-  "syntax-property": string;
-  "syntax-constant": string;
-  "syntax-success": string;
-  "syntax-warning": string;
-  "syntax-critical": string;
-  "syntax-info": string;
-  "syntax-diff-add": string;
-  "syntax-diff-delete": string;
+  "icon-on-brand-base": string;
+  "icon-on-brand-hover": string;
+  "icon-on-brand-selected": string;
+  "icon-on-interactive-base": string;
+  "icon-on-success-base": string;
+  "icon-on-success-hover": string;
+  "icon-on-success-selected": string;
+  "icon-on-warning-base": string;
+  "icon-on-warning-hover": string;
+  "icon-on-warning-selected": string;
+  "icon-on-critical-base": string;
+  "icon-on-critical-hover": string;
+  "icon-on-critical-selected": string;
+  "icon-on-info-base": string;
+  "icon-on-info-hover": string;
+  "icon-on-info-selected": string;
 
-  // Markdown
-  "markdown-text": string;
-  "markdown-heading": string;
-  "markdown-link": string;
-  "markdown-link-text": string;
-  "markdown-code": string;
-  "markdown-block-quote": string;
-  "markdown-emph": string;
-  "markdown-strong": string;
-  "markdown-horizontal-rule": string;
-  "markdown-list-item": string;
-
-  // Base
-  "primary-base": string;
-  "primary-hover": string;
-  "primary-active": string;
-  "primary-text": string;
-  "secondary-base": string;
-  "secondary-hover": string;
-  "secondary-active": string;
-  "secondary-text": string;
-  "accent-base": string;
-  "accent-hover": string;
-  "accent-active": string;
-  "accent-text": string;
-  "success-base": string;
-  "success-hover": string;
-  "success-active": string;
-  "success-text": string;
-  "warning-base": string;
-  "warning-hover": string;
-  "warning-active": string;
-  "warning-text": string;
-  "critical-base": string;
-  "critical-hover": string;
-  "critical-active": string;
-  "critical-text": string;
-  "info-base": string;
-  "info-hover": string;
-  "info-active": string;
-  "info-text": string;
-  "interactive-base": string;
-  "interactive-hover": string;
-  "interactive-active": string;
-  "interactive-text": string;
-  "diff-add-base": string;
-  "diff-add-foreground": string;
-  "diff-delete-base": string;
-  "diff-delete-foreground": string;
-
-  // Selection
-  "selection-background": string;
-  "selection-foreground": string;
-  "selection-inactive-background": string;
-
-  // UI Components
-  "code-background": string;
-  "code-foreground": string;
-  "tab-active": string;
-  "tab-inactive": string;
-  "tab-hover": string;
-  "line-indicator": string;
-  "line-indicator-active": string;
-  "line-indicator-hover": string;
-  "avatar-background": string;
-  "avatar-foreground": string;
-  "focus-ring": string;
-  "scrollbar-thumb": string;
-  "scrollbar-track": string;
-  "shadow": string;
-  "overlay": string;
+  "icon-agent-plan-base": string;
+  "icon-agent-docs-base": string;
+  "icon-agent-ask-base": string;
+  "icon-agent-build-base": string;
 
   // Terminal ANSI
   "terminal-ansi-black": string;
@@ -398,6 +391,89 @@ export interface InternalThemeColors {
   "terminal-ansi-bright-magenta": string;
   "terminal-ansi-bright-cyan": string;
   "terminal-ansi-bright-white": string;
+
+  // Syntax
+  "syntax-comment": string;
+  "syntax-keyword": string;
+  "syntax-function": string;
+  "syntax-variable": string;
+  "syntax-string": string;
+  "syntax-number": string;
+  "syntax-type": string;
+  "syntax-operator": string;
+  "syntax-punctuation": string;
+  "syntax-object": string;
+  "syntax-regexp": string;
+  "syntax-primitive": string;
+  "syntax-property": string;
+  "syntax-constant": string;
+  "syntax-tag": string;
+  "syntax-attribute": string;
+  "syntax-value": string;
+  "syntax-namespace": string;
+  "syntax-class": string;
+  "syntax-success": string;
+  "syntax-warning": string;
+  "syntax-critical": string;
+  "syntax-info": string;
+  "syntax-diff-add": string;
+  "syntax-diff-delete": string;
+
+  // Markdown
+  "markdown-text": string;
+  "markdown-heading": string;
+  "markdown-link": string;
+  "markdown-link-text": string;
+  "markdown-code": string;
+  "markdown-block-quote": string;
+  "markdown-emph": string;
+  "markdown-strong": string;
+  "markdown-horizontal-rule": string;
+  "markdown-list-item": string;
+  "markdown-list-enumeration": string;
+  "markdown-image": string;
+  "markdown-image-text": string;
+  "markdown-code-block": string;
+
+  // Code/Editor
+  "code-background": string;
+  "code-foreground": string;
+  "line-indicator": string;
+  "line-indicator-active": string;
+  "line-indicator-hover": string;
+
+  // Tab
+  "tab-active": string;
+  "tab-inactive": string;
+  "tab-hover": string;
+
+  // Avatar
+  "avatar-background": string;
+  "avatar-foreground": string;
+  "avatar-background-pink": string;
+  "avatar-background-mint": string;
+  "avatar-background-orange": string;
+  "avatar-background-purple": string;
+  "avatar-background-cyan": string;
+  "avatar-background-lime": string;
+  "avatar-text-pink": string;
+  "avatar-text-mint": string;
+  "avatar-text-orange": string;
+  "avatar-text-purple": string;
+  "avatar-text-cyan": string;
+  "avatar-text-lime": string;
+
+  // Scrollbar
+  "scrollbar-thumb": string;
+  "scrollbar-track": string;
+
+  // Misc
+  "focus-ring": string;
+  "shadow": string;
+  "overlay": string;
+  "selection-background": string;
+  "selection-foreground": string;
+  "selection-inactive-background": string;
 }
 
 export interface SeedColor {

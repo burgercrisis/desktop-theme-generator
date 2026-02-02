@@ -248,6 +248,11 @@ const App: React.FC = () => {
     return baseColors
   }, [activeMode, lightThemeColors, darkThemeColors, deferredManualOverrides])
 
+  // Helper for formatting UI labels to 'AGENT LOG' style
+  const formatAgentLabel = useCallback((str: string) => {
+    return str.replace(/-/g, '_').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()
+  }, [])
+
   // WCAG Compliance Pairs - Comprehensive list for checker
   const wcagPairs = useMemo(() => {
     const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff' }> = []
@@ -260,169 +265,166 @@ const App: React.FC = () => {
       }
     }
 
-    // --- CORE TYPOGRAPHY ---
-    const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger"]
-    const coreTexts = ["text-base", "text-weak", "text-weaker", "text-strong"]
-    
-    backgrounds.forEach(bg => {
-      coreTexts.forEach(fg => {
-        addPair("Typography", `${fg.split("-")[1].toUpperCase()} on ${bg.split("-")[1].toUpperCase()}`, bg, fg, `${fg} on ${bg}`, false, 'read')
+      // --- LOG_01_TYPOGRAPHY ---
+      const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger", "surface-base", "surface-inset-base", "surface-raised-base", "surface-float-base"]
+      const coreTexts = ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger"]
+      
+      backgrounds.forEach(bg => {
+        coreTexts.forEach(fg => {
+          addPair("LOG_01_TYPOGRAPHY", `${formatAgentLabel(fg.replace("text-", ""))}_ON_${formatAgentLabel(bg.replace("background-", "").replace("surface-", ""))}`, bg, fg, `${fg} ON ${bg}`, false, 'read')
+        })
       })
-    })
 
-    // --- SURFACES & INTERACTIVE STATES ---
-    const surfaceCategories = [
-      { name: "Surface (Main)", prefix: "surface-base", items: ["base", "hover", "active"] },
-      { name: "Surface (Inset)", prefix: "surface-inset", items: ["base", "base-hover", "active", "strong", "strong-hover"] },
-      { name: "Surface (Raised)", prefix: "surface-raised", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "stronger", "stronger-hover"] },
-      { name: "Surface (Float)", prefix: "surface-float", items: ["base", "base-hover", "active"] },
-    ]
-
-    surfaceCategories.forEach(cat => {
-      cat.items.forEach(item => {
-        const bgKey = item === "base" && !cat.prefix.includes("-") ? cat.prefix : `${cat.prefix}-${item}`
-        addPair(cat.name, `${item.toUpperCase()} Contrast`, bgKey, "text-base", `text-base on ${bgKey}`, false, 'read')
-      })
-    })
-
-    // --- BRAND & INTERACTIVE ---
-    const interactiveSurfaces = [
-      { bg: "surface-brand-base", fg: "text-on-brand-base", label: "Brand Base" },
-      { bg: "surface-brand-hover", fg: "text-on-brand-base", label: "Brand Hover" },
-      { bg: "surface-brand-active", fg: "text-on-brand-base", label: "Brand Active" },
-      { bg: "surface-interactive-base", fg: "text-on-interactive-base", label: "Interactive Base" },
-      { bg: "surface-interactive-hover", fg: "text-on-interactive-base", label: "Interactive Hover" },
-      { bg: "surface-interactive-active", fg: "text-on-interactive-base", label: "Interactive Active" },
-      { bg: "surface-interactive-weak", fg: "text-on-interactive-weak", label: "Interactive Weak" },
-      { bg: "surface-interactive-weak-hover", fg: "text-on-interactive-weak", label: "Interactive Weak Hover" }
-    ]
-    interactiveSurfaces.forEach(s => {
-      addPair("Action", s.label, s.bg, s.fg, `Text on ${s.bg}`, false, 'action')
-    })
-    
-    addPair("Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background", false, 'action')
-    addPair("Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true, 'action')
-    addPair("Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true, 'action')
-
-    // --- SEMANTIC STATES ---
-    const semanticTypes = ["success", "warning", "critical", "info"]
-    semanticTypes.forEach(type => {
-      const states = [
-        { suffix: "base", label: "Base" },
-        { suffix: "hover", label: "Hover" },
-        { suffix: "active", label: "Active" },
-        { suffix: "weak", label: "Weak" },
-        { suffix: "strong", label: "Strong" }
+      // --- LOG_02_SURFACES ---
+      const surfaceCategories = [
+        { name: "LOG_02_SURFACES", prefix: "surface-base", items: ["base", "hover", "active"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-inset", items: ["base", "base-hover", "base-active", "strong", "strong-hover"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-raised", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "stronger", "stronger-hover", "stronger-non-alpha"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-float", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "strong-active"] },
       ]
-      states.forEach(state => {
-        addPair("Semantic", `${type.toUpperCase()} ${state.label}`, `surface-${type}-${state.suffix}`, `text-on-${type}-base`, `${type} ${state.label} surface contrast`, false, 'action')
+
+      surfaceCategories.forEach(cat => {
+        cat.items.forEach(item => {
+          // Fix mapping to match schema
+          let bgKey = ""
+          if (item === "base" && cat.prefix === "surface-base") {
+            bgKey = "surface-base"
+          } else if (item === "hover" && cat.prefix === "surface-base") {
+            bgKey = "surface-base-hover"
+          } else if (item === "active" && cat.prefix === "surface-base") {
+            bgKey = "surface-base-active"
+          } else {
+            bgKey = `${cat.prefix}-${item}`
+          }
+
+          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
+        })
       })
-      addPair("Semantic", `${type.toUpperCase()} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true, 'action')
-      addPair("Semantic", `${type.toUpperCase()} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true, 'action')
-    })
 
-    // --- DIFF STATES ---
-    const diffStates = [
-      { type: "add", label: "Add" },
-      { type: "delete", label: "Delete" }
-    ]
-    diffStates.forEach(diff => {
-      addPair("Diff", `${diff.label} Text`, `surface-diff-${diff.type}-base`, `text-diff-${diff.type}-base`, `Diff ${diff.label} text contrast`, false, 'diff')
-      addPair("Diff", `${diff.label} Weak`, `surface-diff-${diff.type}-weak`, `text-diff-${diff.type}-base`, `${diff.label} text on weak background`, false, 'diff')
-      addPair("Diff", `${diff.label} Strong`, `surface-diff-${diff.type}-strong`, `text-diff-${diff.type}-strong`, `Strong ${diff.label} text contrast`, false, 'diff')
-      addPair("Diff", `${diff.label} Stronger`, `surface-diff-${diff.type}-stronger`, `text-on-critical-base`, `${diff.label} text on stronger background`, false, 'diff')
-      addPair("Diff", `${diff.label} Icon`, `background-base`, `icon-diff-${diff.type}-base`, `Diff ${diff.label} icon on background`, true, 'diff')
-    })
-    addPair("Diff", "Skip Background", "background-base", "surface-diff-skip-base", "Skip line contrast", true, 'diff')
-    addPair("Diff", "Unchanged Background", "background-base", "surface-diff-unchanged-base", "Unchanged line contrast", true, 'diff')
+      // --- LOG_03_ACTIONS ---
+      const interactiveSurfaces = [
+        { bg: "surface-brand-base", fg: "text-on-brand-base", label: "BRAND_BASE" },
+        { bg: "surface-brand-hover", fg: "text-on-brand-base", label: "BRAND_HOVER" },
+        { bg: "surface-brand-active", fg: "text-on-brand-base", label: "BRAND_ACTIVE" },
+        { bg: "surface-brand-base", fg: "text-on-brand-strong", label: "BRAND_STRONG" },
+        { bg: "surface-interactive-base", fg: "text-on-interactive-base", label: "INTERACTIVE_BASE" },
+        { bg: "surface-interactive-hover", fg: "text-on-interactive-base", label: "INTERACTIVE_HOVER" },
+        { bg: "surface-interactive-active", fg: "text-on-interactive-base", label: "INTERACTIVE_ACTIVE" },
+        { bg: "surface-interactive-weak", fg: "text-on-interactive-weak", label: "INTERACTIVE_WEAK" },
+        { bg: "surface-interactive-weak-hover", fg: "text-on-interactive-weak", label: "INTERACTIVE_WEAK_HOVER" }
+      ]
+      interactiveSurfaces.forEach(s => {
+        addPair("LOG_03_ACTIONS", formatAgentLabel(s.label), s.bg, s.fg, `TEXT_ON_${s.bg.toUpperCase().replace(/-/g, '_')}`, false, 'action')
+      })
+      
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_TEXT"), "background-base", "text-interactive-base", "INTERACTIVE_TEXT_ON_BACKGROUND", false, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_ICON"), "background-base", "icon-interactive-base", "INTERACTIVE_ICON_CONTRAST", true, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER"), "background-base", "border-interactive-base", "INTERACTIVE_BORDER_CONTRAST", true, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_HOVER"), "background-base", "border-interactive-hover", "INTERACTIVE_BORDER_HOVER_CONTRAST", true, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_ACTIVE"), "background-base", "border-interactive-active", "INTERACTIVE_BORDER_ACTIVE_CONTRAST", true, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_SELECTED"), "background-base", "border-interactive-selected", "INTERACTIVE_BORDER_SELECTED_CONTRAST", true, 'action')
 
-    // --- INPUTS ---
-    addPair("Inputs", "Input Text", "input-base", "text-base", "Text inside input field", false, 'shell')
-    addPair("Inputs", "Input Border", "background-base", "border-base", "Input border on background", true, 'shell')
-    addPair("Inputs", "Input Placeholder", "input-base", "text-weaker", "Placeholder text contrast", false, 'shell')
-    addPair("Inputs", "Input Hover", "input-hover", "text-base", "Text in hovered input", false, 'shell')
-    addPair("Inputs", "Input Active", "input-active", "text-base", "Text in active input", false, 'shell')
-    addPair("Inputs", "Input Disabled", "background-base", "input-disabled", "Disabled input background contrast", true, 'shell')
-    addPair("Inputs", "Input Selected Border", "background-base", "border-selected", "Selected input border contrast", true, 'shell')
+      // --- LOG_04_BUTTONS ---
+      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_BASE"), "button-secondary-base", "text-base", "SECONDARY_BUTTON_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_HOVER"), "button-secondary-hover", "text-base", "SECONDARY_BUTTON_HOVER_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER"), "button-ghost-hover", "text-base", "GHOST_BUTTON_HOVER_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER2"), "button-ghost-hover2", "text-base", "GHOST_BUTTON_HOVER2_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_BASE"), "button-danger-base", "text-on-critical-base", "DANGER_BUTTON_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER"), "button-danger-hover", "text-on-critical-base", "DANGER_BUTTON_HOVER_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE"), "button-danger-active", "text-on-critical-base", "DANGER_BUTTON_ACTIVE_TEXT", false, 'action')
 
-    // --- UI COMPONENTS (NON-TEXT 3:1) ---
-    addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true, 'shell')
-    addPair("UI Components", "Border Hover", "background-base", "border-hover", "Border hover on background", true, 'shell')
-    addPair("UI Components", "Border Active", "background-base", "border-active", "Border active on background", true, 'shell')
-    addPair("UI Components", "Border Focus", "background-base", "border-focus", "Border focus on background", true, 'shell')
-    addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true, 'shell')
-    addPair("UI Components", "Weak Border", "background-base", "border-weak-base", "Weak border on background", true, 'shell')
-    addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true, 'shell')
-    addPair("UI Components", "Icon Hover", "background-base", "icon-hover", "Icon hover on background", true, 'shell')
-    addPair("UI Components", "Icon Weak", "background-base", "icon-weak-base", "Weak icon on background", true, 'shell')
-    addPair("UI Components", "Icon Brand", "background-base", "icon-brand-base", "Brand icon on background", true, 'shell')
-    addPair("UI Components", "Invert Text (Base)", "background-stronger", "text-invert-base", "Inverted base text contrast", false, 'read')
-    addPair("UI Components", "Invert Text (Strong)", "background-stronger", "text-invert-strong", "Inverted strong text contrast", false, 'read')
+      // --- LOG_05_SEMANTIC ---
+      const semanticTypes = ["success", "warning", "critical", "info"]
+      semanticTypes.forEach(type => {
+        const states = [
+          { suffix: "base", label: "BASE" },
+          { suffix: "hover", label: "HOVER" },
+          { suffix: "active", label: "ACTIVE" },
+          { suffix: "weak", label: "WEAK" },
+          { suffix: "strong", label: "STRONG" }
+        ]
+        states.forEach(state => {
+          const bgKey = `surface-${type}-${state.suffix}`
+          const fgKey = (state.suffix === 'strong' || state.suffix === 'base') 
+            ? `text-on-${type}-${state.suffix === 'strong' ? 'strong' : 'base'}`
+            : `text-on-${type}-base`;
+          
+          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_${state.label}`), bgKey, fgKey, `${type.toUpperCase()}_${state.label}_SURFACE_CONTRAST`, false, 'action')
+          
+          // Verify strong text on all semantic surfaces
+          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_${state.label}`), bgKey, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_${state.label}_SURFACE`, false, 'action')
+        })
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_ICON`), `background-base`, `icon-${type}-base`, `${type.toUpperCase()}_ICON_ON_BACKGROUND`, true, 'action')
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BORDER`), `background-base`, `border-${type}-base`, `${type.toUpperCase()}_BORDER_ON_BACKGROUND`, true, 'action')
+        
+        // --- NEW: STRONG VARIANTS ON BACKGROUND ---
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_BG`), `background-base`, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_MAIN_BG`, false, 'action')
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BASE_ON_BG`), `background-base`, `text-on-${type}-base`, `${type.toUpperCase()}_BASE_TEXT_ON_MAIN_BG`, false, 'action')
+      })
 
-    // --- SELECTION & FOCUS ---
-    addPair("Accessibility", "Selection", "selection-background", "selection-foreground", "Text selection contrast", false, 'read')
-    addPair("Accessibility", "Inactive Selection", "selection-inactive-background", "text-base", "Inactive selection background contrast", false, 'read')
-    addPair("Accessibility", "Focus Ring", "background-base", "focus-ring", "Focus ring contrast on background", true, 'shell')
-    addPair("Accessibility", "Scrollbar Thumb", "scrollbar-track", "scrollbar-thumb", "Scrollbar thumb contrast on track", true, 'shell')
-    addPair("Accessibility", "Scrollbar on BG", "background-base", "scrollbar-thumb", "Scrollbar thumb on background", true, 'shell')
+      // --- LOG_06_DIFFS ---
+      const diffStates = [
+        { type: "add", label: "ADD" },
+        { type: "delete", label: "DELETE" }
+      ]
+      diffStates.forEach(diff => {
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_TEXT`), `surface-diff-${diff.type}-base`, `text-diff-${diff.type}-base`, `DIFF_${diff.label}_TEXT_CONTRAST`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_WEAK`), `surface-diff-${diff.type}-weak`, `text-diff-${diff.type}-base`, `${diff.label}_TEXT_ON_WEAK_BACKGROUND`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONG`), `surface-diff-${diff.type}-strong`, `text-diff-${diff.type}-strong`, `STRONG_${diff.label}_TEXT_CONTRAST`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONGER`), `surface-diff-${diff.type}-stronger`, `text-on-critical-base`, `${diff.label}_TEXT_ON_STRONGER_BACKGROUND`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_ICON`), `background-base`, `icon-diff-${diff.type}-base`, `DIFF_${diff.label}_ICON_ON_BACKGROUND`, true, 'diff')
+      })
+      addPair("LOG_06_DIFFS", formatAgentLabel("SKIP_BACKGROUND"), "background-base", "surface-diff-skip-base", "SKIP_LINE_CONTRAST", true, 'diff')
+      addPair("LOG_06_DIFFS", formatAgentLabel("UNCHANGED_BACKGROUND"), "background-base", "surface-diff-unchanged-base", "UNCHANGED_LINE_CONTRAST", true, 'diff')
 
-    // --- SYNTAX HIGHLIGHTING ---
-    const syntaxTokens = [
-      "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 
-      "syntax-string", "syntax-number", "syntax-type", "syntax-operator", 
-      "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", 
-      "syntax-property", "syntax-constant", "syntax-success", "syntax-warning",
-      "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"
-    ]
-    syntaxTokens.forEach(token => {
-      const parts = token.split("-")
-      const label = parts.length > 2 ? `${parts[1].charAt(0).toUpperCase() + parts[1].slice(1)} ${parts[2].charAt(0).toUpperCase() + parts[2].slice(1)}` : parts[1].charAt(0).toUpperCase() + parts[1].slice(1)
-      addPair("Syntax", label, "background-base", token, `Syntax ${label} on editor background`, false, 'shell')
-    })
+      // --- LOG_07_INPUTS ---
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_TEXT"), "input-base", "text-base", "TEXT_INSIDE_INPUT_FIELD", false, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_BORDER"), "background-base", "border-base", "INPUT_BORDER_ON_BACKGROUND", true, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_PLACEHOLDER"), "input-base", "text-weaker", "PLACEHOLDER_TEXT_CONTRAST", false, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_HOVER"), "input-hover", "text-base", "TEXT_IN_HOVERED_INPUT", false, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_ACTIVE"), "input-active", "text-base", "TEXT_IN_ACTIVE_INPUT", false, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_DISABLED"), "background-base", "input-disabled", "DISABLED_INPUT_BACKGROUND_CONTRAST", true, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_SELECTED_BORDER"), "background-base", "border-selected", "SELECTED_INPUT_BORDER_CONTRAST", true, 'shell')
 
-    // --- MARKDOWN ---
-    const markdownTokens = [
-      "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text",
-      "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong",
-      "markdown-list-item", "markdown-horizontal-rule"
-    ]
-    markdownTokens.forEach(token => {
-      const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
-      const isNonText = token === "markdown-horizontal-rule"
-      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`, isNonText, 'read')
-    })
+      // --- LOG_08_TERMINAL ---
+      const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+      ansiColors.forEach(color => {
+        addPair("LOG_08_TERMINAL", formatAgentLabel(color), "background-base", `terminal-ansi-${color}`, `TERMINAL ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
+        addPair("LOG_08_TERMINAL", formatAgentLabel(`bright-${color}`), "background-base", `terminal-ansi-bright-${color}`, `TERMINAL BRIGHT ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
+      })
 
-    // --- INDICATORS & UI ---
-    addPair("UI Elements", "Line Indicator", "background-base", "line-indicator", "Line indicator contrast", true, 'shell')
-    addPair("UI Elements", "Line Indicator Active", "background-base", "line-indicator-active", "Active line indicator contrast", true, 'shell')
-    addPair("UI Elements", "Line Indicator Hover", "background-base", "line-indicator-hover", "Hover line indicator contrast", true, 'shell')
-    addPair("UI Elements", "Tab Active", "background-base", "tab-active", "Active tab indicator contrast", true, 'shell')
-    addPair("UI Elements", "Tab Inactive", "background-base", "tab-inactive", "Inactive tab background contrast", true, 'shell')
-    addPair("UI Elements", "Tab Hover", "background-base", "tab-hover", "Hover tab background contrast", true, 'shell')
-    addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast", false, 'read')
-    addPair("UI Elements", "Avatar on BG", "background-base", "avatar-background", "Avatar background on main BG", true, 'read')
-    addPair("UI Elements", "Code Block BG", "background-base", "code-background", "Code block background on main background", true, 'read')
-    addPair("UI Elements", "Code Block Text", "code-background", "code-foreground", "Text inside code blocks", false, 'read')
+      // --- LOG_09_AVATARS ---
+      const avatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
+      avatarColors.forEach(color => {
+        addPair("LOG_09_AVATARS", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
+      })
 
-    // --- TERMINAL ---
-    const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
-    ansiColors.forEach(color => {
-      addPair("Terminal", `ANSI ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-${color}`, `Terminal ${color} on background`, false, 'shell')
-      addPair("Terminal", `Bright ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-bright-${color}`, `Terminal bright ${color} on background`, false, 'shell')
-    })
+      // --- LOG_10_SYNTAX ---
+      const syntaxTokensDetailed = [
+        "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 
+        "syntax-string", "syntax-number", "syntax-type", "syntax-operator", 
+        "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", 
+        "syntax-property", "syntax-constant", "syntax-tag", "syntax-attribute",
+        "syntax-value", "syntax-namespace", "syntax-class",
+        "syntax-success", "syntax-warning", "syntax-critical", "syntax-info", 
+        "syntax-diff-add", "syntax-diff-delete"
+      ]
+      syntaxTokensDetailed.forEach(token => {
+        const parts = token.split("-")
+        const label = formatAgentLabel(parts.length > 2 ? `${parts[1]}_${parts[2]}` : parts[1])
+        addPair("LOG_10_SYNTAX", label, "code-background", token, `SYNTAX ${label} ON EDITOR BACKGROUND`, false, 'read')
+      })
 
-    // --- BASE PALETTE (FOR VERIFICATION) ---
-    const basePaletteTokens = [
-      "primary-base", "primary-text", "secondary-base", "secondary-text",
-      "accent-base", "accent-text", "success-base", "success-text",
-      "warning-base", "warning-text", "critical-base", "critical-text",
-      "info-base", "info-text"
-    ]
-    basePaletteTokens.forEach(token => {
-      const parts = token.split("-")
-      const label = `${parts[0].toUpperCase()} ${parts[1].toUpperCase()}`
-      addPair("Palette", label, "background-base", token, `Base ${label} contrast`, false, 'read')
-    })
+      // --- LOG_11_UI_EXTRAS ---
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("FOCUS_RING"), "background-base", "focus-ring", "FOCUS RING CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SCROLLBAR"), "scrollbar-track", "scrollbar-thumb", "SCROLLBAR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false, 'read')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", false, 'read')
+
+    return pairs
   }, [themeColors])
 
   const deferredWcagPairs = useDeferredValue(wcagPairs)
@@ -440,257 +442,39 @@ const App: React.FC = () => {
     }
   }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
 
-  // Exhaustive list of properties for the matrix, grouped logically
+  // Matrix Router properties (Categorized for easier browsing)
   const MATRIX_PROPERTIES = [
-    // Backgrounds
-    "background-base",
-    "background-weak",
-    "background-strong",
-    "background-stronger",
-
-    // Surfaces (Primary/Neutral)
-    "surface-base",
-    "surface-base-hover",
-    "surface-base-active",
-    "surface-base-interactive-active",
-    "surface-inset-base",
-    "surface-inset-base-hover",
-    "surface-inset-active",
-    "surface-inset-strong",
-    "surface-inset-strong-hover",
-    "surface-raised-base",
-    "surface-raised-base-hover",
-    "surface-raised-base-active",
-    "surface-raised-strong",
-    "surface-raised-strong-hover",
-    "surface-raised-stronger",
-    "surface-raised-stronger-hover",
-    "surface-float-base",
-    "surface-float-base-hover",
-    "surface-float-active",
-    "surface-weak",
-    "surface-weaker",
-    "surface-strong",
-
-    // Semantic Surfaces
-    "surface-brand-base",
-    "surface-brand-hover",
-    "surface-brand-active",
-    "surface-interactive-base",
-    "surface-interactive-hover",
-    "surface-interactive-active",
-    "surface-interactive-weak",
-    "surface-interactive-weak-hover",
-    "surface-success-base",
-    "surface-success-hover",
-    "surface-success-active",
-    "surface-success-weak",
-    "surface-success-strong",
-    "surface-warning-base",
-    "surface-warning-hover",
-    "surface-warning-active",
-    "surface-warning-weak",
-    "surface-warning-strong",
-    "surface-critical-base",
-    "surface-critical-hover",
-    "surface-critical-active",
-    "surface-critical-weak",
-    "surface-critical-strong",
-    "surface-info-base",
-    "surface-info-hover",
-    "surface-info-active",
-    "surface-info-weak",
-    "surface-info-strong",
-
-    // Diff Surfaces
-    "surface-diff-unchanged-base",
-    "surface-diff-skip-base",
-    "surface-diff-add-base",
-    "surface-diff-add-weak",
-    "surface-diff-add-weaker",
-    "surface-diff-add-strong",
-    "surface-diff-add-stronger",
-    "surface-diff-delete-base",
-    "surface-diff-delete-weak",
-    "surface-diff-delete-weaker",
-    "surface-diff-delete-strong",
-    "surface-diff-delete-stronger",
-
-    // Text
-    "text-base",
-    "text-weak",
-    "text-weaker",
-    "text-strong",
-    "text-invert-base",
-    "text-invert-weak",
-    "text-invert-weaker",
-    "text-invert-strong",
-    "text-on-brand-base",
-    "text-interactive-base",
-    "text-on-interactive-base",
-    "text-on-interactive-weak",
-    "text-on-success-base",
-    "text-on-warning-base",
-    "text-on-critical-base",
-    "text-on-critical-weak",
-    "text-on-critical-strong",
-    "text-on-info-base",
-    "text-diff-add-base",
-    "text-diff-add-strong",
-    "text-diff-delete-base",
-    "text-diff-delete-strong",
-
-    // Inputs
-    "input-base",
-    "input-hover",
-    "input-active",
-    "input-disabled",
-
-    // Borders
-    "border-base",
-    "border-hover",
-    "border-active",
-    "border-selected",
-    "border-disabled",
-    "border-focus",
-    "border-weak-base",
-    "border-strong-base",
-    "border-interactive-base",
-    "border-interactive-hover",
-    "border-interactive-active",
-    "border-interactive-selected",
-    "border-success-base",
-    "border-warning-base",
-    "border-critical-base",
-    "border-info-base",
-
-    // Icons
-    "icon-base",
-    "icon-hover",
-    "icon-active",
-    "icon-selected",
-    "icon-disabled",
-    "icon-focus",
-    "icon-weak-base",
-    "icon-strong-base",
-    "icon-brand-base",
-    "icon-interactive-base",
-    "icon-success-base",
-    "icon-warning-base",
-    "icon-critical-base",
-    "icon-info-base",
-    "icon-diff-add-base",
-    "icon-diff-delete-base",
-
-    // Syntax
-    "syntax-comment",
-    "syntax-keyword",
-    "syntax-function",
-    "syntax-variable",
-    "syntax-string",
-    "syntax-number",
-    "syntax-type",
-    "syntax-operator",
-    "syntax-punctuation",
-    "syntax-object",
-    "syntax-regexp",
-    "syntax-primitive",
-    "syntax-property",
-    "syntax-constant",
-    "syntax-success",
-    "syntax-warning",
-    "syntax-critical",
-    "syntax-info",
-    "syntax-diff-add",
-    "syntax-diff-delete",
-
-    // Markdown
-    "markdown-text",
-    "markdown-heading",
-    "markdown-link",
-    "markdown-link-text",
-    "markdown-code",
-    "markdown-block-quote",
-    "markdown-emph",
-    "markdown-strong",
-    "markdown-horizontal-rule",
-    "markdown-list-item",
-
-    // UI Extras & Selection
-    "selection-background",
-    "selection-foreground",
-    "selection-inactive-background",
-    "line-indicator",
-    "line-indicator-active",
-    "line-indicator-hover",
-    "code-background",
-    "code-foreground",
-    "tab-active",
-    "tab-inactive",
-    "tab-hover",
-    "avatar-background",
-    "avatar-foreground",
-    "focus-ring",
-    "scrollbar-thumb",
-    "scrollbar-track",
-    "shadow",
-    "overlay",
-
-    // Functional Seeds (Base Palette)
-    "primary-base",
-    "primary-hover",
-    "primary-active",
-    "primary-text",
-    "secondary-base",
-    "secondary-hover",
-    "secondary-active",
-    "secondary-text",
-    "accent-base",
-    "accent-hover",
-    "accent-active",
-    "accent-text",
-    "success-base",
-    "success-hover",
-    "success-active",
-    "success-text",
-    "warning-base",
-    "warning-hover",
-    "warning-active",
-    "warning-text",
-    "critical-base",
-    "critical-hover",
-    "critical-active",
-    "critical-text",
-    "info-base",
-    "info-hover",
-    "info-active",
-    "info-text",
-    "interactive-base",
-    "interactive-hover",
-    "interactive-active",
-    "interactive-text",
-    "diff-add-base",
-    "diff-add-foreground",
-    "diff-delete-base",
-    "diff-delete-foreground",
-
-    // Terminal
-    "terminal-ansi-black",
-    "terminal-ansi-red",
-    "terminal-ansi-green",
-    "terminal-ansi-yellow",
-    "terminal-ansi-blue",
-    "terminal-ansi-magenta",
-    "terminal-ansi-cyan",
-    "terminal-ansi-white",
-    "terminal-ansi-bright-black",
-    "terminal-ansi-bright-red",
-    "terminal-ansi-bright-green",
-    "terminal-ansi-bright-yellow",
-    "terminal-ansi-bright-blue",
-    "terminal-ansi-bright-magenta",
-    "terminal-ansi-bright-cyan",
-    "terminal-ansi-bright-white",
+    { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
+    { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
+    { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
+    { category: "SURFACE_RAISED", keys: ["surface-raised-base", "surface-raised-base-hover", "surface-raised-base-active", "surface-raised-strong", "surface-raised-strong-hover", "surface-raised-stronger", "surface-raised-stronger-hover", "surface-raised-stronger-non-alpha"] },
+    { category: "SURFACE_FLOAT", keys: ["surface-float-base", "surface-float-base-hover", "surface-float-base-active", "surface-float-strong", "surface-float-strong-hover", "surface-float-strong-active"] },
+    { category: "SURFACE_FUNCTIONAL", keys: ["surface-brand-base", "surface-brand-hover", "surface-brand-active", "surface-interactive-base", "surface-interactive-hover", "surface-interactive-active", "surface-interactive-weak", "surface-interactive-weak-hover", "surface-success-base", "surface-success-hover", "surface-success-active", "surface-success-weak", "surface-success-strong", "surface-warning-base", "surface-warning-hover", "surface-warning-active", "surface-warning-weak", "surface-warning-strong", "surface-critical-base", "surface-critical-hover", "surface-critical-active", "surface-critical-weak", "surface-critical-strong", "surface-info-base", "surface-info-hover", "surface-info-active", "surface-info-weak", "surface-info-strong"] },
+    { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
+    { category: "TEXT_CORE", keys: ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger", "text-invert-base", "text-invert-weak", "text-invert-weaker", "text-invert-strong"] },
+    { category: "TEXT_FUNCTIONAL", keys: ["text-on-brand-base", "text-on-brand-weak", "text-on-brand-weaker", "text-on-brand-strong", "text-interactive-base", "text-on-interactive-base", "text-on-interactive-weak", "text-on-success-base", "text-on-success-weak", "text-on-success-strong", "text-on-warning-base", "text-on-warning-weak", "text-on-warning-strong", "text-on-critical-base", "text-on-critical-weak", "text-on-critical-strong", "text-on-info-base", "text-on-info-weak", "text-on-info-strong", "text-diff-add-base", "text-diff-add-strong", "text-diff-delete-base", "text-diff-delete-strong"] },
+    { category: "INPUT", keys: ["input-base", "input-hover", "input-active", "input-disabled"] },
+    { category: "BUTTON", keys: ["button-secondary-base", "button-secondary-hover", "button-ghost-hover", "button-ghost-hover2", "button-danger-base", "button-danger-hover", "button-danger-active"] },
+    { category: "BORDER_CORE", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-disabled", "border-focus", "border-color"] },
+    { category: "BORDER_WEAK", keys: ["border-weak-base", "border-weak-hover", "border-weak-active", "border-weak-selected", "border-weak-disabled", "border-weak-focus"] },
+    { category: "BORDER_WEAKER", keys: ["border-weaker-base", "border-weaker-hover", "border-weaker-active", "border-weaker-selected", "border-weaker-disabled", "border-weaker-focus"] },
+    { category: "BORDER_STRONG", keys: ["border-strong-base", "border-strong-hover", "border-strong-active", "border-strong-selected", "border-strong-disabled", "border-strong-focus"] },
+    { category: "BORDER_FUNCTIONAL", keys: ["border-interactive-base", "border-interactive-hover", "border-interactive-active", "border-interactive-selected", "border-success-base", "border-success-hover", "border-success-selected", "border-warning-base", "border-warning-hover", "border-warning-selected", "border-critical-base", "border-critical-hover", "border-critical-selected", "border-info-base", "border-info-hover", "border-info-selected"] },
+    { category: "ICON_CORE", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-disabled", "icon-focus", "icon-invert-base"] },
+    { category: "ICON_WEAK", keys: ["icon-weak-base", "icon-weak-hover", "icon-weak-active", "icon-weak-selected", "icon-weak-disabled", "icon-weak-focus"] },
+    { category: "ICON_STRONG", keys: ["icon-strong-base", "icon-strong-hover", "icon-strong-active", "icon-strong-selected", "icon-strong-disabled", "icon-strong-focus"] },
+    { category: "ICON_FUNCTIONAL", keys: ["icon-brand-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-add-hover", "icon-diff-add-active", "icon-diff-delete-base", "icon-diff-delete-hover", "icon-diff-modified-base"] },
+    { category: "ICON_ON_COLOR", keys: ["icon-on-brand-base", "icon-on-brand-hover", "icon-on-brand-selected", "icon-on-interactive-base", "icon-on-success-base", "icon-on-success-hover", "icon-on-success-selected", "icon-on-warning-base", "icon-on-warning-hover", "icon-on-warning-selected", "icon-on-critical-base", "icon-on-critical-hover", "icon-on-critical-selected", "icon-on-info-base", "icon-on-info-hover", "icon-on-info-selected"] },
+    { category: "ICON_AGENT", keys: ["icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
+    { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
+    { category: "SYNTAX_CORE", keys: ["syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", "syntax-string", "syntax-number", "syntax-type", "syntax-operator", "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", "syntax-property", "syntax-constant"] },
+    { category: "SYNTAX_WEB", keys: ["syntax-tag", "syntax-attribute", "syntax-value", "syntax-namespace", "syntax-class"] },
+    { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
+    { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
+    { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
+    { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
+    { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
+    { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
   ]
 
   // Handlers for Matrix Router
@@ -980,7 +764,7 @@ const App: React.FC = () => {
                   : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
               }`}
             >
-              Matrix
+              MATRIX_ROUTER
             </button>
             <button
               onClick={() => setActiveTab("export")}
@@ -990,7 +774,7 @@ const App: React.FC = () => {
                   : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
               }`}
             >
-              Export
+              EXPORT_ENGINE
             </button>
           </div>
         </div>
@@ -1238,7 +1022,7 @@ const App: React.FC = () => {
                                   <span className="text-[8px] leading-none font-bold">{isSeedOverridden ? "×" : "·"}</span>
                                 </button>
                                 <span className={`text-[9px] font-mono transition-colors uppercase tracking-tighter truncate ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-300'}`}>
-                                  {seedName}
+                                  {formatAgentLabel(seedName)}
                                 </span>
                               </div>
                               <div className="flex gap-1">
@@ -1279,81 +1063,90 @@ const App: React.FC = () => {
                         # SEMANTIC_TOKEN_MATRIX
                       </span>
                       <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
-                        {MATRIX_PROPERTIES.length} TOKENS
+                        {MATRIX_PROPERTIES.reduce((acc, cat) => acc + cat.keys.length, 0)} TOKENS
                       </span>
                     </div>
                     <div className={`max-h-[600px] overflow-y-auto custom-scrollbar transition-colors divide-y ${activeMode === 'light' ? 'bg-white divide-gray-50' : 'bg-[#0d0d17] divide-[#1a1a2e]'}`}>
-                      {MATRIX_PROPERTIES.map((property) => {
-                        const currentColor = themeColors[property as keyof OpencodeThemeColors]
-                        const currentModeOverrides = manualOverrides[activeMode] || {}
-                        const isOverridden = property in currentModeOverrides
-
-                        return (
-                          <div key={property} className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
-                            <button
-                              onClick={() => handleManualReset(property)}
-                              className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
-                                isOverridden
-                                  ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-                                  : activeMode === 'light'
-                                    ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-                                    : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-                              }`}
-                              title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
-                            >
-                              <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
-                            </button>
-
-                            <div className="flex flex-col min-w-0 flex-1">
-                              <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
-                                {property}
-                              </span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <div 
-                                  className={`w-3 h-3 rounded-[2px] border shrink-0 ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
-                                  style={{ backgroundColor: currentColor }}
-                                />
-                                <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
-                              {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
-                                <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
-                                  {variants.map((variant, idx) => {
-                                    const isSelected = currentColor.toLowerCase() === variant.hex.toLowerCase()
-                                    const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
-                                    const blackContrast = getContrastRatio(variant.hex, "#000000")
-                                    const bestContrast = Math.max(whiteContrast, blackContrast)
-                                    const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
-
-                                    return (
-                                      <button
-                                        key={`${property}-${seedName}-${idx}`}
-                                        onClick={() => handleManualOverride(property, variant.hex)}
-                                        className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
-                                          isSelected 
-                                            ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
-                                            : "hover:scale-110 opacity-40 hover:opacity-100"
-                                        }`}
-                                        style={{ backgroundColor: variant.hex }}
-                                        title={`${seedName}_V${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1)`}
-                                      >
-                                        {isSelected && (
-                                          <div 
-                                            className="w-1 h-1 rounded-full" 
-                                            style={{ backgroundColor: contrastColor }}
-                                          />
-                                        )}
-                                      </button>
-                                    )
-                                  })}
-                                </div>
-                              ))}
-                            </div>
+                      {MATRIX_PROPERTIES.map((category) => (
+                        <div key={category.category} className="flex flex-col">
+                          <div className={`px-3 py-1 text-[8px] font-black tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'bg-gray-50 text-purple-900/40' : 'bg-purple-900/10 text-purple-500/40'}`}>
+                            {category.category}
                           </div>
-                        )
-                      })}
+                          {category.keys.map((property) => {
+                            const currentColor = themeColors[property as keyof OpencodeThemeColors]
+                            const currentModeOverrides = manualOverrides[activeMode] || {}
+                            const isOverridden = property in currentModeOverrides
+
+                            return (
+                              <div key={property} className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
+                                <button
+                                  onClick={() => handleManualReset(property)}
+                                  className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
+                                    isOverridden
+                                      ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+                                      : activeMode === 'light'
+                                        ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                                        : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+                                  }`}
+                                  title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
+                                >
+                                  <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
+                                </button>
+
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
+                                    {formatAgentLabel(property)}
+                                  </span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <div 
+                                      className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
+                                      style={{ backgroundColor: currentColor }}
+                                      onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: property, label: property })}
+                                      title="QUICK_PICKER"
+                                    />
+                                    <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+                                  {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
+                                    <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
+                                      {variants.map((variant, idx) => {
+                                        const isSelected = currentColor?.toLowerCase() === variant.hex.toLowerCase()
+                                        const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
+                                        const blackContrast = getContrastRatio(variant.hex, "#000000")
+                                        const bestContrast = Math.max(whiteContrast, blackContrast)
+                                        const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
+
+                                        return (
+                                          <button
+                                            key={`${property}-${seedName}-${idx}`}
+                                            onClick={() => handleManualOverride(property, variant.hex)}
+                                            className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                                              isSelected 
+                                                ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
+                                                : "hover:scale-110 opacity-40 hover:opacity-100"
+                                            }`}
+                                            style={{ backgroundColor: variant.hex }}
+                                            title={`${seedName}_V${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1)`}
+                                          >
+                                            {isSelected && (
+                                              <div 
+                                                className="w-1 h-1 rounded-full" 
+                                                style={{ backgroundColor: contrastColor }}
+                                              />
+                                            )}
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1713,7 +1506,7 @@ const App: React.FC = () => {
                                   className={`w-4 h-4 rounded-[2px] border ${activeMode === 'light' ? 'border-gray-200 shadow-sm' : 'border-white/10'}`}
                                   style={{ backgroundColor: seed.hex }}
                                 />
-                                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-200'}`}>{seed.name}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-200'}`}>{formatAgentLabel(seed.name)}</span>
                               </div>
                               <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/60'}`}>{seed.hex.toUpperCase()}</span>
                             </div>
@@ -1751,7 +1544,7 @@ const App: React.FC = () => {
                           style={{ backgroundColor: value as string }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className={`text-[10px] font-black uppercase tracking-tight truncate transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{key}</div>
+                          <div className={`text-[10px] font-black uppercase tracking-tight truncate transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{formatAgentLabel(key)}</div>
                           <div className={`text-[9px] font-mono mt-0.5 transition-colors ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-500/60'}`}>{String(value).toUpperCase()}</div>
                         </div>
                         <button 
@@ -1821,7 +1614,7 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
                 <span className={`text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
-                  {quickPicker.label}
+                  {formatAgentLabel(quickPicker.label)}
                 </span>
               </div>
               <button 
@@ -1857,6 +1650,22 @@ const App: React.FC = () => {
                 {String(themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000").toUpperCase()}
               </span>
             </div>
+            {/* Quick Reset for this property */}
+            {manualOverrides[activeMode]?.[quickPicker.key] && (
+              <button
+                onClick={() => {
+                  handleManualReset(quickPicker.key)
+                  setQuickPicker(null)
+                }}
+                className={`mt-2 py-1.5 text-[8px] font-black uppercase tracking-widest border transition-all ${
+                  activeMode === 'light'
+                    ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                    : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
+                }`}
+              >
+                RESET_PROPERTY
+              </button>
+            )}
           </div>
         </div>
       )}

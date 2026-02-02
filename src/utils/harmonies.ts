@@ -45,25 +45,25 @@ export const generateOpencodeSeeds = (
       interactiveHue = getHarmonyHue(spread);
       infoHue = getHarmonyHue(spread * 2);
       break;
+    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(180 - spread);
+      infoHue = getHarmonyHue(180 + spread);
+      break;
     case HarmonyRule.TRIADIC:
       interactiveHue = getHarmonyHue(120);
       infoHue = getHarmonyHue(240);
-      break;
-    case HarmonyRule.TETRADIC:
-      interactiveHue = getHarmonyHue(spread);
-      infoHue = getHarmonyHue(180);
       break;
     case HarmonyRule.SQUARE:
       interactiveHue = getHarmonyHue(90);
       infoHue = getHarmonyHue(180);
       break;
+    case HarmonyRule.TETRADIC:
+      interactiveHue = getHarmonyHue(180);
+      infoHue = getHarmonyHue(180 + spread);
+      break;
     case HarmonyRule.SPLIT_COMPLEMENTARY:
       interactiveHue = getHarmonyHue(180 - spread);
       infoHue = getHarmonyHue(180 + spread);
-      break;
-    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY:
-      interactiveHue = getHarmonyHue(spread);
-      infoHue = getHarmonyHue(180 - spread);
       break;
     case HarmonyRule.ACCENTED_ANALOGOUS:
       interactiveHue = getHarmonyHue(spread);
@@ -83,11 +83,25 @@ export const generateOpencodeSeeds = (
       interactiveHue = getHarmonyHue(spread);
       infoHue = getHarmonyHue(-spread);
       break;
-    case HarmonyRule.VIVID_PASTEL:
-    case HarmonyRule.SYNTHWAVE:
     case HarmonyRule.DEEP_NIGHT:
-      interactiveHue = getHarmonyHue(180);
-      infoHue = getHarmonyHue(180 + spread);
+      interactiveHue = getHarmonyHue(240);
+      infoHue = getHarmonyHue(240 + spread);
+      break;
+    case HarmonyRule.OCEANIC:
+      interactiveHue = getHarmonyHue(180 + spread);
+      infoHue = getHarmonyHue(210);
+      break;
+    case HarmonyRule.FOREST_EDGE:
+      interactiveHue = getHarmonyHue(120);
+      infoHue = getHarmonyHue(30);
+      break;
+    case HarmonyRule.SOLAR_FLARE:
+      interactiveHue = getHarmonyHue(30);
+      infoHue = getHarmonyHue(60);
+      break;
+    case HarmonyRule.EARTHY:
+      interactiveHue = getHarmonyHue(45);
+      infoHue = getHarmonyHue(90);
       break;
     case HarmonyRule.HARD_CLASH:
     case HarmonyRule.ANALOGOUS_CLASH:
@@ -187,7 +201,7 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-inset-base": getFromScale(primaryScale, pos(0.08), primaryHex),
     "surface-inset-base-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
-    "surface-inset-active": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "surface-inset-base-active": getFromScale(primaryScale, pos(0.15), primaryHex),
     "surface-inset-strong": getFromScale(primaryScale, pos(0.15), primaryHex),
     "surface-inset-strong-hover": getFromScale(primaryScale, pos(0.20), primaryHex),
 
@@ -201,11 +215,15 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-float-base": getFromScale(primaryScale, pos(0.25), primaryHex),
     "surface-float-base-hover": getFromScale(primaryScale, pos(0.30), primaryHex),
-    "surface-float-active": getFromScale(primaryScale, pos(0.35), primaryHex),
+    "surface-float-base-active": getFromScale(primaryScale, pos(0.35), primaryHex),
+    "surface-float-strong": getFromScale(primaryScale, pos(0.40), primaryHex),
+    "surface-float-strong-hover": getFromScale(primaryScale, pos(0.45), primaryHex),
+    "surface-float-strong-active": getFromScale(primaryScale, pos(0.50), primaryHex),
 
     "surface-weak": getFromScale(neutralScale, pos(0.10), neutralHex),
     "surface-weaker": getFromScale(neutralScale, pos(0.05), neutralHex),
     "surface-strong": getFromScale(primaryScale, pos(0.40), primaryHex),
+    "surface-raised-stronger-non-alpha": getFromScale(primaryScale, pos(0.45), primaryHex),
     
     "surface-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
     "surface-brand-hover": getFromScale(primaryScale, isDark ? 0.6 : 0.4, primaryHex),
@@ -243,6 +261,12 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-diff-unchanged-base": "transparent",
     "surface-diff-skip-base": getFromScale(primaryScale, pos(0.15), primaryHex),
+
+    "surface-diff-hidden-base": getFromScale(interactiveScale, pos(0.15), interactiveHex),
+    "surface-diff-hidden-weak": getFromScale(interactiveScale, pos(0.08), interactiveHex),
+    "surface-diff-hidden-weaker": getFromScale(interactiveScale, pos(0.04), interactiveHex),
+    "surface-diff-hidden-strong": getFromScale(interactiveScale, pos(0.4), interactiveHex),
+    "surface-diff-hidden-stronger": getFromScale(interactiveScale, pos(0.6), interactiveHex),
     
     "surface-diff-add-base": getFromScale(diffAddScale, pos(0.15), diffAddHex),
     "surface-diff-add-weak": getFromScale(diffAddScale, pos(0.08), diffAddHex),
@@ -256,11 +280,19 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "surface-diff-delete-strong": getFromScale(diffDeleteScale, pos(0.4), diffDeleteHex),
     "surface-diff-delete-stronger": getFromScale(diffDeleteScale, pos(0.6), diffDeleteHex),
 
+    // Buttons
+    "button-secondary-base": isDark ? getFromScale(primaryScale, 0.2, primaryHex) : getFromScale(primaryScale, 0.05, primaryHex),
+    "button-secondary-hover": isDark ? getFromScale(primaryScale, 0.3, primaryHex) : getFromScale(primaryScale, 0.1, primaryHex),
+    "button-danger-base": getFromScale(errorScale, 0.5, errorHex),
+    "button-danger-hover": getFromScale(errorScale, 0.6, errorHex),
+    "button-ghost-hover": isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)",
+    "button-ghost-hover2": isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
+
     // Inputs
-    "input-base": getFromScale(primaryScale, pos(0.12), primaryHex),
-    "input-hover": getFromScale(primaryScale, pos(0.15), primaryHex),
-    "input-active": getFromScale(primaryScale, pos(0.18), primaryHex),
-    "input-disabled": getFromScale(neutralScale, pos(0.20), neutralHex),
+    "input-base": getFromScale(primaryScale, pos(0.08), primaryHex),
+    "input-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
+    "input-active": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "input-disabled": getFromScale(neutralScale, pos(0.05), neutralHex),
 
     // Selection
     "selection-background": getFromScale(interactiveScale, pos(0.3), interactiveHex),
@@ -288,16 +320,25 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "text-invert-strong": getFromScale(primaryScale, pos(0.02), primaryHex),
 
     "text-on-brand-base": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.05, primaryHex),
+    "text-on-brand-weak": isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
+    "text-on-brand-weaker": isDark ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)",
+    "text-on-brand-strong": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.02, primaryHex),
     
     "text-interactive-base": getFromScale(interactiveScale, pos(0.7), interactiveHex),
     "text-on-interactive-base": isDark ? "#FFFFFF" : getFromScale(interactiveScale, 0.05, interactiveHex),
     "text-on-interactive-weak": getFromScale(interactiveScale, pos(0.8), interactiveHex),
     "text-on-success-base": isDark ? "#FFFFFF" : getFromScale(successScale, 0.05, successHex),
-    "text-on-critical-base": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
-    "text-on-critical-weak": getFromScale(errorScale, pos(0.8), errorHex),
-    "text-on-critical-strong": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
-    "text-on-warning-base": isDark ? "#FFFFFF" : getFromScale(warningScale, 0.05, warningHex),
+    "text-on-success-weak": isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
+    "text-on-success-strong": isDark ? "#FFFFFF" : getFromScale(successScale, 0.02, successHex),
+    "text-on-warning-base": isDark ? "#000000" : getFromScale(warningScale, 0.05, warningHex),
+    "text-on-warning-weak": isDark ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.7)",
+    "text-on-warning-strong": isDark ? "#000000" : getFromScale(warningScale, 0.02, warningHex),
     "text-on-info-base": isDark ? "#FFFFFF" : getFromScale(infoScale, 0.05, infoHex),
+    "text-on-info-weak": isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
+    "text-on-info-strong": isDark ? "#FFFFFF" : getFromScale(infoScale, 0.02, infoHex),
+    "text-on-critical-base": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
+    "text-on-critical-weak": isDark ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)",
+    "text-on-critical-strong": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
     
     "text-diff-add-base": getFromScale(diffAddScale, pos(0.7), diffAddHex),
     "text-diff-add-strong": isDark ? "#FFFFFF" : getFromScale(diffAddScale, 0.05, diffAddHex),
@@ -311,8 +352,28 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "border-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
     "border-disabled": getFromScale(neutralScale, pos(0.2), neutralHex),
     "border-focus": getFromScale(interactiveScale, 0.6, interactiveHex),
+
     "border-weak-base": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "border-weak-hover": getFromScale(primaryScale, pos(0.20), primaryHex),
+    "border-weak-active": getFromScale(primaryScale, pos(0.25), primaryHex),
+    "border-weak-selected": getFromScale(interactiveScale, 0.3, interactiveHex),
+    "border-weak-disabled": getFromScale(neutralScale, pos(0.1), neutralHex),
+    "border-weak-focus": getFromScale(interactiveScale, 0.4, interactiveHex),
+
+    "border-weaker-base": getFromScale(primaryScale, pos(0.10), primaryHex),
+    "border-weaker-hover": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "border-weaker-active": getFromScale(primaryScale, pos(0.20), primaryHex),
+    "border-weaker-selected": getFromScale(interactiveScale, 0.2, interactiveHex),
+    "border-weaker-disabled": getFromScale(neutralScale, pos(0.05), neutralHex),
+    "border-weaker-focus": getFromScale(interactiveScale, 0.3, interactiveHex),
+
     "border-strong-base": getFromScale(primaryScale, pos(0.35), primaryHex),
+    "border-strong-hover": getFromScale(primaryScale, pos(0.40), primaryHex),
+    "border-strong-active": getFromScale(primaryScale, pos(0.45), primaryHex),
+    "border-strong-selected": getFromScale(interactiveScale, 0.6, interactiveHex),
+    "border-strong-disabled": getFromScale(neutralScale, pos(0.3), neutralHex),
+    "border-strong-focus": getFromScale(interactiveScale, 0.7, interactiveHex),
+
     "border-interactive-base": getFromScale(interactiveScale, pos(0.4), interactiveHex),
     "border-interactive-hover": getFromScale(interactiveScale, pos(0.5), interactiveHex),
     "border-interactive-active": getFromScale(interactiveScale, pos(0.6), interactiveHex),
@@ -326,54 +387,20 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "icon-base": getFromScale(primaryScale, pos(0.7), primaryHex),
     "icon-hover": getFromScale(primaryScale, pos(0.8), primaryHex),
     "icon-active": getFromScale(primaryScale, pos(0.9), primaryHex),
-    "icon-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
     "icon-disabled": getFromScale(neutralScale, pos(0.4), neutralHex),
-    "icon-focus": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "icon-weak-base": getFromScale(primaryScale, pos(0.5), primaryHex),
-    "icon-strong-base": getFromScale(primaryScale, pos(0.9), primaryHex),
-    "icon-brand-base": getFromScale(primaryScale, 0.5, primaryHex),
-    "icon-interactive-base": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "icon-success-base": getFromScale(successScale, 0.5, successHex),
-    "icon-warning-base": getFromScale(warningScale, 0.5, warningHex),
-    "icon-critical-base": getFromScale(errorScale, 0.5, errorHex),
-    "icon-info-base": getFromScale(infoScale, 0.5, infoHex),
-    
-    "icon-diff-add-base": getFromScale(diffAddScale, 0.6, diffAddHex),
-    "icon-diff-delete-base": getFromScale(diffDeleteScale, 0.6, diffDeleteHex),
-    
-    // Syntax
-    "syntax-comment": getFromScale(primaryScale, pos(0.4), primaryHex),
-    "syntax-keyword": getFromScale(infoScale, pos(0.6), infoHex),
-    "syntax-function": getFromScale(interactiveScale, pos(0.6), interactiveHex),
-    "syntax-variable": getFromScale(primaryScale, pos(0.8), primaryHex),
-    "syntax-string": getFromScale(successScale, pos(0.6), successHex),
-    "syntax-number": getFromScale(warningScale, pos(0.6), warningHex),
-    "syntax-type": getFromScale(infoScale, pos(0.7), infoHex),
-    "syntax-operator": getFromScale(interactiveScale, pos(0.4), interactiveHex),
-    "syntax-punctuation": getFromScale(primaryScale, pos(0.5), primaryHex),
-    "syntax-object": getFromScale(primaryScale, pos(0.9), primaryHex),
-    "syntax-regexp": getFromScale(warningScale, pos(0.7), warningHex),
-    "syntax-primitive": getFromScale(warningScale, pos(0.5), warningHex),
-    "syntax-property": getFromScale(infoScale, pos(0.5), infoHex),
-    "syntax-constant": getFromScale(interactiveScale, pos(0.7), interactiveHex),
-    "syntax-success": getFromScale(successScale, pos(0.6), successHex),
-    "syntax-warning": getFromScale(warningScale, pos(0.6), warningHex),
-    "syntax-critical": getFromScale(errorScale, pos(0.6), errorHex),
-    "syntax-info": getFromScale(infoScale, pos(0.6), infoHex),
-    "syntax-diff-add": getFromScale(successScale, pos(0.6), successHex),
-    "syntax-diff-delete": getFromScale(errorScale, pos(0.6), errorHex),
+    "icon-brand": getFromScale(primaryScale, 0.5, primaryHex),
+    "icon-interactive": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "icon-success": getFromScale(successScale, 0.5, successHex),
+    "icon-warning": getFromScale(warningScale, 0.5, warningHex),
+    "icon-critical": getFromScale(errorScale, 0.5, errorHex),
+    "icon-info": getFromScale(infoScale, 0.5, infoHex),
 
-    // Markdown
-    "markdown-text": getFromScale(primaryScale, pos(0.8), primaryHex),
-    "markdown-heading": getFromScale(infoScale, pos(0.7), infoHex),
-    "markdown-link": getFromScale(interactiveScale, pos(0.6), interactiveHex),
-    "markdown-link-text": getFromScale(interactiveScale, pos(0.5), interactiveHex),
-    "markdown-code": getFromScale(successScale, pos(0.6), successHex),
-    "markdown-block-quote": getFromScale(warningScale, pos(0.5), warningHex),
-    "markdown-emph": getFromScale(warningScale, pos(0.5), warningHex),
-    "markdown-strong": getFromScale(warningScale, pos(0.7), warningHex),
-    "markdown-horizontal-rule": getFromScale(primaryScale, pos(0.3), primaryHex),
-    "markdown-list-item": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "icon-weak-base": getFromScale(primaryScale, pos(0.5), primaryHex),
+    "icon-weak-hover": getFromScale(primaryScale, pos(0.6), primaryHex),
+    "icon-weak-active": getFromScale(primaryScale, pos(0.7), primaryHex),
+    "icon-strong-base": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "icon-strong-hover": getFromScale(primaryScale, pos(0.95), primaryHex),
+    "icon-strong-active": getFromScale(primaryScale, pos(1.0), primaryHex),
 
     // Base tokens
     "primary-base": getFromScale(primaryScale, 0.5, primaryHex),
@@ -420,45 +447,95 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "diff-add-foreground": getFromScale(diffAddScale, 0.8, diffAddHex),
     "diff-delete-base": getFromScale(diffDeleteScale, 0.15, diffDeleteHex),
     "diff-delete-foreground": getFromScale(diffDeleteScale, 0.8, diffDeleteHex),
-    
-    "code-background": getFromScale(primaryScale, pos(0.04), primaryHex),
-    "code-foreground": getFromScale(primaryScale, pos(0.85), primaryHex),
-    
-    "tab-active": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "tab-inactive": getFromScale(primaryScale, pos(0.15), primaryHex),
-    "tab-hover": getFromScale(primaryScale, pos(0.2), primaryHex),
-    
-    "line-indicator": getFromScale(primaryScale, pos(0.2), primaryHex),
-    "line-indicator-active": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "line-indicator-hover": getFromScale(primaryScale, pos(0.3), primaryHex),
-    
-    "avatar-background": getFromScale(primaryScale, pos(0.4), primaryHex),
-    "avatar-foreground": getFromScale(primaryScale, pos(0.95), primaryHex),
-    
-    "input-base": getFromScale(primaryScale, pos(0.08), primaryHex),
-    "input-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
-    "input-active": getFromScale(primaryScale, pos(0.15), primaryHex),
-    "input-disabled": getFromScale(neutralScale, pos(0.05), neutralHex),
 
-    // Terminal ANSI colors
-    "terminal-ansi-black": isDark ? getFromScale(primaryScale, 0.05, primaryHex) : getFromScale(primaryScale, 0.95, primaryHex),
+    // Syntax
+    "syntax-comment": getFromScale(neutralScale, pos(0.5), neutralHex),
+    "syntax-keyword": getFromScale(infoScale, pos(0.6), infoHex),
+    "syntax-function": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "syntax-variable": getFromScale(primaryScale, pos(0.8), primaryHex),
+    "syntax-string": getFromScale(successScale, pos(0.6), successHex),
+    "syntax-number": getFromScale(warningScale, pos(0.6), warningHex),
+    "syntax-type": getFromScale(infoScale, pos(0.7), infoHex),
+    "syntax-operator": getFromScale(primaryScale, pos(0.6), primaryHex),
+    "syntax-punctuation": getFromScale(primaryScale, pos(0.4), primaryHex),
+    "syntax-object": getFromScale(primaryScale, pos(0.7), primaryHex),
+    "syntax-regexp": getFromScale(errorScale, pos(0.6), errorHex),
+    "syntax-primitive": getFromScale(warningScale, pos(0.7), warningHex),
+    "syntax-property": getFromScale(interactiveScale, pos(0.7), interactiveHex),
+    "syntax-constant": getFromScale(warningScale, pos(0.8), warningHex),
+    "syntax-tag": getFromScale(errorScale, pos(0.5), errorHex),
+    "syntax-attribute": getFromScale(warningScale, pos(0.5), warningHex),
+    "syntax-value": getFromScale(successScale, pos(0.5), successHex),
+    "syntax-namespace": getFromScale(infoScale, pos(0.5), infoHex),
+    "syntax-class": getFromScale(infoScale, pos(0.8), infoHex),
+    "syntax-success": getFromScale(successScale, pos(0.5), successHex),
+    "syntax-warning": getFromScale(warningScale, pos(0.5), warningHex),
+    "syntax-critical": getFromScale(errorScale, pos(0.5), errorHex),
+    "syntax-info": getFromScale(infoScale, pos(0.5), infoHex),
+    "syntax-diff-add": getFromScale(successScale, pos(0.7), successHex),
+    "syntax-diff-delete": getFromScale(errorScale, pos(0.7), errorHex),
+
+    // Markdown
+    "markdown-text": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "markdown-heading": getFromScale(primaryScale, pos(0.98), primaryHex),
+    "markdown-link": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "markdown-link-text": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "markdown-code": getFromScale(primaryScale, pos(0.8), primaryHex),
+    "markdown-block-quote": getFromScale(primaryScale, pos(0.4), primaryHex),
+    "markdown-emph": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "markdown-strong": getFromScale(primaryScale, pos(0.98), primaryHex),
+    "markdown-horizontal-rule": getFromScale(primaryScale, pos(0.2), primaryHex),
+    "markdown-list-item": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "markdown-list-enumeration": getFromScale(interactiveScale, pos(0.6), interactiveHex),
+    "markdown-image": getFromScale(infoScale, pos(0.6), infoHex),
+    "markdown-image-text": getFromScale(infoScale, pos(0.6), infoHex),
+    "markdown-code-block": getFromScale(primaryScale, pos(0.1), primaryHex),
+
+    // Avatars
+    "avatar-background": getFromScale(primaryScale, pos(0.2), primaryHex),
+    "avatar-foreground": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "avatar-background-pink": getFromScale(errorScale, pos(0.4), errorHex),
+    "avatar-background-mint": getFromScale(successScale, pos(0.4), successHex),
+    "avatar-background-orange": getFromScale(warningScale, pos(0.4), warningHex),
+    "avatar-background-purple": getFromScale(infoScale, pos(0.4), infoHex),
+    "avatar-background-cyan": getFromScale(interactiveScale, pos(0.4), interactiveHex),
+    "avatar-background-lime": getFromScale(successScale, pos(0.3), successHex),
+    "avatar-text-pink": "#FFFFFF",
+    "avatar-text-mint": "#FFFFFF",
+    "avatar-text-orange": "#FFFFFF",
+    "avatar-text-purple": "#FFFFFF",
+    "avatar-text-cyan": "#FFFFFF",
+    "avatar-text-lime": "#FFFFFF",
+
+    // Terminal
+    "terminal-ansi-black": isDark ? "#000000" : "#000000",
     "terminal-ansi-red": getFromScale(errorScale, 0.5, errorHex),
     "terminal-ansi-green": getFromScale(successScale, 0.5, successHex),
     "terminal-ansi-yellow": getFromScale(warningScale, 0.5, warningHex),
-    "terminal-ansi-blue": getFromScale(infoScale, 0.5, infoHex),
-    "terminal-ansi-magenta": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "terminal-ansi-cyan": getFromScale(infoScale, 0.4, infoHex),
-    "terminal-ansi-white": isDark ? getFromScale(primaryScale, 0.95, primaryHex) : getFromScale(primaryScale, 0.05, primaryHex),
-    "terminal-ansi-bright-black": isDark ? getFromScale(primaryScale, 0.2, primaryHex) : getFromScale(primaryScale, 0.8, primaryHex),
-    "terminal-ansi-bright-red": getFromScale(errorScale, 0.6, errorHex),
-    "terminal-ansi-bright-green": getFromScale(successScale, 0.6, successHex),
-    "terminal-ansi-bright-yellow": getFromScale(warningScale, 0.6, warningHex),
-    "terminal-ansi-bright-blue": getFromScale(infoScale, 0.6, infoHex),
-    "terminal-ansi-bright-magenta": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "terminal-ansi-bright-cyan": getFromScale(infoScale, 0.5, infoHex),
-    "terminal-ansi-bright-white": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.1, primaryHex),
-  }
+    "terminal-ansi-blue": getFromScale(primaryScale, 0.5, primaryHex),
+    "terminal-ansi-magenta": getFromScale(infoScale, 0.5, infoHex),
+    "terminal-ansi-cyan": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "terminal-ansi-white": isDark ? "#FFFFFF" : "#FFFFFF",
+    "terminal-ansi-bright-black": getFromScale(neutralScale, 0.6, neutralHex),
+    "terminal-ansi-bright-red": getFromScale(errorScale, 0.7, errorHex),
+    "terminal-ansi-bright-green": getFromScale(successScale, 0.7, successHex),
+    "terminal-ansi-bright-yellow": getFromScale(warningScale, 0.7, warningHex),
+    "terminal-ansi-bright-blue": getFromScale(primaryScale, 0.7, primaryHex),
+    "terminal-ansi-bright-magenta": getFromScale(infoScale, 0.7, infoHex),
+    "terminal-ansi-bright-cyan": getFromScale(interactiveScale, 0.7, interactiveHex),
+    "terminal-ansi-bright-white": isDark ? "#FFFFFF" : "#F0F0F0",
 
+    // Editor Misc
+    "code-background": getFromScale(primaryScale, pos(0.02), primaryHex),
+    "code-foreground": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "line-indicator": getFromScale(primaryScale, pos(0.2), primaryHex),
+    "line-indicator-active": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "line-indicator-hover": getFromScale(primaryScale, pos(0.3), primaryHex),
+    "tab-active": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "tab-inactive": "transparent",
+    "tab-hover": getFromScale(primaryScale, pos(0.1), primaryHex),
+    "border-color": getFromScale(primaryScale, pos(0.25), primaryHex),
+  }
   return converted
 }
 
