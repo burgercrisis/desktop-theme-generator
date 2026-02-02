@@ -68,7 +68,9 @@ export const exportToOpencode9SeedJSON = (
   darkSeeds: SeedColor[],
   manualOverrides: Record<string, Record<string, string>> = { light: {}, dark: {} }
 ): string => {
-  const getSeedMap = (seeds: SeedColor[]) => {
+  console.group(`🎨 Opencode 9-Seed Export: ${name}`)
+  
+  const getSeedMap = (seeds: SeedColor[], mode: string) => {
     const seedMap: Record<string, string> = {}
     
     // Required keys for Opencode ThemeSeedColors
@@ -77,6 +79,7 @@ export const exportToOpencode9SeedJSON = (
       'info', 'interactive', 'diffAdd', 'diffDelete'
     ]
 
+    console.log(`🌱 Generating seeds for ${mode} mode...`)
     seeds.forEach(s => {
       const targetName = s.name as string
       if (targetName === 'critical') {
@@ -94,19 +97,26 @@ export const exportToOpencode9SeedJSON = (
     requiredSeeds.forEach(key => {
       if (!seedMap[key]) {
         seedMap[key] = neutralHex
+        console.warn(`⚠️ Seed "${key}" missing for ${mode}, falling back to neutral: ${neutralHex}`)
       }
     })
+
+    console.table(Object.entries(seedMap).map(([name, hex]) => ({ Seed: name, Hex: hex })))
     return seedMap
   }
 
-  const lightSeedMap = getSeedMap(lightSeeds)
-  const darkSeedMap = getSeedMap(darkSeeds)
+  const lightSeedMap = getSeedMap(lightSeeds, 'light')
+  const darkSeedMap = getSeedMap(darkSeeds, 'dark')
 
   // Include all calculated engine colors as the baseline, then apply manual overrides
-  // We filter the baseline to only include keys that exist in the OpencodeThemeColors type
-  // and then merge in the manual overrides which might contain custom keys.
   const lightOverrides: Record<string, string> = { ...lightColors, ...(manualOverrides.light || {}) }
   const darkOverrides: Record<string, string> = { ...darkColors, ...(manualOverrides.dark || {}) }
+
+  const lightOverrideCount = Object.keys(manualOverrides.light || {}).length
+  const darkOverrideCount = Object.keys(manualOverrides.dark || {}).length
+  
+  if (lightOverrideCount > 0) console.log(`🔧 Applied ${lightOverrideCount} manual overrides for light mode`)
+  if (darkOverrideCount > 0) console.log(`🔧 Applied ${darkOverrideCount} manual overrides for dark mode`)
 
   const opencodeTheme: OpencodeThemeJSON = {
     $schema: "https://raw.githubusercontent.com/opencode/opencode-desktop/main/schemas/theme.schema.json",
@@ -122,6 +132,7 @@ export const exportToOpencode9SeedJSON = (
     }
   }
 
+  console.groupEnd()
   return JSON.stringify(opencodeTheme, null, 2)
 }
 
@@ -138,6 +149,8 @@ export const writeOpencode9ThemeFile = async (
 ): Promise<{ success: boolean; error?: string }> => {
   const jsonContent = exportToOpencode9SeedJSON(name, lightColors, darkColors, lightSeeds, darkSeeds, overrides)
   const json = JSON.parse(jsonContent)
+
+  console.log(`📤 Syncing theme "${name}" to Opencode API...`)
 
   const apiUrls = [
     "http://127.0.0.1:3032/api/write-theme",
@@ -161,6 +174,7 @@ export const writeOpencode9ThemeFile = async (
       })
 
       if (response.ok) {
+        console.log(`✅ Successfully synced to ${apiUrl}`)
         return { success: true }
       }
     } catch (error: any) {
@@ -168,6 +182,7 @@ export const writeOpencode9ThemeFile = async (
     }
   }
 
+  console.error(`❌ Sync failed. Last error: ${lastError?.message || "Unknown error"}`)
   return { success: false, error: lastError?.message || "Failed to write theme file" }
 }
 

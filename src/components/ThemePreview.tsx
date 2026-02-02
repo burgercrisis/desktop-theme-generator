@@ -235,203 +235,227 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
   ];
 
   return (
-    <div 
-      className="w-full h-full rounded-lg overflow-hidden relative flex flex-col"
-      style={{ 
-        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontSize: '13px',
-        lineHeight: 1.5,
-        color: theme.foreground,
-        backgroundColor: theme.background,
-      }}
-    >
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .diff-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .diff-scrollbar::-webkit-scrollbar-track {
-          background: ${theme.background};
-        }
-        .diff-scrollbar::-webkit-scrollbar-thumb {
-          background: ${theme.scrollbarThumb};
-          border-radius: 4px;
-        }
-      `}</style>
-
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex flex-col items-center py-2 border-r" style={{ width: '40px', backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
-          {sidebarItems.map((item, idx) => (
-            <button 
-              key={idx}
-              className="w-8 h-8 flex items-center justify-center rounded transition-colors mb-1"
-              style={{ 
-                backgroundColor: item.active ? theme.surfaceBase : 'transparent',
-                color: item.active ? theme.primary : theme.iconWeak
-              }}
-            >
-              <span className="text-sm">{item.icon}</span>
-            </button>
-          ))}
+    <div className="flex flex-col h-full rounded-lg border overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-colors" style={{ backgroundColor: theme.surfaceStrong, borderColor: theme.borderBase }}>
+      {/* Terminal Header */}
+      <div className="px-3 py-1.5 border-b flex items-center justify-between transition-colors" style={{ backgroundColor: theme.surfaceStronger || theme.surfaceRaised, borderColor: theme.borderBase }}>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.critical, opacity: 0.3, border: `1px solid ${theme.critical}` }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.warning, opacity: 0.3, border: `1px solid ${theme.warning}` }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.success, opacity: 0.3, border: `1px solid ${theme.success}` }} />
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest ml-2" style={{ color: theme.accent }}>
+            # LIVE_RENDER_PREVIEW
+          </span>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: theme.primary }} />
+            <span className="text-[8px] font-mono uppercase" style={{ color: theme.primary, opacity: 0.6 }}>Renderer_Active</span>
+          </div>
+          <span className="text-[8px] font-mono" style={{ color: theme.foregroundWeak, opacity: 0.4 }}>FPS: 60</span>
+        </div>
+      </div>
 
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ backgroundColor: theme.background }}>
-          <div className="flex h-9 shrink-0 border-b items-center px-3" style={{ backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
-            <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>src/components/Button.tsx</span>
-            <div className="flex-1" />
-            <button 
-              className="w-6 h-6 flex items-center justify-center rounded"
-              style={{ color: theme.iconWeak }}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 16 16">
-                <path d="M2 3.5A1.5 1.5 0 013.5 2h2.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H12.5A1.5 1.5 0 0114 5.5v1.401a2.986 2.986 0 00-1.5-.401h-9a2.986 2.986 0 00-1.5.401V3.5z" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M3.5 6A1.5 1.5 0 002 7.5v5A1.5 1.5 0 003.5 14h9a1.5 1.5 0 001.5-1.5v-5A1.5 1.5 0 0012.5 6h-9z" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
+      <div 
+        className="flex-1 w-full relative flex flex-col transition-colors"
+        style={{ 
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontSize: '13px',
+          lineHeight: 1.5,
+          color: theme.foreground,
+          backgroundColor: theme.background,
+        }}
+      >
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .animate-spin {
+            animation: spin 1s linear infinite;
+          }
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .diff-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .diff-scrollbar::-webkit-scrollbar-track {
+            background: ${theme.background};
+          }
+          .diff-scrollbar::-webkit-scrollbar-thumb {
+            background: ${theme.scrollbarThumb};
+            border-radius: 4px;
+          }
+        `}</style>
+
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex flex-col items-center py-2 border-r transition-colors" style={{ width: '40px', backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
+            {sidebarItems.map((item, idx) => (
+              <button 
+                key={idx}
+                className="w-8 h-8 flex items-center justify-center rounded transition-colors mb-1"
+                style={{ 
+                  backgroundColor: item.active ? theme.surfaceBase : 'transparent',
+                  color: item.active ? theme.primary : theme.iconWeak
+                }}
+              >
+                <span className="text-sm">{item.icon}</span>
+              </button>
+            ))}
           </div>
 
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden diff-scrollbar" style={{ overflowY: 'auto' }}>
-              <div className="flex">
-                <div className="w-10 shrink-0 text-right select-none" style={{ color: theme.foregroundWeak }}>
-                  {Array.from({ length: 20 }, (_, i) => (
-                    <div 
-                      key={i} 
-                      className="h-6 text-xs leading-6 pr-2"
-                      style={{ 
-                        color: i + 1 === 1 || i + 1 === 8 || i + 1 === 9 || i + 1 === 20 ? theme.foregroundWeak : theme.foregroundWeak,
-                        opacity: 0.4
-                      }}
-                    >
-                      {i + 1}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex-1 font-mono text-xs">
-                  {diffLines.map((line, idx) => (
-                    <div 
-                      key={idx}
-                      className="h-6 flex items-center"
-                      style={{
-                        backgroundColor: 
-                          line.type === 'added' ? theme.diffAddBackground : 
-                          line.type === 'removed' ? theme.diffRemoveBackground : 
-                          line.type === 'hunk' ? theme.surfaceBase : 'transparent',
-                        color: 
-                          line.type === 'added' ? theme.diffAddForeground :
-                          line.type === 'removed' ? theme.diffRemoveForeground :
-                          line.type === 'header' ? theme.foregroundWeak :
-                          line.type === 'hunk' ? theme.accent : theme.codeForeground,
-                      }}
-                    >
-                      <span 
-                        className="w-6 text-center opacity-50 shrink-0"
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ backgroundColor: theme.background }}>
+            <div className="flex h-9 shrink-0 border-b items-center px-3 transition-colors" style={{ backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
+              <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>src/components/Button.tsx</span>
+              <div className="flex-1" />
+              <button 
+                className="w-6 h-6 flex items-center justify-center rounded"
+                style={{ color: theme.iconWeak }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                  <path d="M2 3.5A1.5 1.5 0 013.5 2h2.879a1.5 1.5 0 011.06.44l1.122 1.12A1.5 1.5 0 009.62 4H12.5A1.5 1.5 0 0114 5.5v1.401a2.986 2.986 0 00-1.5-.401h-9a2.986 2.986 0 00-1.5.401V3.5z" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M3.5 6A1.5 1.5 0 002 7.5v5A1.5 1.5 0 003.5 14h9a1.5 1.5 0 001.5-1.5v-5A1.5 1.5 0 0012.5 6h-9z" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden diff-scrollbar" style={{ overflowY: 'auto' }}>
+                <div className="flex">
+                  <div className="w-10 shrink-0 text-right select-none" style={{ color: theme.foregroundWeak }}>
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <div 
+                        key={i} 
+                        className="h-6 text-xs leading-6 pr-2"
                         style={{ 
-                          color: 
-                            line.type === 'added' ? theme.success :
-                            line.type === 'removed' ? theme.critical : 'transparent'
+                          color: theme.foregroundWeak,
+                          opacity: 0.4
                         }}
                       >
-                        {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : line.type === 'header' || line.type === 'hunk' ? '' : ' '}
-                      </span>
-                      <span className={line.type === 'header' ? 'opacity-60 truncate' : 'truncate'}>
-                        {line.type === 'header' || line.type === 'hunk' ? line.content : highlightCode(line.content)}
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex-1 font-mono text-xs">
+                    {diffLines.map((line, idx) => (
+                      <div 
+                        key={idx}
+                        className="h-6 flex items-center"
+                        style={{
+                          backgroundColor: 
+                            line.type === 'added' ? theme.diffAddBackground : 
+                            line.type === 'removed' ? theme.diffRemoveBackground : 
+                            line.type === 'hunk' ? theme.surfaceBase : 'transparent',
+                          color: 
+                            line.type === 'added' ? theme.diffAddForeground :
+                            line.type === 'removed' ? theme.diffRemoveForeground :
+                            line.type === 'header' ? theme.foregroundWeak :
+                            line.type === 'hunk' ? theme.accent : theme.codeForeground,
+                        }}
+                      >
+                        <span 
+                          className="w-6 text-center opacity-50 shrink-0"
+                          style={{ 
+                            color: 
+                              line.type === 'added' ? theme.success :
+                              line.type === 'removed' ? theme.critical : 'transparent'
+                          }}
+                        >
+                          {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : line.type === 'header' || line.type === 'hunk' ? '' : ' '}
+                        </span>
+                        <span className={line.type === 'header' ? 'opacity-60 truncate' : 'truncate'}>
+                          {line.type === 'header' || line.type === 'hunk' ? line.content : highlightCode(line.content)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-24 border-t px-3 py-2 font-mono text-[11px] overflow-hidden shrink-0 transition-colors" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceBase }}>
+                  <div className="flex gap-2 mb-1">
+                    <span style={{ color: theme.terminalGreen }}>$</span>
+                    <span style={{ color: theme.terminalWhite }}>npm run dev</span>
+                  </div>
+                  <div style={{ color: theme.foregroundWeak }}>{`> vite v5.0.0 dev server running at:`}</div>
+                  <div className="flex gap-2">
+                    <span style={{ color: theme.foregroundWeak }}>{`> Local:`}</span>
+                    <span style={{ color: theme.terminalBlue }}>http://localhost:5173/</span>
+                  </div>
+                  <div className="flex gap-1 mt-2">
+                    {[theme.terminalBlack, theme.terminalRed, theme.terminalGreen, theme.terminalYellow, theme.terminalBlue, theme.terminalMagenta, theme.terminalCyan, theme.terminalWhite].map((c, i) => (
+                      <div key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-48 border-l shrink-0 flex flex-col transition-colors" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
+                <div className="h-7 border-b flex items-center px-2" style={{ borderColor: theme.borderWeak }}>
+                  <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>Session</span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-1">
+                  {sessionItems.map((item, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center gap-1.5 px-1.5 py-1 rounded cursor-pointer transition-colors"
+                      style={{ 
+                        backgroundColor: item.active ? theme.surfaceBase : 'transparent',
+                      }}
+                    >
+                      <span className="text-xs">{item.icon}</span>
+                      <span className="text-xs truncate" style={{ color: item.type === 'folder' ? theme.foregroundWeak : theme.foreground }}>
+                        {item.name}
                       </span>
                     </div>
                   ))}
                 </div>
-          </div>
-
-          <div className="h-24 border-t px-3 py-2 font-mono text-[11px] overflow-hidden" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceBase }}>
-            <div className="flex gap-2 mb-1">
-              <span style={{ color: theme.terminalGreen }}>$</span>
-              <span style={{ color: theme.terminalWhite }}>npm run dev</span>
-            </div>
-            <div style={{ color: theme.foregroundWeak }}>{`> vite v5.0.0 dev server running at:`}</div>
-            <div className="flex gap-2">
-              <span style={{ color: theme.foregroundWeak }}>{`> Local:`}</span>
-              <span style={{ color: theme.terminalBlue }}>http://localhost:5173/</span>
-            </div>
-            <div className="flex gap-1 mt-2">
-              {[theme.terminalBlack, theme.terminalRed, theme.terminalGreen, theme.terminalYellow, theme.terminalBlue, theme.terminalMagenta, theme.terminalCyan, theme.terminalWhite].map((c, i) => (
-                <div key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="w-48 border-l shrink-0 flex flex-col" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
-              <div className="h-7 border-b flex items-center px-2" style={{ borderColor: theme.borderWeak }}>
-                <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>Session</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-1">
-                {sessionItems.map((item, idx) => (
-                  <div 
-                    key={idx}
-                    className="flex items-center gap-1.5 px-1.5 py-1 rounded cursor-pointer"
-                    style={{ 
-                      backgroundColor: item.active ? theme.surfaceBase : 'transparent',
-                    }}
-                  >
-                    <span className="text-xs">{item.icon}</span>
-                    <span className="text-xs truncate" style={{ color: item.type === 'folder' ? theme.foregroundWeak : theme.foreground }}>
-                      {item.name}
+            </div>
+          </div>
+
+          <div className="w-64 border-l flex flex-col shrink-0 transition-colors" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
+            <div className="h-7 border-b flex items-center px-2" style={{ borderColor: theme.borderWeak }}>
+              <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>Terminal</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 font-mono text-xs diff-scrollbar" style={{ overflowY: 'auto' }}>
+              {terminalHistory.map((item, idx) => (
+                <div key={idx} className="mb-1">
+                  {item.type === 'command' ? (
+                    <span className="flex items-center gap-1" style={{ color: theme.accent }}>
+                      <span>$</span>
+                      <span style={{ color: theme.foreground }}>{item.content.replace('$ ', '')}</span>
                     </span>
-                  </div>
-                ))}
+                  ) : (
+                    <span style={{ color: theme.foregroundWeak }}>{item.content}</span>
+                  )}
+                </div>
+              ))}
+              <div className="flex items-center gap-1 mt-1" style={{ color: theme.accent }}>
+                <span>$</span>
+                <span className="animate-pulse" style={{ color: theme.foreground }}>_</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="w-64 border-l flex flex-col shrink-0" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
-          <div className="h-7 border-b flex items-center px-2" style={{ borderColor: theme.borderWeak }}>
-            <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>Terminal</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 font-mono text-xs diff-scrollbar" style={{ overflowY: 'auto' }}>
-            {terminalHistory.map((item, idx) => (
-              <div key={idx} className="mb-1">
-                {item.type === 'command' ? (
-                  <span className="flex items-center gap-1" style={{ color: theme.accent }}>
-                    <span>$</span>
-                    <span style={{ color: theme.foreground }}>{item.content.replace('$ ', '')}</span>
-                  </span>
-                ) : (
-                  <span style={{ color: theme.foregroundWeak }}>{item.content}</span>
-                )}
-              </div>
-            ))}
-            <div className="flex items-center gap-1 mt-1" style={{ color: theme.accent }}>
-              <span>$</span>
-              <span className="animate-pulse" style={{ color: theme.foreground }}>_</span>
-            </div>
-          </div>
+        <div className="h-9 shrink-0 border-t flex items-center px-3 gap-2 transition-colors" style={{ backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
+          <button className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors shadow-sm" style={{ backgroundColor: theme.primary, color: theme.primaryText }}>
+            <span>Accept</span>
+          </button>
+          <button className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors shadow-sm border" style={{ backgroundColor: theme.surfaceBase, color: theme.foreground, borderColor: theme.borderWeak }}>
+            <span>Reject</span>
+          </button>
+          <div className="flex-1" />
+          <span className="text-xs" style={{ color: theme.foregroundWeak }}>2 changes in session</span>
         </div>
-      </div>
-
-      <div className="h-9 shrink-0 border-t flex items-center px-3 gap-2" style={{ backgroundColor: theme.surfaceRaised, borderColor: theme.borderWeak }}>
-        <button className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors" style={{ backgroundColor: theme.primary, color: theme.primaryText }}>
-          <span>Accept</span>
-        </button>
-        <button className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors" style={{ backgroundColor: theme.surfaceBase, color: theme.foreground, border: `1px solid ${theme.borderWeak}` }}>
-          <span>Reject</span>
-        </button>
-        <div className="flex-1" />
-        <span className="text-xs" style={{ color: theme.foregroundWeak }}>2 changes in session</span>
       </div>
     </div>
+  );
   );
 };
 

@@ -250,13 +250,13 @@ const App: React.FC = () => {
 
   // WCAG Compliance Pairs - Comprehensive list for checker
   const wcagPairs = useMemo(() => {
-    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string }> = []
+    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff' }> = []
     
-    const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false) => {
+    const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors] as string
       const fg = themeColors[fgKey as keyof OpencodeThemeColors] as string
       if (bg && fg) {
-        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText })
+        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText, type })
       }
     }
 
@@ -266,78 +266,78 @@ const App: React.FC = () => {
     
     backgrounds.forEach(bg => {
       coreTexts.forEach(fg => {
-        addPair("Core Typography", `${fg.split("-")[1]} on ${bg.split("-")[1]}`, bg, fg, `${fg} on ${bg}`)
+        addPair("Core Typography", `${fg.split("-")[1]} on ${bg.split("-")[1]}`, bg, fg, `${fg} on ${bg}`, false, 'read')
       })
     })
 
     // --- SURFACES & HOVERS ---
     const mainSurfaces = ["surface-base", "surface-raised-base", "surface-float-base", "surface-weak", "surface-strong"]
     mainSurfaces.forEach(bg => {
-      addPair("Surfaces", `Base text on ${bg.split("-")[1]}`, bg, "text-base", `text-base on ${bg}`)
+      addPair("Surfaces", `Base text on ${bg.split("-")[1]}`, bg, "text-base", `text-base on ${bg}`, false, 'read')
     })
-    addPair("Surfaces", "Text on Base Hover", "surface-base-hover", "text-base", "Text on surface-base-hover")
-    addPair("Surfaces", "Text on Base Active", "surface-base-active", "text-base", "Text on surface-base-active")
-    addPair("Surfaces", "Text on Raised Hover", "surface-raised-base-hover", "text-base", "Text on surface-raised-base-hover")
-    addPair("Surfaces", "Text on Float Hover", "surface-float-base-hover", "text-base", "Text on surface-float-base-hover")
-    addPair("Surfaces", "Interactive Active BG", "surface-base-interactive-active", "text-on-interactive-base", "Text on surface-base-interactive-active")
+    addPair("Surfaces", "Text on Base Hover", "surface-base-hover", "text-base", "Text on surface-base-hover", false, 'read')
+    addPair("Surfaces", "Text on Base Active", "surface-base-active", "text-base", "Text on surface-base-active", false, 'read')
+    addPair("Surfaces", "Text on Raised Hover", "surface-raised-base-hover", "text-base", "Text on surface-raised-base-hover", false, 'read')
+    addPair("Surfaces", "Text on Float Hover", "surface-float-base-hover", "text-base", "Text on surface-float-base-hover", false, 'read')
+    addPair("Surfaces", "Interactive Active BG", "surface-base-interactive-active", "text-on-interactive-base", "Text on surface-base-interactive-active", false, 'read')
 
     // --- BRAND & INTERACTIVE ---
-    addPair("Brand & Action", "On Brand", "surface-brand-base", "text-on-brand-base", "Text on Brand Surface")
-    addPair("Brand & Action", "On Brand Hover", "surface-brand-hover", "text-on-brand-base", "Text on Brand Hover")
-    addPair("Brand & Action", "On Brand Active", "surface-brand-active", "text-on-brand-base", "Text on Brand Active")
-    addPair("Brand & Action", "On Interactive", "surface-interactive-base", "text-on-interactive-base", "Text on Interactive Surface")
-    addPair("Brand & Action", "On Interactive Hover", "surface-interactive-hover", "text-on-interactive-base", "Text on Interactive Hover")
-    addPair("Brand & Action", "On Interactive Active", "surface-interactive-active", "text-on-interactive-base", "Text on Interactive Active")
-    addPair("Brand & Action", "On Interactive Weak", "surface-interactive-weak", "text-on-interactive-weak", "Text on Interactive Weak Surface")
-    addPair("Brand & Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background")
-    addPair("Brand & Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true)
-    addPair("Brand & Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true)
+    addPair("Brand & Action", "On Brand", "surface-brand-base", "text-on-brand-base", "Text on Brand Surface", false, 'action')
+    addPair("Brand & Action", "On Brand Hover", "surface-brand-hover", "text-on-brand-base", "Text on Brand Hover", false, 'action')
+    addPair("Brand & Action", "On Brand Active", "surface-brand-active", "text-on-brand-base", "Text on Brand Active", false, 'action')
+    addPair("Brand & Action", "On Interactive", "surface-interactive-base", "text-on-interactive-base", "Text on Interactive Surface", false, 'action')
+    addPair("Brand & Action", "On Interactive Hover", "surface-interactive-hover", "text-on-interactive-base", "Text on Interactive Hover", false, 'action')
+    addPair("Brand & Action", "On Interactive Active", "surface-interactive-active", "text-on-interactive-base", "Text on Interactive Active", false, 'action')
+    addPair("Brand & Action", "On Interactive Weak", "surface-interactive-weak", "text-on-interactive-weak", "Text on Interactive Weak Surface", false, 'action')
+    addPair("Brand & Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background", false, 'action')
+    addPair("Brand & Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true, 'action')
+    addPair("Brand & Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true, 'action')
 
     // --- SEMANTIC STATES ---
     const semanticTypes = ["success", "warning", "critical", "info"]
     semanticTypes.forEach(type => {
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text`, `surface-${type}-base`, `text-on-${type}-base`, `${type} state text contrast`)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Hover)`, `surface-${type}-hover`, `text-on-${type}-base`, `${type} text on hover surface`)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Active)`, `surface-${type}-active`, `text-on-${type}-base`, `${type} text on active surface`)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon (On Surface)`, `surface-${type}-base`, `text-on-${type}-base`, `${type} icon on base surface`, true)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true)
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Weak`, `surface-${type}-weak`, `text-on-${type}-base`, `Text on weak ${type} surface`)
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text`, `surface-${type}-base`, `text-on-${type}-base`, `${type} state text contrast`, false, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Hover)`, `surface-${type}-hover`, `text-on-${type}-base`, `${type} text on hover surface`, false, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Active)`, `surface-${type}-active`, `text-on-${type}-base`, `${type} text on active surface`, false, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon (On Surface)`, `surface-${type}-base`, `text-on-${type}-base`, `${type} icon on base surface`, true, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true, 'action')
+      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Weak`, `surface-${type}-weak`, `text-on-${type}-base`, `Text on weak ${type} surface`, false, 'action')
     })
 
     // --- INPUTS ---
-    addPair("Inputs", "Input Text", "input-base", "text-base", "Text inside input field")
-    addPair("Inputs", "Input Border", "background-base", "border-base", "Input border on background", true)
-    addPair("Inputs", "Input Placeholder", "input-base", "text-weaker", "Placeholder text contrast")
-    addPair("Inputs", "Input Hover", "input-hover", "text-base", "Text in hovered input")
-    addPair("Inputs", "Input Active", "input-active", "text-base", "Text in active input")
+    addPair("Inputs", "Input Text", "input-base", "text-base", "Text inside input field", false, 'shell')
+    addPair("Inputs", "Input Border", "background-base", "border-base", "Input border on background", true, 'shell')
+    addPair("Inputs", "Input Placeholder", "input-base", "text-weaker", "Placeholder text contrast", false, 'shell')
+    addPair("Inputs", "Input Hover", "input-hover", "text-base", "Text in hovered input", false, 'shell')
+    addPair("Inputs", "Input Active", "input-active", "text-base", "Text in active input", false, 'shell')
 
     // --- UI COMPONENTS (NON-TEXT 3:1) ---
-    addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true)
-    addPair("UI Components", "Border Hover", "background-base", "border-hover", "Border hover on background", true)
-    addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true)
-    addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true)
-    addPair("UI Components", "Icon Hover", "background-base", "icon-hover", "Icon hover on background", true)
-    addPair("UI Components", "Weak Icon", "background-base", "icon-weak-base", "Weak icon on background", true)
-    addPair("UI Components", "Invert Text (Base)", "background-stronger", "text-invert-base", "Inverted base text contrast")
-    addPair("UI Components", "Invert Text (Strong)", "background-stronger", "text-invert-strong", "Inverted strong text contrast")
+    addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true, 'shell')
+    addPair("UI Components", "Border Hover", "background-base", "border-hover", "Border hover on background", true, 'shell')
+    addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true, 'shell')
+    addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true, 'shell')
+    addPair("UI Components", "Icon Hover", "background-base", "icon-hover", "Icon hover on background", true, 'shell')
+    addPair("UI Components", "Weak Icon", "background-base", "icon-weak-base", "Weak icon on background", true, 'shell')
+    addPair("UI Components", "Invert Text (Base)", "background-stronger", "text-invert-base", "Inverted base text contrast", false, 'read')
+    addPair("UI Components", "Invert Text (Strong)", "background-stronger", "text-invert-strong", "Inverted strong text contrast", false, 'read')
 
     // --- DIFF STATES ---
-    addPair("Diff", "Add Text", "surface-diff-add-base", "text-diff-add-base", "Diff Add text contrast")
-    addPair("Diff", "Delete Text", "surface-diff-delete-base", "text-diff-delete-base", "Diff Delete text contrast")
-    addPair("Diff", "Add Weak", "surface-diff-add-weak", "text-diff-add-base", "Add text on weak background")
-    addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background")
-    addPair("Diff", "Add Strong", "surface-diff-add-strong", "text-diff-add-strong", "Strong Add text contrast")
-    addPair("Diff", "Delete Strong", "surface-diff-delete-strong", "text-diff-delete-strong", "Strong Delete text contrast")
-    addPair("Diff", "Add Icon", "background-base", "icon-diff-add-base", "Diff add icon on background", true)
-    addPair("Diff", "Delete Icon", "background-base", "icon-diff-delete-base", "Diff delete icon on background", true)
+    addPair("Diff", "Add Text", "surface-diff-add-base", "text-diff-add-base", "Diff Add text contrast", false, 'diff')
+    addPair("Diff", "Delete Text", "surface-diff-delete-base", "text-diff-delete-base", "Diff Delete text contrast", false, 'diff')
+    addPair("Diff", "Add Weak", "surface-diff-add-weak", "text-diff-add-base", "Add text on weak background", false, 'diff')
+    addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background", false, 'diff')
+    addPair("Diff", "Add Strong", "surface-diff-add-strong", "text-diff-add-strong", "Strong Add text contrast", false, 'diff')
+    addPair("Diff", "Delete Strong", "surface-diff-delete-strong", "text-diff-delete-strong", "Strong Delete text contrast", false, 'diff')
+    addPair("Diff", "Add Icon", "background-base", "icon-diff-add-base", "Diff add icon on background", true, 'diff')
+    addPair("Diff", "Delete Icon", "background-base", "icon-diff-delete-base", "Diff delete icon on background", true, 'diff')
 
     // --- SELECTION & FOCUS ---
-    addPair("Accessibility", "Selection", "selection-background", "selection-foreground", "Text selection contrast")
-    addPair("Accessibility", "Inactive Selection", "selection-inactive-background", "text-base", "Inactive selection background contrast")
-    addPair("Accessibility", "Focus Ring", "background-base", "focus-ring", "Focus ring contrast on background", true)
-    addPair("Accessibility", "Scrollbar Thumb", "scrollbar-track", "scrollbar-thumb", "Scrollbar thumb contrast on track", true)
-    addPair("Accessibility", "Scrollbar on BG", "background-base", "scrollbar-thumb", "Scrollbar thumb on background", true)
+    addPair("Accessibility", "Selection", "selection-background", "selection-foreground", "Text selection contrast", false, 'read')
+    addPair("Accessibility", "Inactive Selection", "selection-inactive-background", "text-base", "Inactive selection background contrast", false, 'read')
+    addPair("Accessibility", "Focus Ring", "background-base", "focus-ring", "Focus ring contrast on background", true, 'shell')
+    addPair("Accessibility", "Scrollbar Thumb", "scrollbar-track", "scrollbar-thumb", "Scrollbar thumb contrast on track", true, 'shell')
+    addPair("Accessibility", "Scrollbar on BG", "background-base", "scrollbar-thumb", "Scrollbar thumb on background", true, 'shell')
 
     // --- SYNTAX HIGHLIGHTING ---
     const syntaxTokens = [
@@ -348,7 +348,7 @@ const App: React.FC = () => {
     ]
     syntaxTokens.forEach(token => {
       const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
-      addPair("Syntax", label, "background-base", token, `Syntax ${label} on editor background`)
+      addPair("Syntax", label, "background-base", token, `Syntax ${label} on editor background`, false, 'shell')
     })
 
     // --- MARKDOWN ---
@@ -359,25 +359,25 @@ const App: React.FC = () => {
     ]
     markdownTokens.forEach(token => {
       const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
-      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`)
+      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`, false, 'read')
     })
-    addPair("Markdown", "Horizontal Rule", "background-base", "markdown-horizontal-rule", "Markdown horizontal rule contrast", true)
+    addPair("Markdown", "Horizontal Rule", "background-base", "markdown-horizontal-rule", "Markdown horizontal rule contrast", true, 'read')
 
     // --- INDICATORS & UI ---
-    addPair("UI Elements", "Line Indicator", "background-base", "line-indicator", "Line indicator contrast", true)
-    addPair("UI Elements", "Line Indicator Active", "background-base", "line-indicator-active", "Active line indicator contrast", true)
-    addPair("UI Elements", "Line Indicator Hover", "background-base", "line-indicator-hover", "Hover line indicator contrast", true)
-    addPair("UI Elements", "Tab Active", "background-base", "tab-active", "Active tab indicator contrast", true)
-    addPair("UI Elements", "Tab Inactive", "background-base", "tab-inactive", "Inactive tab background contrast", true)
-    addPair("UI Elements", "Tab Hover", "background-base", "tab-hover", "Hover tab background contrast", true)
-    addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast")
-    addPair("UI Elements", "Avatar on BG", "background-base", "avatar-background", "Avatar background on main BG", true)
+    addPair("UI Elements", "Line Indicator", "background-base", "line-indicator", "Line indicator contrast", true, 'shell')
+    addPair("UI Elements", "Line Indicator Active", "background-base", "line-indicator-active", "Active line indicator contrast", true, 'shell')
+    addPair("UI Elements", "Line Indicator Hover", "background-base", "line-indicator-hover", "Hover line indicator contrast", true, 'shell')
+    addPair("UI Elements", "Tab Active", "background-base", "tab-active", "Active tab indicator contrast", true, 'shell')
+    addPair("UI Elements", "Tab Inactive", "background-base", "tab-inactive", "Inactive tab background contrast", true, 'shell')
+    addPair("UI Elements", "Tab Hover", "background-base", "tab-hover", "Hover tab background contrast", true, 'shell')
+    addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast", false, 'read')
+    addPair("UI Elements", "Avatar on BG", "background-base", "avatar-background", "Avatar background on main BG", true, 'read')
 
     // --- TERMINAL ---
     const ansiColors = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"]
     ansiColors.forEach(color => {
-      addPair("Terminal", `ANSI ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-${color}`, `Terminal ${color} on background`)
-      addPair("Terminal", `Bright ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-bright-${color}`, `Terminal bright ${color} on background`)
+      addPair("Terminal", `ANSI ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-${color}`, `Terminal ${color} on background`, false, 'shell')
+      addPair("Terminal", `Bright ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-bright-${color}`, `Terminal bright ${color} on background`, false, 'shell')
     })
 
     return pairs
@@ -604,6 +604,7 @@ const App: React.FC = () => {
 
   // Handlers for Matrix Router
   const handleSeedOverride = useCallback((seedName: string, hex: string) => {
+    console.log(`🌱 Seed Override: Setting ${seedName} to ${hex} for ${activeMode} mode`)
     setSeedOverrides(prev => ({
       ...prev,
       [activeMode]: {
@@ -614,6 +615,7 @@ const App: React.FC = () => {
   }, [activeMode])
 
   const handleSeedReset = useCallback((seedName: string) => {
+    console.log(`♻️ Seed Reset: Clearing override for ${seedName} in ${activeMode} mode`)
     setSeedOverrides(prev => {
       const updated = { ...prev, [activeMode]: { ...(prev[activeMode] || {}) } }
       delete updated[activeMode][seedName]
@@ -622,6 +624,7 @@ const App: React.FC = () => {
   }, [activeMode])
 
   const handleManualOverride = useCallback((property: string, hex: string) => {
+    console.log(`🎨 Manual Override: Setting ${property} to ${hex} for ${activeMode} mode`)
     setManualOverrides(prev => ({
       ...prev,
       [activeMode]: {
@@ -633,6 +636,7 @@ const App: React.FC = () => {
   }, [activeMode])
 
   const handleManualReset = useCallback((property: string) => {
+    console.log(`♻️ Manual Reset: Clearing override for ${property} in ${activeMode} mode`)
     setManualOverrides(prev => {
       const updated = { ...prev, [activeMode]: { ...(prev[activeMode] || {}) } }
       delete updated[activeMode][property]
@@ -773,6 +777,7 @@ const App: React.FC = () => {
   )
 
   const handleQuickOverride = useCallback((key: string, hex: string) => {
+    console.log(`🎯 Quick Override: Setting ${key} to ${hex} for ${activeMode} mode`)
     setManualOverrides(prev => ({
       ...prev,
       [activeMode]: {
@@ -846,52 +851,53 @@ const App: React.FC = () => {
   }, [])
 
   return (
-    <div className="min-h-screen text-gray-100" style={{ backgroundColor: "#0d0d0d" }}>
-      <header className="px-6 py-3 border-b flex items-center justify-between" style={{ backgroundColor: "#141414", borderColor: "rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold" style={{ backgroundColor: theme.colors["surface-brand-base"] || "#6366f1" }}>
-            <span style={{ color: "#ffffff" }}>O</span>
+    <div className={`min-h-screen transition-colors ${activeMode === 'light' ? 'bg-gray-100' : ''}`} style={{ backgroundColor: activeMode === 'light' ? undefined : "#0d0d17" }}>
+      <header className={`px-6 py-2 border-b flex items-center justify-between sticky top-0 z-50 backdrop-blur-md transition-colors ${activeMode === 'light' ? 'bg-white/80 border-gray-200' : 'bg-[#1a1a2e]/80 border-[#2d2d4d]'}`}>
+        <div className="flex items-center gap-4">
+          <div className={`w-9 h-9 rounded flex items-center justify-center border transition-all shadow-[0_0_15px_rgba(168,85,247,0.15)] ${activeMode === 'light' ? 'bg-gray-100 border-purple-200' : 'bg-[#2d2d4d] border-purple-500/30'}`}>
+            <span className={`font-black text-xl font-mono ${activeMode === 'light' ? 'text-purple-600' : 'text-purple-400'}`}>9</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold tracking-tight" style={{ color: theme.colors["text-base"] || "#ffffff" }}>
-              Desktop Theme Generator
+            <h1 className={`text-xs font-black uppercase tracking-[0.3em] flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+              OPENCODE_GEN <span className={`text-[10px] font-mono font-normal tracking-normal ${activeMode === 'light' ? 'text-purple-500/60' : 'text-purple-500/60'}`}>v2.1.0</span>
             </h1>
-            <p className="text-[11px]" style={{ color: theme.colors["text-weak"] || "#ffffff", opacity: 0.5 }}>
-              Generate beautiful desktop themes with the color wheel
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+              <p className={`text-[9px] font-mono uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-700/60' : 'text-purple-400/60'}`}>
+                SYSTEM_STATUS: OPERATIONAL
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <div className={`flex items-center gap-2 px-3 py-1.5 border rounded transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+            <span className={`text-[9px] font-mono uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-500/60' : 'text-purple-500/50'}`}>Project:</span>
             <input
-            type="text"
-            value={themeName}
-            onChange={(e) => setThemeName(e.target.value)}
-            className="px-3 py-1.5 text-sm rounded border outline-none w-40"
-            style={{
-              backgroundColor: "transparent",
-              borderColor: "rgba(255,255,255,0.1)",
-              color: theme.colors["text-base"] || "#ffffff",
-            }}
-            placeholder="Theme name"
-          />
-          <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+              type="text"
+              value={themeName}
+              onChange={(e) => setThemeName(e.target.value)}
+              className={`bg-transparent border-none outline-none text-[10px] font-mono w-32 focus:ring-0 transition-colors ${activeMode === 'light' ? 'text-purple-900 placeholder-purple-300' : 'text-purple-300 placeholder-purple-900'}`}
+              placeholder="THEME_ID"
+            />
+          </div>
+          <div className={`flex p-1 border rounded-md transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
             <button
               onClick={() => setActiveTab("palette")}
-              className="px-4 py-1.5 text-sm font-medium transition-colors"
-              style={{
-                backgroundColor: activeTab === "palette" ? (theme.colors["surface-brand-base"] || "#6366f1") : "transparent",
-                color: activeTab === "palette" ? "#ffffff" : (theme.colors["text-base"] || "#ffffff"),
-              }}
+              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
+                activeTab === "palette" 
+                  ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
+                  : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+              }`}
             >
-              Palette
+              Matrix
             </button>
             <button
               onClick={() => setActiveTab("export")}
-              className="px-4 py-1.5 text-sm font-medium transition-colors"
-              style={{
-                backgroundColor: activeTab === "export" ? (theme.colors["surface-brand-base"] || "#6366f1") : "transparent",
-                color: activeTab === "export" ? "#ffffff" : (theme.colors["text-base"] || "#ffffff"),
-              }}
+              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
+                activeTab === "export" 
+                  ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
+                  : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+              }`}
             >
               Export
             </button>
@@ -901,29 +907,43 @@ const App: React.FC = () => {
 
       <main className="p-6 max-w-[1600px] mx-auto">
         <div className="grid lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5 space-y-4">
-            {/* Color Wheel */}
-            <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Color Wheel</h2>
+          <div className="lg:col-span-5 space-y-6">
+            {/* Color Wheel - TERMINAL STYLE */}
+            <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+              <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-600' : 'text-purple-400/80'}`}>
+                  # HARMONY_ENGINE_VISUALIZER
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1 h-1 rounded-full animate-pulse ${activeMode === 'light' ? 'bg-purple-400' : 'bg-purple-500/50'}`}></div>
+                  <span className={`text-[8px] font-mono uppercase transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}>Live_Input</span>
+                </div>
               </div>
-              <ColorWheel hsl={baseColor} paletteGroups={paletteGroups} onChange={handleColorChange} />
+              <div className="p-1">
+                <ColorWheel hsl={baseColor} paletteGroups={paletteGroups} onChange={handleColorChange} />
+              </div>
             </div>
 
             {/* Matrix Router */}
-            <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              <div className="px-4 py-2.5 border-b flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Matrix Router</h2>
+            <div className={`rounded-lg border overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.1)] transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+              <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-600' : 'text-purple-400/80'}`}>
+                    # MATRIX_ROUTER
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setMatrixMode(!matrixMode)}
-                    style={{
-                      backgroundColor: matrixMode ? "rgba(99, 102, 241, 0.2)" : "rgba(255,255,255,0.05)",
-                      color: matrixMode ? "#6366f1" : "rgba(255,255,255,0.6)",
-                    }}
-                    className="text-xs px-3 py-1 rounded transition-colors"
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
+                      matrixMode 
+                        ? "bg-purple-500/20 text-purple-600 border-purple-500/40" 
+                        : activeMode === 'light'
+                          ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
+                          : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
+                    }`}
                   >
-                    {matrixMode ? "◉ Active" : "○ Enable"}
+                    {matrixMode ? "DISCONNECT" : "INITIALIZE"}
                   </button>
                 </div>
               </div>
@@ -933,137 +953,161 @@ const App: React.FC = () => {
                   {/* Override count and status */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
-                        {Object.keys(manualOverrides[activeMode] || {}).length + Object.keys(seedOverrides[activeMode] || {}).length} override(s) active
+                      <span className={`text-[10px] font-mono font-bold uppercase tracking-tight transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/40'}`}>
+                        {Object.keys(manualOverrides[activeMode] || {}).length + Object.keys(seedOverrides[activeMode] || {}).length} OVERRIDE(S)_ACTIVE
                       </span>
                       {writeStatus === "writing" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
-                          Writing...
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-mono animate-pulse">
+                          WRITING...
                         </span>
                       )}
                       {writeStatus === "success" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-                          ✓ Saved to custom-theme.json
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 font-mono">
+                          ✓ SYNC_SUCCESS
                         </span>
                       )}
                       {writeStatus === "error" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400" title={writeError || "Unknown error"}>
-                          ⚠ Save Failed
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-mono" title={writeError || "Unknown error"}>
+                          ⚠ SYNC_FAILED
                         </span>
                       )}
                     </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={handleResetMode}
-                          disabled={
-                            Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
-                            Object.keys(seedOverrides[activeMode] || {}).length === 0
-                          }
-                          className="text-xs px-3 py-1 rounded bg-gray-500/10 text-gray-400 hover:bg-gray-500/20 disabled:opacity-30"
-                          title={`Reset only ${activeMode} overrides`}
-                        >
-                          Reset {activeMode === "light" ? "Light" : "Dark"}
-                        </button>
-                        <button
-                          onClick={handleClearAll}
-                          disabled={
-                            Object.keys(manualOverrides.light).length === 0 && 
-                            Object.keys(manualOverrides.dark).length === 0 && 
-                            Object.keys(seedOverrides.light).length === 0 && 
-                            Object.keys(seedOverrides.dark).length === 0
-                          }
-                          className="text-xs px-3 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-30"
-                          title="Clear all overrides for BOTH modes"
-                        >
-                          Clear All
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleResetMode}
+                        disabled={
+                          Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
+                          Object.keys(seedOverrides[activeMode] || {}).length === 0
+                        }
+                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
+                          activeMode === 'light'
+                            ? "border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100"
+                            : "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
+                        }`}
+                        title={`Reset only ${activeMode} overrides`}
+                      >
+                        RESET_{activeMode.toUpperCase()}
+                      </button>
+                      <button
+                        onClick={handleClearAll}
+                        disabled={
+                          Object.keys(manualOverrides.light).length === 0 && 
+                          Object.keys(manualOverrides.dark).length === 0 && 
+                          Object.keys(seedOverrides.light).length === 0 && 
+                          Object.keys(seedOverrides.dark).length === 0
+                        }
+                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
+                          activeMode === 'light'
+                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                            : "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                        }`}
+                        title="Clear all overrides for BOTH modes"
+                      >
+                        PURGE_ALL
+                      </button>
+                    </div>
                   </div>
 
-                  {/* WCAG Compliance Summary */}
-                  <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
-                          WCAG 2.1 Compliance Details
-                        </span>
-                        <span className="text-[10px] opacity-50">Comprehensive check of {deferredWcagPairs.length} color pairs</span>
-                      </div>
+                  {/* WCAG Compliance Summary - AGENT LOG STYLE */}
+                  <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                    <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                          <span className="text-[9px] opacity-70">Pass</span>
+                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>
+                          AGENT_AUDIT_LOG
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
+                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
+                            {deferredWcagPairs.filter(p => getContrastScore(p.bg, p.fg).ratio >= (p.isNonText ? 3 : 4.5)).length}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                          <span className="text-[9px] opacity-70">Fail</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
+                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
+                            {deferredWcagPairs.filter(p => getContrastScore(p.bg, p.fg).ratio < (p.isNonText ? 3 : 4.5)).length}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="space-y-4">
+                    <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                      <div className="flex flex-col">
                         {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
-                          <div key={category} className="space-y-2">
-                            <h3 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-1 border-b border-indigo-500/20 pb-1 mb-2">{category}</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
+                            <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
+                              <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                                <span className="opacity-40">#</span> {category}
+                              </h3>
+                              <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
+                                {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
+                              </span>
+                            </div>
+                            
+                            <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
                               {deferredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = getContrastScore(pair.bg, pair.fg)
                                 const threshold = pair.isNonText ? 3 : 4.5
                                 const isFailing = score.ratio < threshold
                                 
-                                // Custom level display for non-text
-                                let levelDisplay = score.level
-                                if (pair.isNonText) {
-                                  levelDisplay = score.ratio >= 3 ? "Pass (UI)" : "Fail"
-                                }
+                                // Map type to icon
+                                let typeIcon = "📄" // read
+                                if (pair.type === 'shell') typeIcon = "🐚"
+                                if (pair.type === 'action') typeIcon = "⚡"
+                                if (pair.type === 'diff') typeIcon = "🔍"
 
                                 return (
-                                  <div key={`${pair.bgKey}-${pair.fgKey}`} className="flex flex-col gap-1 bg-white/5 p-2 rounded border border-white/5 hover:border-white/10 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex flex-col overflow-hidden">
-                                        <span className="text-[10px] font-bold truncate" style={{ color: pair.fg }}>{pair.label}</span>
-                                        <span className="text-[8px] opacity-40 font-medium truncate">{pair.fgKey} on {pair.bgKey}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1.5 shrink-0">
-                                        <span className="text-[10px] font-mono font-bold">{score.ratio}:1</span>
-                                        <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold ${
-                                          levelDisplay === 'AAA' ? "bg-green-500/30 text-green-300" :
-                                          (levelDisplay === 'AA' || levelDisplay === 'Pass (UI)') ? "bg-blue-500/30 text-blue-300" :
-                                          levelDisplay === 'AA Large' ? "bg-yellow-500/30 text-yellow-300" :
-                                          "bg-red-500/30 text-red-300"
-                                        }`}>
-                                          {levelDisplay}
-                                        </span>
-                                      </div>
+                                  <div 
+                                    key={`${pair.category}-${pair.type}-${pair.bgKey}-${pair.fgKey}`} 
+                                    className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
+                                  >
+                                    {/* Icon Column */}
+                                    <div className={`w-5 h-5 shrink-0 flex items-center justify-center rounded text-[10px] border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200 group-hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] group-hover:border-purple-500/30'}`}>
+                                      {typeIcon}
                                     </div>
-                                    <div className="flex items-center justify-between mt-1">
-                                      <div className="flex items-center gap-1.5">
-                                        <div className="flex items-center gap-0.5">
+
+                                    {/* Content Column */}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-baseline justify-between gap-2">
+                                        <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
+                                          {pair.label}
+                                        </span>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                          <span className={`text-[10px] font-mono font-black ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
+                                            {score.ratio.toFixed(2)}:1
+                                          </span>
+                                          <span className={`text-[8px] font-black px-1 rounded-[2px] ${
+                                            isFailing 
+                                              ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
+                                              : activeMode === 'light' 
+                                                ? 'bg-green-100 text-green-700 border border-green-200'
+                                                : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                          }`}>
+                                            {isFailing ? 'FAIL' : (score.level === 'AAA' ? 'AAA' : 'PASS')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-0.5">
+                                        <div className="flex items-center gap-1.5 overflow-hidden">
+                                          <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 shrink-0 ml-2">
                                           <button 
-                                            className="w-2.5 h-2.5 rounded-sm border border-white/10 hover:scale-125 transition-transform" 
+                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
                                             style={{ backgroundColor: pair.bg }} 
+                                            title={`BG: ${pair.bgKey}`}
                                             onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
                                           />
                                           <button 
-                                            className="w-2.5 h-2.5 rounded-sm border border-white/10 hover:scale-125 transition-transform" 
+                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
                                             style={{ backgroundColor: pair.fg }} 
+                                            title={`FG: ${pair.fgKey}`}
                                             onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
                                           />
                                         </div>
-                                        <span className="text-[8px] opacity-30 font-mono truncate max-w-[60px]">{pair.bg} vs {pair.fg}</span>
                                       </div>
-                                      {isFailing && (
-                                        <span className="text-[8px] text-red-400 font-medium">
-                                          {threshold}:1 req.
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="h-0.5 w-full bg-black/20 rounded-full overflow-hidden mt-0.5">
-                                      <div 
-                                        className={`h-full transition-all duration-500 ${isFailing ? 'bg-red-500' : 'bg-green-500'}`}
-                                        style={{ width: `${Math.min(100, (score.ratio / 10) * 100)}%` }}
-                                      />
                                     </div>
                                   </div>
                                 )
@@ -1075,269 +1119,290 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Full Palette Overview */}
-                  <div className="flex flex-col gap-2 mb-6">
-                    <span className="text-xs uppercase tracking-wider opacity-50 font-semibold">
-                      Full Theme Palette
-                    </span>
-                    <div className="flex flex-col gap-1.5">
-                      {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
-                        const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
-                        return (
-                          <div key={seedName} className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 w-16 shrink-0">
-                              <button
-                                onClick={() => handleSeedReset(seedName)}
-                                className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${
-                                  isSeedOverridden
-                                    ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                                    : "bg-gray-800 text-gray-600 hover:bg-gray-700"
-                                }`}
-                                title={isSeedOverridden ? "Reset seed to generated value" : "Seed is auto-generated"}
-                              >
-                                <span className="text-[8px] leading-none">{isSeedOverridden ? "✕" : "○"}</span>
-                              </button>
-                              <span className="text-[10px] opacity-60 capitalize truncate">{seedName}</span>
+                  {/* Full Palette Overview - TERMINAL STYLE */}
+                  <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                    <div className={`px-3 py-1.5 border-b flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                        # SEED_PALETTE_BUFFER
+                      </span>
+                    </div>
+                    <div className={`p-3 transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                      <div className="flex flex-col gap-2">
+                        {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
+                          const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
+                          return (
+                            <div key={seedName} className="flex items-center gap-2 group">
+                              <div className="flex items-center gap-1.5 w-20 shrink-0">
+                                <button
+                                  onClick={() => handleSeedReset(seedName)}
+                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${
+                                    isSeedOverridden
+                                      ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+                                      : activeMode === 'light'
+                                        ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                                        : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+                                  }`}
+                                  title={isSeedOverridden ? "RESET_SEED_VECTOR" : "AUTO_GENERATED"}
+                                >
+                                  <span className="text-[8px] leading-none font-bold">{isSeedOverridden ? "×" : "·"}</span>
+                                </button>
+                                <span className={`text-[9px] font-mono transition-colors uppercase tracking-tighter truncate ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-300'}`}>
+                                  {seedName}
+                                </span>
+                              </div>
+                              <div className="flex gap-1">
+                                {variants.map((variant, vIdx) => {
+                                  const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
+                                  return (
+                                    <div
+                                      key={`${seedName}-${vIdx}`}
+                                      onClick={() => handleSeedOverride(seedName, variant.hex)}
+                                      className={`w-7 h-5 rounded-[2px] border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
+                                        isCurrentSeed 
+                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/40` 
+                                          : "opacity-60 hover:opacity-100 border-white/5"
+                                      }`}
+                                      style={{
+                                        backgroundColor: variant.hex,
+                                      }}
+                                      title={`MOUNT_SEED: ${variant.hex}`}
+                                    >
+                                      {variant.isBase && (
+                                        <div className="w-1 h-1 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
-                            <div className="flex gap-1">
-                              {variants.map((variant, vIdx) => {
-                                // Use a small epsilon for color matching to avoid rounding issues
-                                const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
-                                return (
-                                  <div
-                                    key={`${seedName}-${vIdx}`}
-                                    onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                    className={`w-8 h-8 rounded border flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${
-                                      isCurrentSeed ? "ring-2 ring-white z-10 scale-105" : "opacity-80 hover:opacity-100"
-                                    }`}
-                                    style={{
-                                      backgroundColor: variant.hex,
-                                      borderColor: "rgba(255,255,255,0.2)",
-                                    }}
-                                    title={`Set ${seedName} seed to: ${variant.hex}`}
-                                  >
-                                    {variant.isBase && (
-                                      <span className="text-[8px] font-bold" style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
-                                        ●
-                                      </span>
-                                    )}
-                                  </div>
-                                )
-                              })}
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Matrix Grid - TERMINAL STYLE */}
+                  <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                    <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                        # SEMANTIC_TOKEN_MATRIX
+                      </span>
+                      <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
+                        {MATRIX_PROPERTIES.length} TOKENS
+                      </span>
+                    </div>
+                    <div className={`max-h-[600px] overflow-y-auto custom-scrollbar transition-colors divide-y ${activeMode === 'light' ? 'bg-white divide-gray-50' : 'bg-[#0d0d17] divide-[#1a1a2e]'}`}>
+                      {MATRIX_PROPERTIES.map((property) => {
+                        const currentColor = themeColors[property as keyof OpencodeThemeColors]
+                        const currentModeOverrides = manualOverrides[activeMode] || {}
+                        const isOverridden = property in currentModeOverrides
+
+                        return (
+                          <div key={property} className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
+                            <button
+                              onClick={() => handleManualReset(property)}
+                              className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
+                                isOverridden
+                                  ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+                                  : activeMode === 'light'
+                                    ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                                    : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+                              }`}
+                              title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
+                            >
+                              <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
+                            </button>
+
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
+                                {property}
+                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <div 
+                                  className={`w-3 h-3 rounded-[2px] border shrink-0 ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
+                                  style={{ backgroundColor: currentColor }}
+                                />
+                                <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+                              {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
+                                <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
+                                  {variants.map((variant, idx) => {
+                                    const isSelected = currentColor.toLowerCase() === variant.hex.toLowerCase()
+                                    const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
+                                    const blackContrast = getContrastRatio(variant.hex, "#000000")
+                                    const bestContrast = Math.max(whiteContrast, blackContrast)
+                                    const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
+
+                                    return (
+                                      <button
+                                        key={`${property}-${seedName}-${idx}`}
+                                        onClick={() => handleManualOverride(property, variant.hex)}
+                                        className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                                          isSelected 
+                                            ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
+                                            : "hover:scale-110 opacity-40 hover:opacity-100"
+                                        }`}
+                                        style={{ backgroundColor: variant.hex }}
+                                        title={`${seedName}_V${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1)`}
+                                      >
+                                        {isSelected && (
+                                          <div 
+                                            className="w-1 h-1 rounded-full" 
+                                            style={{ backgroundColor: contrastColor }}
+                                          />
+                                        )}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )
                       })}
                     </div>
                   </div>
-
-                  {/* Matrix Grid */}
-                  <div className="space-y-1 max-h-[600px] overflow-y-auto">
-                    {MATRIX_PROPERTIES.map((property) => {
-                      const currentColor = themeColors[property as keyof OpencodeThemeColors]
-                      const currentModeOverrides = manualOverrides[activeMode] || {}
-                      const isOverridden = property in currentModeOverrides
-
-                      return (
-                        <div key={property} className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleManualReset(property)}
-                            className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                              isOverridden
-                                ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                                : "bg-gray-800 text-gray-600 hover:bg-gray-700"
-                            }`}
-                          >
-                            {isOverridden ? "✕" : "○"}
-                          </button>
-
-                          <span className="text-xs capitalize w-36 truncate" style={{ color: "rgba(255,255,255,0.7)" }} title={property}>
-                            {property}
-                          </span>
-
-                          {/* Calculated Preview */}
-                          <div 
-                            className="w-8 h-6 rounded border border-white/10 shrink-0"
-                            style={{ backgroundColor: currentColor }}
-                            title={`Calculated: ${currentColor}`}
-                          />
-
-                          <div className="flex flex-wrap gap-1 ml-2 max-w-[400px]">
-                            {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
-                              <div key={`${property}-${seedName}`} className="flex gap-0.5 p-0.5 rounded bg-white/5">
-                                {variants.map((variant, idx) => {
-                                  const isSelected = currentColor === variant.hex
-                                  const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
-                                  const blackContrast = getContrastRatio(variant.hex, "#000000")
-                                  const bestContrast = Math.max(whiteContrast, blackContrast)
-                                  const wcagLevel = getWCAGLevel(bestContrast)
-                                  const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
-
-                                  return (
-                                    <button
-                                      key={`${property}-${seedName}-${idx}`}
-                                      onClick={() => handleManualOverride(property, variant.hex)}
-                                      className={`w-5 h-4 rounded-sm transition-all relative flex items-center justify-center ${
-                                        isSelected ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110 z-10" : "hover:scale-105"
-                                      }`}
-                                      style={{ backgroundColor: variant.hex }}
-                                      title={`${seedName} variant ${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1 ${wcagLevel})`}
-                                    >
-                                      {variant.isBase && (
-                                        <div className="w-0.5 h-0.5 rounded-full bg-white opacity-40" />
-                                      )}
-                                      {isSelected && (
-                                        <div 
-                                          className="w-1.5 h-1.5 rounded-full" 
-                                          style={{ backgroundColor: contrastColor }}
-                                        />
-                                      )}
-                                    </button>
-                                  )
-                                })}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
                 </div>
               )}
             </div>
 
-            {/* Configuration */}
-            <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Configuration</h2>
+            {/* Configuration - TERMINAL STYLE */}
+            <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+              <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                  # ENGINE_CONFIG_PARAMETERS
+                </span>
+                <div className="flex items-center gap-1">
+                  <div className={`w-1 h-1 rounded-full animate-pulse ${activeMode === 'light' ? 'bg-green-500' : 'bg-green-500/50'}`}></div>
+                  <span className={`text-[8px] font-mono uppercase transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-500/50'}`}>Sync_On</span>
+                </div>
               </div>
-              <div className="p-4 space-y-4">
-                <div className="flex items-center justify-between p-2 rounded bg-indigo-500/10 border border-indigo-500/20 mb-2">
+              <div className="p-4 space-y-6">
+                <div className={`flex items-center justify-between p-3 rounded border transition-colors ${activeMode === 'light' ? 'bg-purple-50 border-purple-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-indigo-300">Opencode 9-Seed Mode</span>
-                    <span className="text-[10px] opacity-60">Generate 9 semantic seeds for Opencode UI</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>OPENCODE_9SEED_SYSTEM</span>
+                    <span className={`text-[8px] font-mono uppercase mt-0.5 transition-colors ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-500/60'}`}>Functional Seed Architecture</span>
                   </div>
                   <button
                     onClick={() => setUseOpencodeMode(!useOpencodeMode)}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${useOpencodeMode ? 'bg-indigo-500' : 'bg-gray-700'}`}
+                    className={`w-10 h-5 rounded-full transition-all relative border ${useOpencodeMode ? 'bg-purple-600 border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.3)]' : activeMode === 'light' ? 'bg-gray-200 border-gray-300' : 'bg-black/40 border-purple-900/40'}`}
                   >
-                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${useOpencodeMode ? 'left-6' : 'left-1'}`} />
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${useOpencodeMode ? 'left-6' : 'left-1'}`} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Color Space</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className={`text-[8px] font-black uppercase tracking-[0.2em] ml-1 transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>VECTOR_SPACE</label>
                     <select
                       value={colorSpace}
                       onChange={(e) => setColorSpace(e.target.value as ColorSpace)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
-                      style={{
-                        backgroundColor: "transparent",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors["text-base"] || "#ffffff",
-                      }}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
+                        activeMode === 'light' 
+                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
+                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                      }`}
                     >
                       {['HSL', 'CAM02', 'HSLuv', 'LCh D50', 'LCh D65', 'OkLCh', 'IPT', 'LCh(uv)'].map((opt) => (
-                        <option key={opt} value={opt} className="bg-[#1a1a1a]">
-                          {opt}
+                        <option key={opt} value={opt} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
+                          {opt.toUpperCase()}
                         </option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Output Space</label>
+                  <div className="space-y-1.5">
+                    <label className={`text-[8px] font-black uppercase tracking-[0.2em] ml-1 transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>OUTPUT_FORMAT</label>
                     <select
                       value={outputSpace}
                       onChange={(e) => setOutputSpace(e.target.value as OutputSpace)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
-                      style={{
-                        backgroundColor: "transparent",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors["text-base"] || "#ffffff",
-                      }}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
+                        activeMode === 'light' 
+                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
+                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                      }`}
                     >
                       {['sRGB', 'P3', 'AdobeRGB', 'Rec.2020', 'HSL', 'HSV'].map((opt) => (
-                        <option key={opt} value={opt} className="bg-[#1a1a1a]">
-                          {opt}
+                        <option key={opt} value={opt} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
+                          {opt.toUpperCase()}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Harmony Rule</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className={`text-[8px] font-black uppercase tracking-[0.2em] ml-1 transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>HARMONY_LOGIC</label>
                     <select
                       value={harmony}
                       onChange={(e) => setHarmony(e.target.value as HarmonyRule)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
-                      style={{
-                        backgroundColor: "transparent",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors["text-base"] || "#ffffff",
-                      }}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
+                        activeMode === 'light' 
+                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
+                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                      }`}
                     >
                       {harmonyOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                        <option key={opt.value} value={opt.value} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
+                          {opt.label.toUpperCase().replace(/\s+/g, '_')}
                         </option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide opacity-50 block mb-1.5">Variant Strategy</label>
+                  <div className="space-y-1.5">
+                    <label className={`text-[8px] font-black uppercase tracking-[0.2em] ml-1 transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>STRATEGY_MAP</label>
                     <select
                       value={variantStrategy}
                       onChange={(e) => setVariantStrategy(e.target.value as VariantStrategy)}
-                      className="w-full px-2.5 py-1.5 text-sm rounded border outline-none"
-                      style={{
-                        backgroundColor: "transparent",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: theme.colors["text-base"] || "#ffffff",
-                      }}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
+                        activeMode === 'light' 
+                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
+                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                      }`}
                     >
                       {variantStrategyOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                        <option key={opt.value} value={opt.value} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
+                          {opt.label.toUpperCase().replace(/\s+/g, '_')}
                         </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <div className="p-3 rounded-lg bg-gray-800/30 border border-white/5 space-y-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <button
-                        onClick={() => setActiveMode("dark")}
-                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
-                          activeMode === "dark" 
-                          ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" 
-                          : "bg-gray-800 text-gray-500 border border-transparent hover:bg-gray-700"
-                        }`}
-                      >
-                        🌙 Dark Mode
-                      </button>
-                      <button
-                        onClick={() => setActiveMode("light")}
-                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${
-                          activeMode === "light" 
-                          ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/40" 
-                          : "bg-gray-800 text-gray-500 border border-transparent hover:bg-gray-700"
-                        }`}
-                      >
-                        ☀️ Light Mode
-                      </button>
-                    </div>
+                <div className={`space-y-5 pt-2 border-t transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
+                  <div className={`flex items-center gap-2 p-1 border rounded-md transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-black/40 border-[#2d2d4d]'}`}>
+                    <button
+                      onClick={() => setActiveMode("dark")}
+                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
+                        activeMode === "dark" 
+                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                        : activeMode === 'light' ? "text-purple-900/40 hover:text-purple-600" : "text-purple-500/40 hover:text-purple-400"
+                      }`}
+                    >
+                      MODE_DARK
+                    </button>
+                    <button
+                      onClick={() => setActiveMode("light")}
+                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
+                        activeMode === "light" 
+                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                        : activeMode === 'light' ? "text-purple-900/40 hover:text-purple-600" : "text-purple-500/40 hover:text-purple-400"
+                      }`}
+                    >
+                      MODE_LIGHT
+                    </button>
+                  </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-[10px] uppercase tracking-wide opacity-50">
-                          {activeMode === "light" ? "Light" : "Dark"} Brightness
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[8px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>
+                          {activeMode.toUpperCase()}_BRIGHTNESS
                         </label>
-                        <span className="text-xs font-mono opacity-60">
+                        <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300'}`}>
                           {activeMode === "light" ? lightBrightness : darkBrightness}%
                         </span>
                       </div>
@@ -1351,16 +1416,16 @@ const App: React.FC = () => {
                           if (activeMode === "light") setLightBrightness(val)
                           else setDarkBrightness(val)
                         }}
-                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
                     </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-[10px] uppercase tracking-wide opacity-50">
-                          {activeMode === "light" ? "Light" : "Dark"} Contrast
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[8px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>
+                          {activeMode.toUpperCase()}_CONTRAST
                         </label>
-                        <span className="text-xs font-mono opacity-60">
+                        <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300'}`}>
                           {activeMode === "light" ? lightContrast : darkContrast}%
                         </span>
                       </div>
@@ -1374,181 +1439,118 @@ const App: React.FC = () => {
                           if (activeMode === "light") setLightContrast(val)
                           else setDarkContrast(val)
                         }}
-                        className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Global Saturation</label>
-                      <span className="text-xs font-mono opacity-60">{saturation}%</span>
+                    <div className="space-y-2 pt-2">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[8px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>GLOBAL_SATURATION</label>
+                        <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300'}`}>{saturation}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={saturation}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          setSaturation(val)
+                          setBaseColor(prev => ({ ...prev, s: val }))
+                        }}
+                        className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={saturation}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value)
-                        setSaturation(val)
-                        setBaseColor(prev => ({ ...prev, s: val }))
-                      }}
-                      className="w-full"
-                      style={{ accentColor: theme.colors["surface-brand-base"] }}
-                    />
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Spread / Angle</label>
-                      <span className="text-xs font-mono opacity-60">{spread}°</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[8px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>SPREAD_VECTOR</label>
+                        <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300'}`}>{spread}°</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="180"
+                        value={spread}
+                        onChange={(e) => setSpread(parseInt(e.target.value))}
+                        className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={spread}
-                      onChange={(e) => setSpread(parseInt(e.target.value))}
-                      className="w-full"
-                      style={{ accentColor: theme.colors["surface-interactive-base"] }}
-                    />
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-[10px] uppercase tracking-wide opacity-50">Variants</label>
-                      <span className="text-xs font-mono opacity-60">{variantCount * 2 + 1} colors</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[8px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/60'}`}>VARIANT_DEPTH</label>
+                        <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300'}`}>{variantCount * 2 + 1} NODES</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        value={variantCount}
+                        onChange={(e) => setVariantCount(parseInt(e.target.value))}
+                        className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={variantCount}
-                      onChange={(e) => setVariantCount(parseInt(e.target.value))}
-                      className="w-full"
-                      style={{ accentColor: theme.colors["surface-success-base"] }}
-                    />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Randomizers */}
-            <div className="bg-[#1a1a1a] rounded-lg border overflow-hidden" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              <div className="px-4 py-2.5 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                <h2 className="text-sm font-medium" style={{ color: theme.colors["text-base"] || "#ffffff" }}>Randomizers</h2>
+            {/* Randomizers - TERMINAL STYLE */}
+            <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+              <div className={`px-3 py-1.5 border-b flex items-center transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                  # ENTROPY_GENERATORS
+                </span>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={randomizeAll}
-                    className="px-3 py-2 rounded text-sm font-medium transition-colors border"
-                    style={{ backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" }}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${
+                      activeMode === 'light' 
+                        ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300' 
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
+                    }`}
                   >
-                    Randomize All
+                    RANDOM_ALL
                   </button>
                   <button
                     onClick={invertBase}
-                    className="px-3 py-2 rounded text-sm font-medium transition-colors border"
-                    style={{ backgroundColor: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)" }}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${
+                      activeMode === 'light' 
+                        ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300' 
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
+                    }`}
                   >
-                    Invert Base
+                    INVERT_VEC
                   </button>
                   <button
                     onClick={chaosMode}
-                    className="px-3 py-2 rounded text-sm font-medium transition-colors border"
-                    style={{ backgroundColor: "rgba(99, 102, 241, 0.1)", borderColor: "rgba(99, 102, 241, 0.2)" }}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(168,85,247,0.1)] ${
+                      activeMode === 'light' 
+                        ? 'bg-purple-600 border-purple-400 text-white hover:bg-purple-700' 
+                        : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20'
+                    }`}
                   >
-                    Chaos Mode
+                    CHAOS_INIT
                   </button>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
-                  <button
-                    onClick={() => applyThemePreset("cyberpunk")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(236, 72, 153, 0.1)", color: "#ec4899" }}
-                  >
-                    Cyberpunk
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("cinematic")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(20, 184, 166, 0.1)", color: "#14b8a6" }}
-                  >
-                    Cinematic
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("pastel")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(168, 85, 247, 0.1)", color: "#a855f7" }}
-                  >
-                    Pastel
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("retro")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(251, 146, 60, 0.1)", color: "#fb923c" }}
-                  >
-                    Retro
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("vivid")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(6, 182, 212, 0.1)", color: "#06b6d4" }}
-                  >
-                    Vivid
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("earthy")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(34, 197, 94, 0.1)", color: "#22c55e" }}
-                  >
-                    Earthy
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("popArt")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(234, 179, 8, 0.1)", color: "#eab308" }}
-                  >
-                    Pop Art
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("midnight")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(99, 102, 241, 0.1)", color: "#6366f1" }}
-                  >
-                    Midnight
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("psychedelic")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(232, 121, 249, 0.1)", color: "#e879f9" }}
-                  >
-                    Psychedelic
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("warm")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(249, 115, 22, 0.1)", color: "#f97316" }}
-                  >
-                    Warm
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("cool")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(96, 165, 250, 0.1)", color: "#60a5fa" }}
-                  >
-                    Cool
-                  </button>
-                  <button
-                    onClick={() => applyThemePreset("neon")}
-                    className="px-2 py-1.5 rounded text-xs transition-colors"
-                    style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "#34d399" }}
-                  >
-                    Neon
-                  </button>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {Object.keys(thematicPresets).map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => applyThemePreset(preset as keyof typeof thematicPresets)}
+                      className={`px-1 py-1.5 border rounded text-[8px] font-mono uppercase tracking-tighter transition-all ${
+                        activeMode === 'light' 
+                          ? 'bg-gray-50 border-gray-100 text-purple-900/40 hover:text-purple-600 hover:border-purple-200 hover:bg-gray-100' 
+                          : 'bg-black/40 border-[#2d2d4d] text-purple-500/60 hover:text-purple-300 hover:border-purple-500/40 hover:bg-black/60'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1559,66 +1561,79 @@ const App: React.FC = () => {
               <>
                 <ThemePreview theme={themeColors} />
 
-                {/* Opencode Theme Presets */}
-                <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold">Opencode Desktop Presets</h2>
+                {/* Opencode Theme Presets - TERMINAL STYLE */}
+                <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                  <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                      # THEME_ENGINE_PRESETS
+                    </span>
                     {activePreset && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-400">
-                        {opencodePresets[activePreset as keyof typeof opencodePresets].name} active
+                      <span className={`text-[8px] font-mono px-2 py-0.5 rounded border transition-colors ${activeMode === 'light' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-purple-500/20 text-purple-400 border-purple-500/30'}`}>
+                        MOUNTED: {opencodePresets[activePreset as keyof typeof opencodePresets].name.toUpperCase()}
                       </span>
                     )}
                   </div>
                   <div className="p-4">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                       {Object.values(opencodePresets).map((preset) => (
                         <button
                           key={preset.id}
                           onClick={() => applyOpencodePreset(preset.id)}
-                          className={`p-3 rounded-lg text-left transition-colors border ${
+                          className={`p-3 rounded border text-left transition-all group ${
                             activePreset === preset.id
-                              ? "bg-indigo-500/20 border-indigo-500/50"
-                              : "bg-gray-800/50 border-gray-700 hover:bg-gray-700"
+                              ? activeMode === 'light' 
+                                ? "bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]" 
+                                : "bg-purple-600/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                              : activeMode === 'light'
+                                ? "bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50"
+                                : "bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5"
                           }`}
-                          style={{
-                            borderColor: activePreset === preset.id ? "#6366f1" : "rgba(255,255,255,0.1)",
-                          }}
                         >
-                          <div className="text-xs font-medium">{preset.name}</div>
-                          <div className="text-[10px] text-gray-500 mt-0.5">{preset.description}</div>
+                          <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activePreset === preset.id ? (activeMode === 'light' ? 'text-white' : 'text-purple-100') : (activeMode === 'light' ? 'text-purple-900 group-hover:text-purple-700' : 'text-purple-300 group-hover:text-purple-200')}`}>
+                            {preset.name}
+                          </div>
+                          <div className={`text-[9px] font-mono mt-1 uppercase tracking-tighter transition-colors ${activePreset === preset.id ? (activeMode === 'light' ? 'text-purple-100/80' : 'text-purple-500/60') : (activeMode === 'light' ? 'text-purple-500/60' : 'text-purple-500/60')}`}>
+                            {preset.description}
+                          </div>
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-800">
-                    <h2 className="text-sm font-semibold">9-Seed Palette</h2>
+                {/* 9-Seed Palette - TERMINAL STYLE */}
+                <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                  <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                      # RAW_VECTOR_DATA
+                    </span>
+                    <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>9 SEEDS</span>
                   </div>
                   <div className="p-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-6">
                       {seeds9.map((seed: SeedColor, idx: number) => {
                         const currentSeedVariants = activeMode === "light" ? seedVariantsLight : seedVariantsDark
                         const variants = currentSeedVariants[seed.name] || []
                         return (
-                          <div key={idx} className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-6 h-6 rounded-full border border-gray-600"
-                                style={{ backgroundColor: seed.hex }}
-                              />
-                              <span className="text-xs font-medium capitalize">{seed.name}</span>
-                              <span className="text-[10px] text-gray-500">{seed.hex}</span>
+                          <div key={idx} className={`space-y-3 p-3 rounded border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-black/20 border-[#1a1a2e]'}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-4 h-4 rounded-[2px] border ${activeMode === 'light' ? 'border-gray-200 shadow-sm' : 'border-white/10'}`}
+                                  style={{ backgroundColor: seed.hex }}
+                                />
+                                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-200'}`}>{seed.name}</span>
+                              </div>
+                              <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/60'}`}>{seed.hex.toUpperCase()}</span>
                             </div>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1.5">
                               {variants.slice(0, 5).map((stop, vIdx) => (
                                 <button
                                   key={vIdx}
                                   onClick={() => handleCopy(stop.hex)}
-                                  className="w-6 h-6 rounded transition-transform hover:scale-110"
+                                  className={`w-7 h-5 rounded-[1px] transition-all hover:scale-110 border ${activeMode === 'light' ? 'border-gray-200 shadow-sm' : 'border-white/5 hover:border-white/20'}`}
                                   style={{ backgroundColor: stop.hex }}
-                                  title={stop.hex}
+                                  title={`COPY: ${stop.hex}`}
                                 />
                               ))}
                             </div>
@@ -1629,29 +1644,32 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-800">
-                    <h2 className="text-sm font-semibold">Theme Colors</h2>
+                {/* Theme Colors - TERMINAL STYLE */}
+                <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                  <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                      # COMPILED_TOKEN_VALUES
+                    </span>
+                    <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>{Object.keys(themeColors).length} TOKENS</span>
                   </div>
-                  <div className="p-4 grid grid-cols-2 gap-3">
+                  <div className="p-4 grid grid-cols-2 gap-3 max-h-[600px] overflow-y-auto custom-scrollbar">
                     {Object.entries(themeColors).map(([key, value]) => (
-                      <div key={key} className="flex items-center gap-3 p-2 rounded-lg bg-gray-800">
+                      <div key={key} className={`flex items-center gap-3 p-2.5 rounded border transition-colors group ${activeMode === 'light' ? 'bg-gray-50 border-gray-100 hover:border-purple-300' : 'bg-black/40 border-[#1a1a2e] hover:border-purple-500/30'}`}>
                         <div
-                          className="w-10 h-10 rounded-lg border border-gray-600 flex-shrink-0"
+                          className={`w-10 h-10 rounded-[2px] border shrink-0 shadow-inner ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
                           style={{ backgroundColor: value as string }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium capitalize">{key}</div>
-                          <div className="text-[10px] text-gray-400 font-mono truncate">{value as string}</div>
+                          <div className={`text-[10px] font-black uppercase tracking-tight truncate transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{key}</div>
+                          <div className={`text-[9px] font-mono mt-0.5 transition-colors ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-500/60'}`}>{String(value).toUpperCase()}</div>
                         </div>
-                        <button onClick={() => handleCopy(value as string)} className="p-1.5 hover:bg-gray-700 rounded transition-colors">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
+                        <button 
+                          onClick={() => handleCopy(value as string)} 
+                          className={`p-1.5 border rounded transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 text-purple-600 hover:text-purple-900 hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] text-purple-400 hover:text-purple-200 hover:bg-purple-500/10'}`}
+                          title="COPY_HEX"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </button>
                       </div>
@@ -1660,20 +1678,27 @@ const App: React.FC = () => {
                 </div>
               </>
             ) : (
-              <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-800">
-                  <h2 className="text-sm font-semibold">Export Theme</h2>
+              <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                  <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                    # EXPORT_THEME_MANIFEST
+                  </span>
+                  <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>{exportFormats.length} FORMATS</span>
                 </div>
                 <div className="p-4">
-                  <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {exportFormats.map((format: any) => (
                       <button
                         key={format.id}
                         onClick={() => handleExport(format.id)}
-                        className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                        className={`p-4 border rounded group transition-all text-left ${
+                          activeMode === 'light' 
+                            ? 'bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50' 
+                            : 'bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5'
+                        }`}
                       >
-                        <div className="text-xs font-mono text-gray-500 mb-1">{format.ext}</div>
-                        <div className="text-sm font-medium">{format.name}</div>
+                        <div className={`text-[8px] font-mono mb-1 uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-500/60 group-hover:text-purple-700' : 'text-purple-500/60 group-hover:text-purple-400'}`}>{format.ext}</div>
+                        <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{format.name}</div>
                       </button>
                     ))}
                   </div>
@@ -1683,31 +1708,45 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
-      {/* Quick Color Picker Portal */}
+      {/* Quick Color Picker Portal - TERMINAL STYLE */}
       {quickPicker && (
         <div 
           className="fixed inset-0 z-50 flex items-start justify-start"
           onClick={() => setQuickPicker(null)}
         >
           <div 
-            className="absolute bg-[#1a1a1a] rounded-lg shadow-2xl border border-white/10 p-3 flex flex-col gap-2 min-w-[200px]"
+            className={`absolute rounded border shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-2 min-w-[240px] transition-colors ${
+              activeMode === 'light' 
+                ? 'bg-white border-purple-200' 
+                : 'bg-[#0d0d17] border-[#2d2d4d]'
+            }`}
             style={{ 
               top: Math.min(window.innerHeight - 300, Math.max(10, quickPicker.y)), 
-              left: Math.min(window.innerWidth - 220, Math.max(10, quickPicker.x + 10))
+              left: Math.min(window.innerWidth - 260, Math.max(10, quickPicker.x + 10)),
             }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <span className="text-xs font-bold text-white/90 truncate max-w-[150px]">{quickPicker.label}</span>
-              <button onClick={() => setQuickPicker(null)} className="text-white/50 hover:text-white">✕</button>
+            <div className={`flex items-center justify-between pb-2 border-b transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#2d2d4d]'}`}>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                <span className={`text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+                  {quickPicker.label}
+                </span>
+              </div>
+              <button 
+                onClick={() => setQuickPicker(null)} 
+                className={`transition-colors text-xs font-bold ${activeMode === 'light' ? 'text-purple-300 hover:text-purple-600' : 'text-purple-500/50 hover:text-purple-300'}`}
+              >
+                ×
+              </button>
             </div>
             
-            <div className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mt-1">Palette</div>
-            <div className="grid grid-cols-8 gap-1">
+            <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-1 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># ENGINE_VARIANTS</div>
+            <div className="grid grid-cols-8 gap-1.5">
               {Object.values(activeVariantsMap).flat().map((v, i) => (
                 <button
                   key={`${v.hex}-${i}`}
-                  className="w-5 h-5 rounded-sm hover:scale-125 transition-transform border border-transparent hover:border-white/50"
+                  className="w-5 h-5 rounded-[1px] hover:scale-125 transition-transform border border-white/5 hover:border-white/40"
                   style={{ backgroundColor: v.hex }}
                   title={`${v.name || 'Color'} (${v.hex})`}
                   onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
@@ -1715,13 +1754,18 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <div className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mt-2">Custom</div>
-            <input 
-              type="color" 
-              className="w-full h-8 cursor-pointer rounded bg-transparent"
-              onChange={(e) => handleQuickOverride(quickPicker.key, e.target.value)}
-              defaultValue={themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000"}
-            />
+            <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-2 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># MANUAL_OVERRIDE</div>
+            <div className={`flex items-center gap-2 border rounded p-1.5 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-purple-100' : 'bg-black/40 border-[#2d2d4d]'}`}>
+              <input 
+                type="color" 
+                className="w-8 h-6 cursor-pointer rounded-[1px] bg-transparent border-none"
+                onChange={(e) => handleQuickOverride(quickPicker.key, e.target.value)}
+                defaultValue={themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000"}
+              />
+              <span className={`text-[10px] font-mono uppercase transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300/60'}`}>
+                {String(themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000").toUpperCase()}
+              </span>
+            </div>
           </div>
         </div>
       )}
