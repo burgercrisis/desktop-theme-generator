@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, getContrastRatio, getWCAGLevel, hexToHsl } from "./utils/colorUtils"
+import { getContrastScore, getContrastRatio, hexToHsl } from "./utils/colorUtils"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -935,7 +935,7 @@ const App: React.FC = () => {
 
                                 return (
                                   <div 
-                                    key={`${pair.category}-${pair.type}-${pair.bgKey}-${pair.fgKey}`} 
+                                    key={`${pair.category}-${pair.type}-${pair.label}-${pair.bgKey}-${pair.fgKey}`} 
                                     className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
                                   >
                                     {/* Icon Column */}
@@ -1263,7 +1263,7 @@ const App: React.FC = () => {
                       className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
                         activeMode === "dark" 
                         ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                        : activeMode === 'light' ? "text-purple-900/40 hover:text-purple-600" : "text-purple-500/40 hover:text-purple-400"
+                        : "text-purple-900/40 hover:text-purple-600"
                       }`}
                     >
                       MODE_DARK
@@ -1273,7 +1273,7 @@ const App: React.FC = () => {
                       className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
                         activeMode === "light" 
                         ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                        : activeMode === 'light' ? "text-purple-900/40 hover:text-purple-600" : "text-purple-500/40 hover:text-purple-400"
+                        : "text-purple-500/40 hover:text-purple-400"
                       }`}
                     >
                       MODE_LIGHT
