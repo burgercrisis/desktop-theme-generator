@@ -253,6 +253,20 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "surface-diff-delete-weaker": getFromScale(diffDeleteScale, pos(0.04), diffDeleteHex),
     "surface-diff-delete-strong": getFromScale(diffDeleteScale, pos(0.4), diffDeleteHex),
     "surface-diff-delete-stronger": getFromScale(diffDeleteScale, pos(0.6), diffDeleteHex),
+
+    // Selection
+    "selection-background": getFromScale(interactiveScale, pos(0.3), interactiveHex),
+    "selection-foreground": getFromScale(primaryScale, pos(0.95), primaryHex),
+    "selection-inactive-background": getFromScale(primaryScale, pos(0.2), primaryHex),
+    
+    // Focus & Scrollbars
+    "focus-ring": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "scrollbar-thumb": getFromScale(primaryScale, pos(0.3), primaryHex),
+    "scrollbar-track": "transparent",
+
+    // Overlays & Shadows
+    "shadow": isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.15)",
+    "overlay": isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(0, 0, 0, 0.3)",
     
     // Text
     "text-base": getFromScale(primaryScale, pos(0.90), primaryHex),

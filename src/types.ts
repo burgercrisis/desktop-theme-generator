@@ -217,6 +217,32 @@ export interface InternalThemeColors {
   // Border
   "border-base": string;
   "border-hover": string;
+  "border-active": string;
+  "border-selected": string;
+  "border-disabled": string;
+  "border-focus": string;
+  "border-weak-base": string;
+  "border-strong-base": string;
+  "border-interactive-base": string;
+  "border-interactive-hover": string;
+  "border-interactive-active": string;
+  "border-interactive-selected": string;
+  "border-success-base": string;
+  "border-warning-base": string;
+  "border-critical-base": string;
+  "border-info-base": string;
+
+  // Selection
+  "selection-background": string;
+  "selection-foreground": string;
+  "selection-inactive-background": string;
+
+  // Others
+  "focus-ring": string;
+  "scrollbar-thumb": string;
+  "scrollbar-track": string;
+  "shadow": string;
+  "overlay": string;
 }
 
 export interface SeedColor {

@@ -317,6 +317,12 @@ const App: React.FC = () => {
     addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background")
     addPair("Diff", "Diff Strong", "surface-diff-add-strong", "text-base", "Base text on strong diff background")
 
+    // --- SELECTION & FOCUS ---
+    addPair("Accessibility", "Selection", "selection-background", "selection-foreground", "Text selection contrast")
+    addPair("Accessibility", "Inactive Selection", "selection-inactive-background", "text-base", "Inactive selection background contrast")
+    addPair("Accessibility", "Focus Ring", "background-base", "focus-ring", "Focus ring contrast on background", true)
+    addPair("Accessibility", "Scrollbar Thumb", "background-base", "scrollbar-thumb", "Scrollbar thumb contrast", true)
+
     // --- SYNTAX HIGHLIGHTING ---
     const syntaxTokens = [
       "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 
@@ -424,6 +430,16 @@ const App: React.FC = () => {
     "surface-diff-delete-weaker",
     "surface-diff-delete-strong",
     "surface-diff-delete-stronger",
+
+    // Selection & Overlays
+    "selection-background",
+    "selection-foreground",
+    "selection-inactive-background",
+    "focus-ring",
+    "scrollbar-thumb",
+    "scrollbar-track",
+    "shadow",
+    "overlay",
 
     // Text
     "text-base",
