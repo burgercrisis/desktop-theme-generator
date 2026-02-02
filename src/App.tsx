@@ -82,6 +82,7 @@ const App: React.FC = () => {
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
   const [writeError, setWriteError] = useState<string | null>(null)
+  const [quickPicker, setQuickPicker] = useState<{ x: number, y: number, key: string, label: string } | null>(null)
 
   // DEFERRED INPUTS: Use React 18 Deferred Value to keep sliders/wheel snappy
   // while offloading heavy palette & WCAG calculations to background priority
@@ -748,6 +749,17 @@ const App: React.FC = () => {
     [theme, themeName, lightThemeColors, darkThemeColors, seeds9, manualOverrides],
   )
 
+  const handleQuickOverride = useCallback((key: string, hex: string) => {
+    setManualOverrides(prev => ({
+      ...prev,
+      [activeMode]: {
+        ...(prev[activeMode] || {}),
+        [key]: hex
+      }
+    }))
+    setQuickPicker(null)
+  }, [activeMode])
+
   const randomizeAll = useCallback(() => {
     const h = Math.floor(Math.random() * 360)
     const s = 40 + Math.floor(Math.random() * 60)
@@ -1005,8 +1017,16 @@ const App: React.FC = () => {
                                     <div className="flex items-center justify-between mt-1">
                                       <div className="flex items-center gap-1.5">
                                         <div className="flex items-center gap-0.5">
-                                          <div className="w-2.5 h-2.5 rounded-sm border border-white/10" style={{ backgroundColor: pair.bg }} />
-                                          <div className="w-2.5 h-2.5 rounded-sm border border-white/10" style={{ backgroundColor: pair.fg }} />
+                                          <button 
+                                            className="w-2.5 h-2.5 rounded-sm border border-white/10 hover:scale-125 transition-transform" 
+                                            style={{ backgroundColor: pair.bg }} 
+                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
+                                          />
+                                          <button 
+                                            className="w-2.5 h-2.5 rounded-sm border border-white/10 hover:scale-125 transition-transform" 
+                                            style={{ backgroundColor: pair.fg }} 
+                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
+                                          />
                                         </div>
                                         <span className="text-[8px] opacity-30 font-mono truncate max-w-[60px]">{pair.bg} vs {pair.fg}</span>
                                       </div>
@@ -1640,6 +1660,48 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+      {/* Quick Color Picker Portal */}
+      {quickPicker && (
+        <div 
+          className="fixed inset-0 z-50 flex items-start justify-start"
+          onClick={() => setQuickPicker(null)}
+        >
+          <div 
+            className="absolute bg-[#1a1a1a] rounded-lg shadow-2xl border border-white/10 p-3 flex flex-col gap-2 min-w-[200px]"
+            style={{ 
+              top: Math.min(window.innerHeight - 300, Math.max(10, quickPicker.y)), 
+              left: Math.min(window.innerWidth - 220, Math.max(10, quickPicker.x + 10))
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <span className="text-xs font-bold text-white/90 truncate max-w-[150px]">{quickPicker.label}</span>
+              <button onClick={() => setQuickPicker(null)} className="text-white/50 hover:text-white">✕</button>
+            </div>
+            
+            <div className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mt-1">Palette</div>
+            <div className="grid grid-cols-8 gap-1">
+              {Object.values(activeVariantsMap).flat().map((v, i) => (
+                <button
+                  key={`${v.hex}-${i}`}
+                  className="w-5 h-5 rounded-sm hover:scale-125 transition-transform border border-transparent hover:border-white/50"
+                  style={{ backgroundColor: v.hex }}
+                  title={`${v.name || 'Color'} (${v.hex})`}
+                  onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
+                />
+              ))}
+            </div>
+
+            <div className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mt-2">Custom</div>
+            <input 
+              type="color" 
+              className="w-full h-8 cursor-pointer rounded bg-transparent"
+              onChange={(e) => handleQuickOverride(quickPicker.key, e.target.value)}
+              defaultValue={themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000"}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
