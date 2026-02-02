@@ -66,7 +66,7 @@ export const exportToOpencode9SeedJSON = (
   darkColors: OpencodeThemeColors,
   lightSeeds: SeedColor[],
   darkSeeds: SeedColor[],
-  manualOverrides: Record<string, string> = {}
+  manualOverrides: Record<string, Record<string, string>> = { light: {}, dark: {} }
 ): string => {
   const getSeedMap = (seeds: SeedColor[]) => {
     const seedMap: Record<string, string> = {}
@@ -103,8 +103,8 @@ export const exportToOpencode9SeedJSON = (
   const darkSeedMap = getSeedMap(darkSeeds)
 
   // Include all calculated engine colors as the baseline, then apply manual overrides
-  const lightOverrides: Record<string, string> = { ...lightColors, ...manualOverrides }
-  const darkOverrides: Record<string, string> = { ...darkColors, ...manualOverrides }
+  const lightOverrides: Record<string, string> = { ...lightColors, ...(manualOverrides.light || {}) }
+  const darkOverrides: Record<string, string> = { ...darkColors, ...(manualOverrides.dark || {}) }
 
   const opencodeTheme: OpencodeThemeJSON = {
     $schema: "https://raw.githubusercontent.com/opencode/opencode-desktop/main/schemas/theme.schema.json",
@@ -132,7 +132,7 @@ export const writeOpencode9ThemeFile = async (
   darkColors: OpencodeThemeColors,
   lightSeeds: SeedColor[],
   darkSeeds: SeedColor[],
-  overrides: Record<string, string>
+  overrides: Record<string, Record<string, string>>
 ): Promise<{ success: boolean; error?: string }> => {
   const jsonContent = exportToOpencode9SeedJSON(name, lightColors, darkColors, lightSeeds, darkSeeds, overrides)
   const json = JSON.parse(jsonContent)

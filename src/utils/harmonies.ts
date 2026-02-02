@@ -23,23 +23,36 @@ export const generateOpencodeSeeds = (
     l: Math.max(0, Math.min(100, ll + lOffset))
   });
 
-  let interactiveHue = (h + 30) % 360;
-  let infoHue = 295;
+  let interactiveHue = (h + spread) % 360;
+  let infoHue = (h + 180) % 360;
 
   // Adjust interactive and info based on harmony
   switch (harmony) {
+    case HarmonyRule.MONOCHROMATIC:
+    case HarmonyRule.SHADES:
+      interactiveHue = h;
+      infoHue = h;
+      break;
     case HarmonyRule.COMPLEMENTARY:
       interactiveHue = getHarmonyHue(180);
+      infoHue = getHarmonyHue(180);
       break;
     case HarmonyRule.ANALOGOUS:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(-spread);
+      break;
     case HarmonyRule.ANALOGOUS_5:
       interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(spread * 2);
       break;
     case HarmonyRule.TRIADIC:
       interactiveHue = getHarmonyHue(120);
       infoHue = getHarmonyHue(240);
       break;
     case HarmonyRule.TETRADIC:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180);
+      break;
     case HarmonyRule.SQUARE:
       interactiveHue = getHarmonyHue(90);
       infoHue = getHarmonyHue(180);
@@ -48,6 +61,66 @@ export const generateOpencodeSeeds = (
       interactiveHue = getHarmonyHue(180 - spread);
       infoHue = getHarmonyHue(180 + spread);
       break;
+    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180 - spread);
+      break;
+    case HarmonyRule.ACCENTED_ANALOGOUS:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180);
+      break;
+    case HarmonyRule.SIX_TONE:
+    case HarmonyRule.PENTAGRAM:
+    case HarmonyRule.FULL_SPECTRUM:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(spread * 2);
+      break;
+    case HarmonyRule.COMPOUND:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180 - spread);
+      break;
+    case HarmonyRule.NATURAL:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(-spread);
+      break;
+    case HarmonyRule.VIVID_PASTEL:
+    case HarmonyRule.SYNTHWAVE:
+    case HarmonyRule.DEEP_NIGHT:
+      interactiveHue = getHarmonyHue(180);
+      infoHue = getHarmonyHue(180 + spread);
+      break;
+    case HarmonyRule.HARD_CLASH:
+    case HarmonyRule.ANALOGOUS_CLASH:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(spread * 3);
+      break;
+    case HarmonyRule.DOUBLE_ANALOGOUS:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(120);
+      break;
+    case HarmonyRule.CLASH_COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180);
+      break;
+    case HarmonyRule.CYBERPUNK:
+      interactiveHue = getHarmonyHue(150);
+      infoHue = getHarmonyHue(300);
+      break;
+    case HarmonyRule.ROYAL:
+      interactiveHue = getHarmonyHue(270);
+      infoHue = getHarmonyHue(50);
+      break;
+    case HarmonyRule.PASTEL_DREAMS:
+      interactiveHue = getHarmonyHue(120);
+      infoHue = getHarmonyHue(240);
+      break;
+    case HarmonyRule.GOLDEN:
+      interactiveHue = getHarmonyHue(137.5);
+      infoHue = getHarmonyHue(275);
+      break;
+    default:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(180);
   }
 
   // Use global saturation for all semantic seeds to make the control "feel" alive

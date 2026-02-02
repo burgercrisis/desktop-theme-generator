@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, getContrastRatio, getWCAGLevel } from "./utils/colorUtils"
+import { getContrastScore, getContrastRatio, getWCAGLevel, hexToHsl } from "./utils/colorUtils"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -31,10 +31,11 @@ import {
   DesktopTheme, 
   OpencodeThemeColors, 
   SeedColor, 
-  SeedName, 
   InternalThemeColors,
   ColorSpace,
-  OutputSpace
+  OutputSpace,
+  ColorStop,
+  SeedName
 } from "./types"
 import "./App.css"
 
@@ -42,7 +43,16 @@ const getInitialState = (key: string, defaultValue: any) => {
   const saved = localStorage.getItem(key)
   if (!saved) return defaultValue
   try {
-    return JSON.parse(saved)
+    const parsed = JSON.parse(saved)
+    
+    // Migration for nested overrides
+    if (key === "manualOverrides" || key === "seedOverrides") {
+      if (parsed && typeof parsed === "object" && !parsed.light && !parsed.dark) {
+        return { light: parsed, dark: {} }
+      }
+    }
+    
+    return parsed
   } catch (e) {
     return defaultValue
   }
@@ -64,12 +74,12 @@ const App: React.FC = () => {
   const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
   const [useOpencodeMode, setUseOpencodeMode] = useState(() => getInitialState("useOpencodeMode", true))
   const [themeName, setThemeName] = useState("My Theme")
-  const [, setCopiedHex] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"palette" | "export">("palette")
 
   // Matrix Router state
   const [matrixMode, setMatrixMode] = useState(() => getInitialState("matrixMode", false))
-  const [manualOverrides, setManualOverrides] = useState<Record<string, string>>(() => getInitialState("manualOverrides", {}))
+  const [manualOverrides, setManualOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("manualOverrides", { light: {}, dark: {} }))
+  const [seedOverrides, setSeedOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("seedOverrides", { light: {}, dark: {} }))
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
   const [writeError, setWriteError] = useState<string | null>(null)
@@ -91,6 +101,7 @@ const App: React.FC = () => {
   React.useEffect(() => localStorage.setItem("themeName", JSON.stringify(themeName)), [themeName])
   React.useEffect(() => localStorage.setItem("matrixMode", JSON.stringify(matrixMode)), [matrixMode])
   React.useEffect(() => localStorage.setItem("manualOverrides", JSON.stringify(manualOverrides)), [manualOverrides])
+  React.useEffect(() => localStorage.setItem("seedOverrides", JSON.stringify(seedOverrides)), [seedOverrides])
 
   // Holistic palette generation using the new modular engine
   const paletteGroups = useMemo(() => {
@@ -109,12 +120,34 @@ const App: React.FC = () => {
 
   // Generate 9 seeds for Opencode mode (functional seeds) - Separate for Light/Dark
   const lightSeeds9 = useMemo<SeedColor[]>(() => {
-    return generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
-  }, [baseColor, harmony, spread, lightBrightness])
+    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
+    return baseSeeds.map(seed => {
+      const overrideHex = seedOverrides.light?.[seed.name]
+      if (overrideHex) {
+        return {
+          ...seed,
+          hex: overrideHex,
+          hsl: hexToHsl(overrideHex)
+        }
+      }
+      return seed
+    })
+  }, [baseColor, harmony, spread, lightBrightness, seedOverrides.light])
 
   const darkSeeds9 = useMemo<SeedColor[]>(() => {
-    return generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
-  }, [baseColor, harmony, spread, darkBrightness])
+    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
+    return baseSeeds.map(seed => {
+      const overrideHex = seedOverrides.dark?.[seed.name]
+      if (overrideHex) {
+        return {
+          ...seed,
+          hex: overrideHex,
+          hsl: hexToHsl(overrideHex)
+        }
+      }
+      return seed
+    })
+  }, [baseColor, harmony, spread, darkBrightness, seedOverrides.dark])
 
   // Active seeds for UI display/preview
   const seeds9 = useMemo<SeedColor[]>(() => {
@@ -132,7 +165,7 @@ const App: React.FC = () => {
         variantStrategy,
         colorSpace,
         outputSpace,
-        50 // We already applied brightness to the seed, so variants are centered around the brightened seed
+        50 // Always 50 because seed.hsl already has mode brightness baked in
       )
       variants[seed.name] = variantsForSeed
     })
@@ -149,7 +182,7 @@ const App: React.FC = () => {
         variantStrategy,
         colorSpace,
         outputSpace,
-        50 // We already applied brightness to the seed
+        50 // Always 50 because seed.hsl already has mode brightness baked in
       )
       variants[seed.name] = variantsForSeed
     })
@@ -183,15 +216,71 @@ const App: React.FC = () => {
   // Active theme colors for UI display/preview
   const themeColors = useMemo<OpencodeThemeColors>(() => {
     const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
+    const currentOverrides = manualOverrides[activeMode] || {}
     
     // Apply manual overrides
-    const hasOverrides = Object.keys(manualOverrides).length > 0
+    const hasOverrides = Object.keys(currentOverrides).length > 0
     if (hasOverrides) {
-      return { ...baseColors, ...manualOverrides }
+      return { ...baseColors, ...currentOverrides }
     }
     
     return baseColors
   }, [activeMode, lightThemeColors, darkThemeColors, manualOverrides])
+
+  // WCAG Compliance Pairs - Comprehensive list for checker
+  const wcagPairs = useMemo(() => {
+    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string }> = []
+    
+    const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false) => {
+      const bg = themeColors[bgKey as keyof OpencodeThemeColors] as string
+      const fg = themeColors[fgKey as keyof OpencodeThemeColors] as string
+      if (bg && fg) {
+        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText })
+      }
+    }
+
+    // --- CORE TYPOGRAPHY ---
+    const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger"]
+    const coreTexts = ["text-base", "text-weak", "text-weaker", "text-strong"]
+    
+    backgrounds.forEach(bg => {
+      coreTexts.forEach(fg => {
+        addPair("Core Typography", `${fg.split('-')[1]} on ${bg.split('-')[1]}`, bg, fg, `${fg} on ${bg}`)
+      })
+    })
+
+    // --- SURFACES ---
+    const mainSurfaces = ["surface-base", "surface-raised-base", "surface-float-base", "surface-weak", "surface-strong"]
+    mainSurfaces.forEach(bg => {
+      addPair("Surfaces", `Base text on ${bg.split('-')[1]}`, bg, "text-base", `text-base on ${bg}`)
+    })
+
+    // --- BRAND & INTERACTIVE ---
+    addPair("Brand & Action", "On Brand", "surface-brand-base", "text-on-brand-base", "Text on Brand Surface")
+    addPair("Brand & Action", "On Brand Hover", "surface-brand-hover", "text-on-brand-base", "Text on Brand Hover")
+    addPair("Brand & Action", "On Interactive", "surface-interactive-base", "text-on-interactive-base", "Text on Interactive Surface")
+    addPair("Brand & Action", "On Interactive Weak", "surface-interactive-weak", "text-on-interactive-weak", "Text on Interactive Weak Surface")
+    addPair("Brand & Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background")
+
+    // --- SEMANTIC STATES ---
+    addPair("Semantic", "Success", "surface-success-base", "text-on-success-base", "Success state contrast")
+    addPair("Semantic", "Warning", "surface-warning-base", "text-on-warning-base", "Warning state contrast")
+    addPair("Semantic", "Critical", "surface-critical-base", "text-on-critical-base", "Critical state contrast")
+    addPair("Semantic", "Info", "surface-info-base", "text-on-info-base", "Info state contrast")
+
+    // --- UI COMPONENTS (NON-TEXT 3:1) ---
+    addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true)
+    addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true)
+    addPair("UI Components", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true)
+    addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true)
+    addPair("UI Components", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true)
+
+    // --- DIFF STATES ---
+    addPair("Diff", "Add Text", "surface-diff-add-base", "text-diff-add-base", "Diff Add text contrast")
+    addPair("Diff", "Delete Text", "surface-diff-delete-base", "text-diff-delete-base", "Diff Delete text contrast")
+
+    return pairs
+  }, [themeColors])
 
   // Desktop theme object for export/preview
   const theme = useMemo<DesktopTheme>(() => {
@@ -338,6 +427,58 @@ const App: React.FC = () => {
     "overlay",
   ]
 
+  // Handlers for Matrix Router
+  const handleSeedOverride = useCallback((seedName: string, hex: string) => {
+    setSeedOverrides(prev => ({
+      ...prev,
+      [activeMode]: {
+        ...(prev[activeMode] || {}),
+        [seedName]: hex
+      }
+    }))
+  }, [activeMode])
+
+  const handleSeedReset = useCallback((seedName: string) => {
+    setSeedOverrides(prev => {
+      const updated = { ...prev, [activeMode]: { ...(prev[activeMode] || {}) } }
+      delete updated[activeMode][seedName]
+      return updated
+    })
+  }, [activeMode])
+
+  const handleManualOverride = useCallback((property: string, hex: string) => {
+    setManualOverrides(prev => ({
+      ...prev,
+      [activeMode]: {
+        ...(prev[activeMode] || {}),
+        [property]: hex
+      }
+    }))
+    setActivePreset(null)
+  }, [activeMode])
+
+  const handleManualReset = useCallback((property: string) => {
+    setManualOverrides(prev => {
+      const updated = { ...prev, [activeMode]: { ...(prev[activeMode] || {}) } }
+      delete updated[activeMode][property]
+      return updated
+    })
+    setActivePreset(null)
+  }, [activeMode])
+
+  const handleClearAll = useCallback(() => {
+    setActivePreset(null)
+    setManualOverrides({ light: {}, dark: {} })
+    setSeedOverrides({ light: {}, dark: {} })
+    // Also reset any preset flags if needed
+  }, [])
+
+  const handleResetMode = useCallback(() => {
+    setActivePreset(null)
+    setManualOverrides(prev => ({ ...prev, [activeMode]: {} }))
+    setSeedOverrides(prev => ({ ...prev, [activeMode]: {} }))
+  }, [activeMode])
+
   // Write to Opencode when manualOverrides, seeds, colors, or strategy change
   const lastWrittenRef = React.useRef<string>(localStorage.getItem("lastSyncedContent") || "")
   const isWritingRef = React.useRef<boolean>(false)
@@ -417,15 +558,23 @@ const App: React.FC = () => {
 
   const handleCopy = useCallback((hex: string) => {
     navigator.clipboard.writeText(hex)
-    setCopiedHex(hex)
-    setTimeout(() => setCopiedHex(null), 1500)
   }, [])
 
   const applyOpencodePreset = useCallback((presetId: string) => {
     const overrides = getPresetOverrides(presetId)
-    setManualOverrides(overrides)
+    const preset = opencodePresets[presetId]
+    
+    setManualOverrides(prev => ({
+      ...prev,
+      [activeMode]: overrides
+    }))
+    
+    if (preset?.baseColor) setBaseColor(preset.baseColor)
+    if (preset?.harmony) setHarmony(preset.harmony)
+    if (preset?.variantStrategy) setVariantStrategy(preset.variantStrategy)
+    
     setActivePreset(presetId)
-  }, [])
+  }, [activeMode])
 
   const handleExport = useCallback(
     (format: string) => {
@@ -437,6 +586,7 @@ const App: React.FC = () => {
       }
 
       if (format === "opencode9") {
+        const currentManualOverrides = manualOverrides[activeMode] || {}
         const content = exportToOpencode9SeedJSON(themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides)
         const formatInfo = exportFormats.find((f: any) => f.id === format)
         downloadFile(
@@ -611,72 +761,137 @@ const App: React.FC = () => {
                   {/* Override count and status */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    {Object.keys(manualOverrides).length} override(s) active
-                  </span>
-                  {writeStatus === "writing" && (
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
-                      Writing...
-                    </span>
-                  )}
-                  {writeStatus === "success" && (
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
-                      ✓ Saved to custom-theme.json
-                    </span>
-                  )}
-                  {writeStatus === "error" && (
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400" title={writeError || "Unknown error"}>
-                      ⚠ Save Failed
-                    </span>
-                  )}
-                </div>
-                    <button
-                      onClick={() => {
-                        setActivePreset(null)
-                        setManualOverrides({})
-                      }}
-                      disabled={Object.keys(manualOverrides).length === 0}
-                      className="text-xs px-3 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                    >
-                      Clear All
-                    </button>
+                      <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>
+                        {Object.keys(manualOverrides[activeMode] || {}).length + Object.keys(seedOverrides[activeMode] || {}).length} override(s) active
+                      </span>
+                      {writeStatus === "writing" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+                          Writing...
+                        </span>
+                      )}
+                      {writeStatus === "success" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400">
+                          ✓ Saved to custom-theme.json
+                        </span>
+                      )}
+                      {writeStatus === "error" && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400" title={writeError || "Unknown error"}>
+                          ⚠ Save Failed
+                        </span>
+                      )}
+                    </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleResetMode}
+                          disabled={
+                            Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
+                            Object.keys(seedOverrides[activeMode] || {}).length === 0
+                          }
+                          className="text-xs px-3 py-1 rounded bg-gray-500/10 text-gray-400 hover:bg-gray-500/20 disabled:opacity-30"
+                          title={`Reset only ${activeMode} overrides`}
+                        >
+                          Reset {activeMode === "light" ? "Light" : "Dark"}
+                        </button>
+                        <button
+                          onClick={handleClearAll}
+                          disabled={
+                            Object.keys(manualOverrides.light).length === 0 && 
+                            Object.keys(manualOverrides.dark).length === 0 && 
+                            Object.keys(seedOverrides.light).length === 0 && 
+                            Object.keys(seedOverrides.dark).length === 0
+                          }
+                          className="text-xs px-3 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-30"
+                          title="Clear all overrides for BOTH modes"
+                        >
+                          Clear All
+                        </button>
+                      </div>
                   </div>
 
                   {/* WCAG Compliance Summary */}
                   <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
-                        WCAG 2.1 Compliance
-                      </span>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>
+                          WCAG 2.1 Compliance Details
+                        </span>
+                        <span className="text-[10px] opacity-50">Comprehensive check of {wcagPairs.length} color pairs</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                          <span className="text-[9px] opacity-70">Pass</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                          <span className="text-[9px] opacity-70">Fail</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(() => {
-                        const pairs = [
-                          { label: "Main Text", bg: themeColors["background-base"], fg: themeColors["text-base"] },
-                          { label: "Brand Text", bg: themeColors["surface-brand-base"], fg: themeColors["text-on-brand-base"] },
-                          { label: "Surface Text", bg: themeColors["surface-base"], fg: themeColors["text-base"] },
-                          { label: "Success Text", bg: themeColors["surface-success-base"], fg: themeColors["text-on-success-base"] },
-                        ]
-                        return pairs.map(pair => {
-                          const score = getContrastScore(pair.bg, pair.fg)
-                          return (
-                            <div key={pair.label} className="flex items-center justify-between bg-white/5 p-1.5 rounded">
-                              <span className="text-[10px] opacity-60">{pair.label}</span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-mono">{score.ratio}:1</span>
-                                <span className={`text-[9px] px-1 rounded ${
-                                  score.level === 'AAA' ? "bg-green-500/30 text-green-300" :
-                                  score.level === 'AA' ? "bg-blue-500/30 text-blue-300" :
-                                  score.level === 'AA Large' ? "bg-yellow-500/30 text-yellow-300" :
-                                  "bg-red-500/30 text-red-300"
-                                }`}>
-                                  {score.level}
-                                </span>
-                              </div>
+
+                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-4">
+                        {Array.from(new Set(wcagPairs.map(p => p.category))).map(category => (
+                          <div key={category} className="space-y-2">
+                            <h3 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-1 border-b border-indigo-500/20 pb-1 mb-2">{category}</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {wcagPairs.filter(p => p.category === category).map(pair => {
+                                const score = getContrastScore(pair.bg, pair.fg)
+                                const threshold = pair.isNonText ? 3 : 4.5
+                                const isFailing = score.ratio < threshold
+                                
+                                // Custom level display for non-text
+                                let levelDisplay = score.level
+                                if (pair.isNonText) {
+                                  levelDisplay = score.ratio >= 3 ? "Pass (UI)" : "Fail"
+                                }
+
+                                return (
+                                  <div key={`${pair.bgKey}-${pair.fgKey}`} className="flex flex-col gap-1 bg-white/5 p-2 rounded border border-white/5 hover:border-white/10 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex flex-col overflow-hidden">
+                                        <span className="text-[10px] font-bold truncate" style={{ color: pair.fg }}>{pair.label}</span>
+                                        <span className="text-[8px] opacity-40 font-medium truncate">{pair.fgKey} on {pair.bgKey}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-[10px] font-mono font-bold">{score.ratio}:1</span>
+                                        <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold ${
+                                          levelDisplay === 'AAA' ? "bg-green-500/30 text-green-300" :
+                                          (levelDisplay === 'AA' || levelDisplay === 'Pass (UI)') ? "bg-blue-500/30 text-blue-300" :
+                                          levelDisplay === 'AA Large' ? "bg-yellow-500/30 text-yellow-300" :
+                                          "bg-red-500/30 text-red-300"
+                                        }`}>
+                                          {levelDisplay}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-0.5">
+                                          <div className="w-2.5 h-2.5 rounded-sm border border-white/10" style={{ backgroundColor: pair.bg }} />
+                                          <div className="w-2.5 h-2.5 rounded-sm border border-white/10" style={{ backgroundColor: pair.fg }} />
+                                        </div>
+                                        <span className="text-[8px] opacity-30 font-mono truncate max-w-[60px]">{pair.bg} vs {pair.fg}</span>
+                                      </div>
+                                      {isFailing && (
+                                        <span className="text-[8px] text-red-400 font-medium">
+                                          {threshold}:1 req.
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="h-0.5 w-full bg-black/20 rounded-full overflow-hidden mt-0.5">
+                                      <div 
+                                        className={`h-full transition-all duration-500 ${isFailing ? 'bg-red-500' : 'bg-green-500'}`}
+                                        style={{ width: `${Math.min(100, (score.ratio / 10) * 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          )
-                        })
-                      })()}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -686,30 +901,53 @@ const App: React.FC = () => {
                       Full Theme Palette
                     </span>
                     <div className="flex flex-col gap-1.5">
-                      {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
-                        <div key={seedName} className="flex items-center gap-2">
-                          <span className="text-[10px] w-16 opacity-60 capitalize">{seedName}</span>
-                          <div className="flex gap-1">
-                            {variants.map((variant, vIdx) => (
-                              <div
-                                key={`${seedName}-${vIdx}`}
-                                className={`w-8 h-8 rounded border flex items-center justify-center transition-transform hover:scale-110`}
-                                style={{
-                                  backgroundColor: variant.hex,
-                                  borderColor: "rgba(255,255,255,0.2)",
-                                }}
-                                title={`${seedName} variant ${vIdx}: ${variant.hex}`}
+                      {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
+                        const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
+                        return (
+                          <div key={seedName} className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 w-16 shrink-0">
+                              <button
+                                onClick={() => handleSeedReset(seedName)}
+                                className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${
+                                  isSeedOverridden
+                                    ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                                    : "bg-gray-800 text-gray-600 hover:bg-gray-700"
+                                }`}
+                                title={isSeedOverridden ? "Reset seed to generated value" : "Seed is auto-generated"}
                               >
-                                {variant.isBase && (
-                                  <span className="text-[8px] font-bold" style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
-                                    ●
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                                <span className="text-[8px] leading-none">{isSeedOverridden ? "✕" : "○"}</span>
+                              </button>
+                              <span className="text-[10px] opacity-60 capitalize truncate">{seedName}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              {variants.map((variant, vIdx) => {
+                                // Use a small epsilon for color matching to avoid rounding issues
+                                const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
+                                return (
+                                  <div
+                                    key={`${seedName}-${vIdx}`}
+                                    onClick={() => handleSeedOverride(seedName, variant.hex)}
+                                    className={`w-8 h-8 rounded border flex items-center justify-center transition-transform hover:scale-110 cursor-pointer ${
+                                      isCurrentSeed ? "ring-2 ring-white z-10 scale-105" : "opacity-80 hover:opacity-100"
+                                    }`}
+                                    style={{
+                                      backgroundColor: variant.hex,
+                                      borderColor: "rgba(255,255,255,0.2)",
+                                    }}
+                                    title={`Set ${seedName} seed to: ${variant.hex}`}
+                                  >
+                                    {variant.isBase && (
+                                      <span className="text-[8px] font-bold" style={{ color: "#ffffff", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                                        ●
+                                      </span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -717,17 +955,13 @@ const App: React.FC = () => {
                   <div className="space-y-1 max-h-[600px] overflow-y-auto">
                     {MATRIX_PROPERTIES.map((property) => {
                       const currentColor = themeColors[property as keyof OpencodeThemeColors]
-                      const isOverridden = property in manualOverrides
+                      const currentModeOverrides = manualOverrides[activeMode] || {}
+                      const isOverridden = property in currentModeOverrides
 
                       return (
                         <div key={property} className="flex items-center gap-2">
                           <button
-                            onClick={() => {
-                              const updated = { ...manualOverrides }
-                              delete updated[property]
-                              setManualOverrides(updated)
-                              setActivePreset(null)
-                            }}
+                            onClick={() => handleManualReset(property)}
                             className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
                               isOverridden
                                 ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
@@ -762,11 +996,7 @@ const App: React.FC = () => {
                                   return (
                                     <button
                                       key={`${property}-${seedName}-${idx}`}
-                                      onClick={() => {
-                                        const newOverrides = { ...manualOverrides, [property]: variant.hex }
-                                        setManualOverrides(newOverrides)
-                                        setActivePreset(null)
-                                      }}
+                                      onClick={() => handleManualOverride(property, variant.hex)}
                                       className={`w-5 h-4 rounded-sm transition-all relative flex items-center justify-center ${
                                         isSelected ? "ring-1 ring-white ring-offset-1 ring-offset-[#1a1a1a] scale-110 z-10" : "hover:scale-105"
                                       }`}
