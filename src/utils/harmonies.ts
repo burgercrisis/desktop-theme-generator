@@ -279,22 +279,22 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "text-invert-weaker": getFromScale(primaryScale, pos(0.5), primaryHex),
     "text-invert-strong": getFromScale(primaryScale, pos(0.02), primaryHex),
 
-    "text-on-brand-base": "#FFFFFF",
+    "text-on-brand-base": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.05, primaryHex),
     
     "text-interactive-base": getFromScale(interactiveScale, pos(0.7), interactiveHex),
-    "text-on-interactive-base": "#FFFFFF",
+    "text-on-interactive-base": isDark ? "#FFFFFF" : getFromScale(interactiveScale, 0.05, interactiveHex),
     "text-on-interactive-weak": getFromScale(interactiveScale, pos(0.8), interactiveHex),
-    "text-on-success-base": "#FFFFFF",
-    "text-on-critical-base": "#FFFFFF",
+    "text-on-success-base": isDark ? "#FFFFFF" : getFromScale(successScale, 0.05, successHex),
+    "text-on-critical-base": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
     "text-on-critical-weak": getFromScale(errorScale, pos(0.8), errorHex),
-    "text-on-critical-strong": "#FFFFFF",
-    "text-on-warning-base": "#FFFFFF",
-    "text-on-info-base": "#FFFFFF",
+    "text-on-critical-strong": isDark ? "#FFFFFF" : getFromScale(errorScale, 0.05, errorHex),
+    "text-on-warning-base": isDark ? "#FFFFFF" : getFromScale(warningScale, 0.05, warningHex),
+    "text-on-info-base": isDark ? "#FFFFFF" : getFromScale(infoScale, 0.05, infoHex),
     
     "text-diff-add-base": getFromScale(diffAddScale, pos(0.7), diffAddHex),
-    "text-diff-add-strong": "#FFFFFF",
+    "text-diff-add-strong": isDark ? "#FFFFFF" : getFromScale(diffAddScale, 0.05, diffAddHex),
     "text-diff-delete-base": getFromScale(diffDeleteScale, pos(0.7), diffDeleteHex),
-    "text-diff-delete-strong": "#FFFFFF",
+    "text-diff-delete-strong": isDark ? "#FFFFFF" : getFromScale(diffDeleteScale, 0.05, diffDeleteHex),
     
     // Borders
     "border-base": getFromScale(primaryScale, pos(0.25), primaryHex),
@@ -309,10 +309,10 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "border-interactive-hover": getFromScale(interactiveScale, pos(0.5), interactiveHex),
     "border-interactive-active": getFromScale(interactiveScale, pos(0.6), interactiveHex),
     "border-interactive-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "border-success-base": getFromScale(successScale, pos(0.4), successHex),
-    "border-warning-base": getFromScale(warningScale, pos(0.4), warningHex),
-    "border-critical-base": getFromScale(errorScale, pos(0.4), errorHex),
-    "border-info-base": getFromScale(infoScale, pos(0.4), infoHex),
+    "border-success-base": getFromScale(successScale, pos(0.41), successHex),
+    "border-warning-base": getFromScale(warningScale, pos(0.41), warningHex),
+    "border-critical-base": getFromScale(errorScale, pos(0.41), errorHex),
+    "border-info-base": getFromScale(infoScale, pos(0.41), infoHex),
     
     // Icons
     "icon-base": getFromScale(primaryScale, pos(0.7), primaryHex),
@@ -450,6 +450,7 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "terminal-ansi-bright-cyan": getFromScale(infoScale, 0.5, infoHex),
     "terminal-ansi-bright-white": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.1, primaryHex),
   }
+
   return converted
 }
 
