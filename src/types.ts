@@ -236,6 +236,7 @@ export interface InternalThemeColors {
   "text-weak": string;
   "text-weaker": string;
   "text-strong": string;
+  "text-stronger": string;
   "text-invert-base": string;
   "text-invert-weak": string;
   "text-invert-weaker": string;
@@ -273,6 +274,9 @@ export interface InternalThemeColors {
   // Button
   "button-secondary-base": string;
   "button-secondary-hover": string;
+  "button-danger-base": string;
+  "button-danger-hover": string;
+  "button-danger-active": string;
   "button-ghost-hover": string;
   "button-ghost-hover2": string;
 
@@ -456,12 +460,22 @@ export interface InternalThemeColors {
   "avatar-background-purple": string;
   "avatar-background-cyan": string;
   "avatar-background-lime": string;
+  "avatar-background-blue": string;
+  "avatar-background-green": string;
+  "avatar-background-yellow": string;
+  "avatar-background-red": string;
+  "avatar-background-gray": string;
   "avatar-text-pink": string;
   "avatar-text-mint": string;
   "avatar-text-orange": string;
   "avatar-text-purple": string;
   "avatar-text-cyan": string;
   "avatar-text-lime": string;
+  "avatar-text-blue": string;
+  "avatar-text-green": string;
+  "avatar-text-yellow": string;
+  "avatar-text-red": string;
+  "avatar-text-gray": string;
 
   // Scrollbar
   "scrollbar-thumb": string;
@@ -474,6 +488,44 @@ export interface InternalThemeColors {
   "selection-background": string;
   "selection-foreground": string;
   "selection-inactive-background": string;
+
+  // Semantic Base
+  "primary-base": string;
+  "primary-hover": string;
+  "primary-active": string;
+  "primary-text": string;
+  "secondary-base": string;
+  "secondary-hover": string;
+  "secondary-active": string;
+  "secondary-text": string;
+  "accent-base": string;
+  "accent-hover": string;
+  "accent-active": string;
+  "accent-text": string;
+  "success-base": string;
+  "success-hover": string;
+  "success-active": string;
+  "success-text": string;
+  "warning-base": string;
+  "warning-hover": string;
+  "warning-active": string;
+  "warning-text": string;
+  "critical-base": string;
+  "critical-hover": string;
+  "critical-active": string;
+  "critical-text": string;
+  "info-base": string;
+  "info-hover": string;
+  "info-active": string;
+  "info-text": string;
+  "interactive-base": string;
+  "interactive-hover": string;
+  "interactive-active": string;
+  "interactive-text": string;
+  "diff-add-base": string;
+  "diff-add-foreground": string;
+  "diff-delete-base": string;
+  "diff-delete-foreground": string;
 }
 
 export interface SeedColor {
