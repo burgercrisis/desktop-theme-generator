@@ -32,6 +32,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #0a0a0a;
   color: #ededed;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode {
+  background-color: #f8fafc;
+  color: #1e293b;
 }
 
 input[type="range"] {
@@ -42,6 +48,11 @@ input[type="range"] {
   background: rgba(255, 255, 255, 0.2);
   outline: none;
   cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+body.light-mode input[type="range"] {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -54,6 +65,11 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   border: none;
   box-shadow: none;
+  transition: background 0.3s ease;
+}
+
+body.light-mode input[type="range"]::-webkit-slider-thumb {
+  background: #6366f1;
 }
 
 select {

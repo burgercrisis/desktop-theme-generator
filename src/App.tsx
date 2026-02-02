@@ -57,6 +57,116 @@ const getInitialState = (key: string, defaultValue: any) => {
   }
 }
 
+// Matrix Router properties (Categorized for easier browsing)
+const MATRIX_PROPERTIES = [
+  { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
+  { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
+  { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
+  { category: "SURFACE_RAISED", keys: ["surface-raised-base", "surface-raised-base-hover", "surface-raised-base-active", "surface-raised-strong", "surface-raised-strong-hover", "surface-raised-stronger", "surface-raised-stronger-hover", "surface-raised-stronger-non-alpha"] },
+  { category: "SURFACE_FLOAT", keys: ["surface-float-base", "surface-float-base-hover", "surface-float-base-active", "surface-float-strong", "surface-float-strong-hover", "surface-float-strong-active"] },
+  { category: "SURFACE_FUNCTIONAL", keys: ["surface-brand-base", "surface-brand-hover", "surface-brand-active", "surface-interactive-base", "surface-interactive-hover", "surface-interactive-active", "surface-interactive-weak", "surface-interactive-weak-hover", "surface-success-base", "surface-success-hover", "surface-success-active", "surface-success-weak", "surface-success-strong", "surface-warning-base", "surface-warning-hover", "surface-warning-active", "surface-warning-weak", "surface-warning-strong", "surface-critical-base", "surface-critical-hover", "surface-critical-active", "surface-critical-weak", "surface-critical-strong", "surface-info-base", "surface-info-hover", "surface-info-active", "surface-info-weak", "surface-info-strong"] },
+  { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
+  { category: "TEXT_CORE", keys: ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger", "text-invert-base", "text-invert-weak", "text-invert-weaker", "text-invert-strong"] },
+  { category: "TEXT_FUNCTIONAL", keys: ["text-on-brand-base", "text-on-brand-weak", "text-on-brand-weaker", "text-on-brand-strong", "text-interactive-base", "text-on-interactive-base", "text-on-interactive-weak", "text-on-success-base", "text-on-success-weak", "text-on-success-strong", "text-on-warning-base", "text-on-warning-weak", "text-on-warning-strong", "text-on-critical-base", "text-on-critical-weak", "text-on-critical-strong", "text-on-info-base", "text-on-info-weak", "text-on-info-strong", "text-diff-add-base", "text-diff-add-strong", "text-diff-delete-base", "text-diff-delete-strong"] },
+  { category: "INPUT", keys: ["input-base", "input-hover", "input-active", "input-disabled"] },
+  { category: "BUTTON", keys: ["button-secondary-base", "button-secondary-hover", "button-ghost-hover", "button-ghost-hover2", "button-danger-base", "button-danger-hover", "button-danger-active"] },
+  { category: "BORDER_CORE", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-disabled", "border-focus", "border-color"] },
+  { category: "BORDER_WEAK", keys: ["border-weak-base", "border-weak-hover", "border-weak-active", "border-weak-selected", "border-weak-disabled", "border-weak-focus"] },
+  { category: "BORDER_WEAKER", keys: ["border-weaker-base", "border-weaker-hover", "border-weaker-active", "border-weaker-selected", "border-weaker-disabled", "border-weaker-focus"] },
+  { category: "BORDER_STRONG", keys: ["border-strong-base", "border-strong-hover", "border-strong-active", "border-strong-selected", "border-strong-disabled", "border-strong-focus"] },
+  { category: "BORDER_FUNCTIONAL", keys: ["border-interactive-base", "border-interactive-hover", "border-interactive-active", "border-interactive-selected", "border-success-base", "border-success-hover", "border-success-selected", "border-warning-base", "border-warning-hover", "border-warning-selected", "border-critical-base", "border-critical-hover", "border-critical-selected", "border-info-base", "border-info-hover", "border-info-selected"] },
+  { category: "ICON_CORE", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-disabled", "icon-focus", "icon-invert-base"] },
+  { category: "ICON_WEAK", keys: ["icon-weak-base", "icon-weak-hover", "icon-weak-active", "icon-weak-selected", "icon-weak-disabled", "icon-weak-focus"] },
+  { category: "ICON_STRONG", keys: ["icon-strong-base", "icon-strong-hover", "icon-strong-active", "icon-strong-selected", "icon-strong-disabled", "icon-strong-focus"] },
+  { category: "ICON_FUNCTIONAL", keys: ["icon-brand-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-add-hover", "icon-diff-add-active", "icon-diff-delete-base", "icon-diff-delete-hover", "icon-diff-modified-base"] },
+  { category: "ICON_ON_COLOR", keys: ["icon-on-brand-base", "icon-on-brand-hover", "icon-on-brand-selected", "icon-on-interactive-base", "icon-on-success-base", "icon-on-success-hover", "icon-on-success-selected", "icon-on-warning-base", "icon-on-warning-hover", "icon-on-warning-selected", "icon-on-critical-base", "icon-on-critical-hover", "icon-on-critical-selected", "icon-on-info-base", "icon-on-info-hover", "icon-on-info-selected"] },
+  { category: "ICON_AGENT", keys: ["icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
+  { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
+  { category: "SYNTAX_CORE", keys: ["syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", "syntax-string", "syntax-number", "syntax-type", "syntax-operator", "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", "syntax-property", "syntax-constant"] },
+  { category: "SYNTAX_WEB", keys: ["syntax-tag", "syntax-attribute", "syntax-value", "syntax-namespace", "syntax-class"] },
+  { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
+  { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
+  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
+  { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
+  { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
+  { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
+]
+
+const MatrixTokenRow = React.memo(({ 
+  property, 
+  currentColor, 
+  activeMode, 
+  isOverridden, 
+  handleManualReset, 
+  handleManualOverride, 
+  setQuickPicker, 
+  formatAgentLabel, 
+  activeVariantsMap 
+}: any) => {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
+      <button
+        onClick={() => handleManualReset(property)}
+        className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
+          isOverridden
+            ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+            : activeMode === 'light'
+              ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+              : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+        }`}
+        title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
+      >
+        <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
+      </button>
+
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
+          {formatAgentLabel(property)}
+        </span>
+        <div className="flex items-center gap-2 mt-0.5">
+          <div 
+            className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
+            style={{ backgroundColor: currentColor }}
+            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: property, label: property })}
+            title="QUICK_PICKER"
+          />
+          <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+        {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
+          <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
+            {variants.map((variant: any, idx: number) => {
+              const isSelected = currentColor?.toLowerCase() === variant.hex.toLowerCase()
+
+              return (
+                <button
+                  key={`${property}-${seedName}-${idx}`}
+                  onClick={() => handleManualOverride(property, variant.hex)}
+                  className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                    isSelected 
+                      ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
+                      : "hover:scale-110 opacity-40 hover:opacity-100"
+                  }`}
+                  style={{ backgroundColor: variant.hex }}
+                  title={`${seedName}_V${idx}: ${variant.hex}`}
+                >
+                  {isSelected && (
+                    <div 
+                      className="w-1 h-1 rounded-full bg-white/60" 
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})
+
 const App: React.FC = () => {
   const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 210, s: 50, l: 50 }))
   const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
@@ -67,7 +177,25 @@ const App: React.FC = () => {
   const [darkBrightness, setDarkBrightness] = useState(() => getInitialState("darkBrightness", 50))
   const [lightContrast, setLightContrast] = useState(() => getInitialState("lightContrast", 50))
   const [darkContrast, setDarkContrast] = useState(() => getInitialState("darkContrast", 50))
-  const [activeMode, setActiveMode] = useState<"light" | "dark">("dark")
+  // Active mode state
+  const [activeMode, setActiveMode] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("activeMode")
+    return (saved === "light" || saved === "dark") ? saved : "dark"
+  })
+
+  // Synchronize body class for theme generator's own UI
+  React.useEffect(() => {
+    if (activeMode === 'light') {
+      document.body.classList.add('light-mode')
+    } else {
+      document.body.classList.remove('light-mode')
+    }
+    localStorage.setItem("activeMode", activeMode)
+  }, [activeMode])
+
+  const toggleMode = useCallback(() => {
+    setActiveMode(prev => prev === "light" ? "dark" : "light")
+  }, [])
   const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>(() => getInitialState("variantStrategy", VariantStrategy.TINTS_SHADES))
   const [colorSpace, setColorSpace] = useState<ColorSpace>(() => getInitialState("colorSpace", "HSL"))
   const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
@@ -97,6 +225,9 @@ const App: React.FC = () => {
   const deferredVariantStrategy = useDeferredValue(variantStrategy)
   const deferredManualOverrides = useDeferredValue(manualOverrides)
   const deferredSeedOverrides = useDeferredValue(seedOverrides)
+
+  // Add deferred active mode to prevent mode-switch blocking
+  const deferredActiveMode = useDeferredValue(activeMode)
 
   // Persistence effect: Consolidated and DEBOUNCED to reduce localStorage I/O overhead
   React.useEffect(() => {
@@ -138,6 +269,9 @@ const App: React.FC = () => {
       outputSpace
     )
   }, [deferredBaseColor, deferredHarmony, deferredSpread, deferredVariantCount, activeMode, deferredLightContrast, deferredDarkContrast, deferredLightBrightness, deferredDarkBrightness, deferredVariantStrategy, colorSpace, outputSpace])
+
+  // DEFERRED_PALETTE_GROUPS: Further defer the complex groups if they aren't immediate
+  const deferredPaletteGroups = useDeferredValue(paletteGroups)
 
   // Generate 9 seeds for Opencode mode (functional seeds) - Separate for Light/Dark
   const lightSeeds9 = useMemo<SeedColor[]>(() => {
@@ -255,13 +389,17 @@ const App: React.FC = () => {
 
   // WCAG Compliance Pairs - Comprehensive list for checker
   const wcagPairs = useMemo(() => {
-    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff' }> = []
+    // Return empty array if not in matrix mode to save heavy calculation
+    if (!matrixMode) return []
+
+    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff'; score: { ratio: number, level: string } }> = []
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
-      const bg = themeColors[bgKey as keyof OpencodeThemeColors] as string
-      const fg = themeColors[fgKey as keyof OpencodeThemeColors] as string
-      if (bg && fg) {
-        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText, type })
+      const bg = themeColors[bgKey as keyof OpencodeThemeColors]
+      const fg = themeColors[fgKey as keyof OpencodeThemeColors]
+      if (typeof bg === 'string' && typeof fg === 'string') {
+        const score = getContrastScore(bg, fg)
+        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText, type, score })
       }
     }
 
@@ -443,39 +581,115 @@ const App: React.FC = () => {
   }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
 
   // Matrix Router properties (Categorized for easier browsing)
-  const MATRIX_PROPERTIES = [
-    { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
-    { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
-    { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
-    { category: "SURFACE_RAISED", keys: ["surface-raised-base", "surface-raised-base-hover", "surface-raised-base-active", "surface-raised-strong", "surface-raised-strong-hover", "surface-raised-stronger", "surface-raised-stronger-hover", "surface-raised-stronger-non-alpha"] },
-    { category: "SURFACE_FLOAT", keys: ["surface-float-base", "surface-float-base-hover", "surface-float-base-active", "surface-float-strong", "surface-float-strong-hover", "surface-float-strong-active"] },
-    { category: "SURFACE_FUNCTIONAL", keys: ["surface-brand-base", "surface-brand-hover", "surface-brand-active", "surface-interactive-base", "surface-interactive-hover", "surface-interactive-active", "surface-interactive-weak", "surface-interactive-weak-hover", "surface-success-base", "surface-success-hover", "surface-success-active", "surface-success-weak", "surface-success-strong", "surface-warning-base", "surface-warning-hover", "surface-warning-active", "surface-warning-weak", "surface-warning-strong", "surface-critical-base", "surface-critical-hover", "surface-critical-active", "surface-critical-weak", "surface-critical-strong", "surface-info-base", "surface-info-hover", "surface-info-active", "surface-info-weak", "surface-info-strong"] },
-    { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
-    { category: "TEXT_CORE", keys: ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger", "text-invert-base", "text-invert-weak", "text-invert-weaker", "text-invert-strong"] },
-    { category: "TEXT_FUNCTIONAL", keys: ["text-on-brand-base", "text-on-brand-weak", "text-on-brand-weaker", "text-on-brand-strong", "text-interactive-base", "text-on-interactive-base", "text-on-interactive-weak", "text-on-success-base", "text-on-success-weak", "text-on-success-strong", "text-on-warning-base", "text-on-warning-weak", "text-on-warning-strong", "text-on-critical-base", "text-on-critical-weak", "text-on-critical-strong", "text-on-info-base", "text-on-info-weak", "text-on-info-strong", "text-diff-add-base", "text-diff-add-strong", "text-diff-delete-base", "text-diff-delete-strong"] },
-    { category: "INPUT", keys: ["input-base", "input-hover", "input-active", "input-disabled"] },
-    { category: "BUTTON", keys: ["button-secondary-base", "button-secondary-hover", "button-ghost-hover", "button-ghost-hover2", "button-danger-base", "button-danger-hover", "button-danger-active"] },
-    { category: "BORDER_CORE", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-disabled", "border-focus", "border-color"] },
-    { category: "BORDER_WEAK", keys: ["border-weak-base", "border-weak-hover", "border-weak-active", "border-weak-selected", "border-weak-disabled", "border-weak-focus"] },
-    { category: "BORDER_WEAKER", keys: ["border-weaker-base", "border-weaker-hover", "border-weaker-active", "border-weaker-selected", "border-weaker-disabled", "border-weaker-focus"] },
-    { category: "BORDER_STRONG", keys: ["border-strong-base", "border-strong-hover", "border-strong-active", "border-strong-selected", "border-strong-disabled", "border-strong-focus"] },
-    { category: "BORDER_FUNCTIONAL", keys: ["border-interactive-base", "border-interactive-hover", "border-interactive-active", "border-interactive-selected", "border-success-base", "border-success-hover", "border-success-selected", "border-warning-base", "border-warning-hover", "border-warning-selected", "border-critical-base", "border-critical-hover", "border-critical-selected", "border-info-base", "border-info-hover", "border-info-selected"] },
-    { category: "ICON_CORE", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-disabled", "icon-focus", "icon-invert-base"] },
-    { category: "ICON_WEAK", keys: ["icon-weak-base", "icon-weak-hover", "icon-weak-active", "icon-weak-selected", "icon-weak-disabled", "icon-weak-focus"] },
-    { category: "ICON_STRONG", keys: ["icon-strong-base", "icon-strong-hover", "icon-strong-active", "icon-strong-selected", "icon-strong-disabled", "icon-strong-focus"] },
-    { category: "ICON_FUNCTIONAL", keys: ["icon-brand-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-add-hover", "icon-diff-add-active", "icon-diff-delete-base", "icon-diff-delete-hover", "icon-diff-modified-base"] },
-    { category: "ICON_ON_COLOR", keys: ["icon-on-brand-base", "icon-on-brand-hover", "icon-on-brand-selected", "icon-on-interactive-base", "icon-on-success-base", "icon-on-success-hover", "icon-on-success-selected", "icon-on-warning-base", "icon-on-warning-hover", "icon-on-warning-selected", "icon-on-critical-base", "icon-on-critical-hover", "icon-on-critical-selected", "icon-on-info-base", "icon-on-info-hover", "icon-on-info-selected"] },
-    { category: "ICON_AGENT", keys: ["icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
-    { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
-    { category: "SYNTAX_CORE", keys: ["syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", "syntax-string", "syntax-number", "syntax-type", "syntax-operator", "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", "syntax-property", "syntax-constant"] },
-    { category: "SYNTAX_WEB", keys: ["syntax-tag", "syntax-attribute", "syntax-value", "syntax-namespace", "syntax-class"] },
-    { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
-    { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
-    { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
-    { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
-    { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
-    { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
-  ]
+const MATRIX_PROPERTIES = [
+  { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
+  { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
+  { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
+  { category: "SURFACE_RAISED", keys: ["surface-raised-base", "surface-raised-base-hover", "surface-raised-base-active", "surface-raised-strong", "surface-raised-strong-hover", "surface-raised-stronger", "surface-raised-stronger-hover", "surface-raised-stronger-non-alpha"] },
+  { category: "SURFACE_FLOAT", keys: ["surface-float-base", "surface-float-base-hover", "surface-float-base-active", "surface-float-strong", "surface-float-strong-hover", "surface-float-strong-active"] },
+  { category: "SURFACE_FUNCTIONAL", keys: ["surface-brand-base", "surface-brand-hover", "surface-brand-active", "surface-interactive-base", "surface-interactive-hover", "surface-interactive-active", "surface-interactive-weak", "surface-interactive-weak-hover", "surface-success-base", "surface-success-hover", "surface-success-active", "surface-success-weak", "surface-success-strong", "surface-warning-base", "surface-warning-hover", "surface-warning-active", "surface-warning-weak", "surface-warning-strong", "surface-critical-base", "surface-critical-hover", "surface-critical-active", "surface-critical-weak", "surface-critical-strong", "surface-info-base", "surface-info-hover", "surface-info-active", "surface-info-weak", "surface-info-strong"] },
+  { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
+  { category: "TEXT_CORE", keys: ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger", "text-invert-base", "text-invert-weak", "text-invert-weaker", "text-invert-strong"] },
+  { category: "TEXT_FUNCTIONAL", keys: ["text-on-brand-base", "text-on-brand-weak", "text-on-brand-weaker", "text-on-brand-strong", "text-interactive-base", "text-on-interactive-base", "text-on-interactive-weak", "text-on-success-base", "text-on-success-weak", "text-on-success-strong", "text-on-warning-base", "text-on-warning-weak", "text-on-warning-strong", "text-on-critical-base", "text-on-critical-weak", "text-on-critical-strong", "text-on-info-base", "text-on-info-weak", "text-on-info-strong", "text-diff-add-base", "text-diff-add-strong", "text-diff-delete-base", "text-diff-delete-strong"] },
+  { category: "INPUT", keys: ["input-base", "input-hover", "input-active", "input-disabled"] },
+  { category: "BUTTON", keys: ["button-secondary-base", "button-secondary-hover", "button-ghost-hover", "button-ghost-hover2", "button-danger-base", "button-danger-hover", "button-danger-active"] },
+  { category: "BORDER_CORE", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-disabled", "border-focus", "border-color"] },
+  { category: "BORDER_WEAK", keys: ["border-weak-base", "border-weak-hover", "border-weak-active", "border-weak-selected", "border-weak-disabled", "border-weak-focus"] },
+  { category: "BORDER_WEAKER", keys: ["border-weaker-base", "border-weaker-hover", "border-weaker-active", "border-weaker-selected", "border-weaker-disabled", "border-weaker-focus"] },
+  { category: "BORDER_STRONG", keys: ["border-strong-base", "border-strong-hover", "border-strong-active", "border-strong-selected", "border-strong-disabled", "border-strong-focus"] },
+  { category: "BORDER_FUNCTIONAL", keys: ["border-interactive-base", "border-interactive-hover", "border-interactive-active", "border-interactive-selected", "border-success-base", "border-success-hover", "border-success-selected", "border-warning-base", "border-warning-hover", "border-warning-selected", "border-critical-base", "border-critical-hover", "border-critical-selected", "border-info-base", "border-info-hover", "border-info-selected"] },
+  { category: "ICON_CORE", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-disabled", "icon-focus", "icon-invert-base"] },
+  { category: "ICON_WEAK", keys: ["icon-weak-base", "icon-weak-hover", "icon-weak-active", "icon-weak-selected", "icon-weak-disabled", "icon-weak-focus"] },
+  { category: "ICON_STRONG", keys: ["icon-strong-base", "icon-strong-hover", "icon-strong-active", "icon-strong-selected", "icon-strong-disabled", "icon-strong-focus"] },
+  { category: "ICON_FUNCTIONAL", keys: ["icon-brand-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-add-hover", "icon-diff-add-active", "icon-diff-delete-base", "icon-diff-delete-hover", "icon-diff-modified-base"] },
+  { category: "ICON_ON_COLOR", keys: ["icon-on-brand-base", "icon-on-brand-hover", "icon-on-brand-selected", "icon-on-interactive-base", "icon-on-success-base", "icon-on-success-hover", "icon-on-success-selected", "icon-on-warning-base", "icon-on-warning-hover", "icon-on-warning-selected", "icon-on-critical-base", "icon-on-critical-hover", "icon-on-critical-selected", "icon-on-info-base", "icon-on-info-hover", "icon-on-info-selected"] },
+  { category: "ICON_AGENT", keys: ["icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
+  { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
+  { category: "SYNTAX_CORE", keys: ["syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", "syntax-string", "syntax-number", "syntax-type", "syntax-operator", "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", "syntax-property", "syntax-constant"] },
+  { category: "SYNTAX_WEB", keys: ["syntax-tag", "syntax-attribute", "syntax-value", "syntax-namespace", "syntax-class"] },
+  { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
+  { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
+  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
+  { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
+  { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
+  { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
+]
+
+const MatrixTokenRow = React.memo(({ 
+  property, 
+  currentColor, 
+  activeMode, 
+  isOverridden, 
+  handleManualReset, 
+  handleManualOverride, 
+  setQuickPicker, 
+  formatAgentLabel, 
+  activeVariantsMap 
+}: any) => {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
+      <button
+        onClick={() => handleManualReset(property)}
+        className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
+          isOverridden
+            ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+            : activeMode === 'light'
+              ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+              : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+        }`}
+        title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
+      >
+        <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
+      </button>
+
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
+          {formatAgentLabel(property)}
+        </span>
+        <div className="flex items-center gap-2 mt-0.5">
+          <div 
+            className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
+            style={{ backgroundColor: currentColor }}
+            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: property, label: property })}
+            title="QUICK_PICKER"
+          />
+          <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+        {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
+          <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
+            {variants.map((variant: any, idx: number) => {
+              const isSelected = currentColor?.toLowerCase() === variant.hex.toLowerCase()
+
+              return (
+                <button
+                  key={`${property}-${seedName}-${idx}`}
+                  onClick={() => handleManualOverride(property, variant.hex)}
+                  className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                    isSelected 
+                      ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
+                      : "hover:scale-110 opacity-40 hover:opacity-100"
+                  }`}
+                  style={{ backgroundColor: variant.hex }}
+                  title={`${seedName}_V${idx}: ${variant.hex}`}
+                >
+                  {isSelected && (
+                    <div 
+                      className="w-1 h-1 rounded-full bg-white/60" 
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})
+
 
   // Handlers for Matrix Router
   const handleSeedOverride = useCallback((seedName: string, hex: string) => {
@@ -725,6 +939,22 @@ const App: React.FC = () => {
     setVariantStrategy(preset.strategy)
   }, [])
 
+  // Pre-calculate contrast scores for deferredWcagPairs
+  const scoredWcagPairs = useMemo(() => {
+    return deferredWcagPairs.map(pair => ({
+      ...pair,
+      score: getContrastScore(pair.bg, pair.fg)
+    }));
+  }, [deferredWcagPairs]);
+
+  const passCount = useMemo(() => {
+    return scoredWcagPairs.filter(p => p.score.ratio >= (p.isNonText ? 3 : 4.5)).length;
+  }, [scoredWcagPairs]);
+
+  const failCount = useMemo(() => {
+    return scoredWcagPairs.filter(p => p.score.ratio < (p.isNonText ? 3 : 4.5)).length;
+  }, [scoredWcagPairs]);
+
   return (
     <div className={`min-h-screen transition-colors ${activeMode === 'light' ? 'bg-gray-100' : ''}`} style={{ backgroundColor: activeMode === 'light' ? undefined : "#0d0d17" }}>
       <header className={`px-6 py-2 border-b flex items-center justify-between sticky top-0 z-50 backdrop-blur-md transition-colors ${activeMode === 'light' ? 'bg-white/80 border-gray-200' : 'bg-[#1a1a2e]/80 border-[#2d2d4d]'}`}>
@@ -896,13 +1126,13 @@ const App: React.FC = () => {
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
                           <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
-                            {deferredWcagPairs.filter(p => getContrastScore(p.bg, p.fg).ratio >= (p.isNonText ? 3 : 4.5)).length}
+                            {passCount}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
                           <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
-                            {deferredWcagPairs.filter(p => getContrastScore(p.bg, p.fg).ratio < (p.isNonText ? 3 : 4.5)).length}
+                            {failCount}
                           </span>
                         </div>
                       </div>
@@ -910,20 +1140,20 @@ const App: React.FC = () => {
 
                     <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
                       <div className="flex flex-col">
-                        {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
+                        {Array.from(new Set(scoredWcagPairs.map(p => p.category))).map(category => (
                           <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
                             <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
                               <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
                                 <span className="opacity-40">#</span> {category}
                               </h3>
                               <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
-                                {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
+                                {scoredWcagPairs.filter(p => p.category === category).length} ENTRIES
                               </span>
                             </div>
                             
                             <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
-                              {deferredWcagPairs.filter(p => p.category === category).map(pair => {
-                                const score = getContrastScore(pair.bg, pair.fg)
+                              {scoredWcagPairs.filter(p => p.category === category).map(pair => {
+                                const score = pair.score
                                 const threshold = pair.isNonText ? 3 : 4.5
                                 const isFailing = score.ratio < threshold
                                 
@@ -1078,73 +1308,21 @@ const App: React.FC = () => {
                             const isOverridden = property in currentModeOverrides
 
                             return (
-                              <div key={property} className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
-                                <button
-                                  onClick={() => handleManualReset(property)}
-                                  className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
-                                    isOverridden
-                                      ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-                                      : activeMode === 'light'
-                                        ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-                                        : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-                                  }`}
-                                  title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
-                                >
-                                  <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
-                                </button>
-
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
-                                    {formatAgentLabel(property)}
-                                  </span>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <div 
-                                      className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
-                                      style={{ backgroundColor: currentColor }}
-                                      onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: property, label: property })}
-                                      title="QUICK_PICKER"
-                                    />
-                                    <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
-                                  {Object.entries(activeVariantsMap).map(([seedName, variants]) => (
-                                    <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
-                                      {variants.map((variant, idx) => {
-                                        const isSelected = currentColor?.toLowerCase() === variant.hex.toLowerCase()
-                                        const whiteContrast = getContrastRatio(variant.hex, "#ffffff")
-                                        const blackContrast = getContrastRatio(variant.hex, "#000000")
-                                        const bestContrast = Math.max(whiteContrast, blackContrast)
-                                        const contrastColor = whiteContrast > blackContrast ? "#ffffff" : "#000000"
-
-                                        return (
-                                          <button
-                                            key={`${property}-${seedName}-${idx}`}
-                                            onClick={() => handleManualOverride(property, variant.hex)}
-                                            className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
-                                              isSelected 
-                                                ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
-                                                : "hover:scale-110 opacity-40 hover:opacity-100"
-                                            }`}
-                                            style={{ backgroundColor: variant.hex }}
-                                            title={`${seedName}_V${idx}: ${variant.hex} (${bestContrast.toFixed(1)}:1)`}
-                                          >
-                                            {isSelected && (
-                                              <div 
-                                                className="w-1 h-1 rounded-full" 
-                                                style={{ backgroundColor: contrastColor }}
-                                              />
-                                            )}
-                                          </button>
-                                        )
-                                      })}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                              <MatrixTokenRow
+                                key={property}
+                                property={property}
+                                currentColor={currentColor}
+                                activeMode={activeMode}
+                                isOverridden={isOverridden}
+                                handleManualReset={handleManualReset}
+                                handleManualOverride={handleManualOverride}
+                                setQuickPicker={setQuickPicker}
+                                formatAgentLabel={formatAgentLabel}
+                                activeVariantsMap={activeVariantsMap}
+                              />
                             )
                           })}
+
                         </div>
                       ))}
                     </div>
@@ -1259,7 +1437,7 @@ const App: React.FC = () => {
                 <div className={`space-y-5 pt-2 border-t transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
                   <div className={`flex items-center gap-2 p-1 border rounded-md transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-black/40 border-[#2d2d4d]'}`}>
                     <button
-                      onClick={() => setActiveMode("dark")}
+                      onClick={toggleMode}
                       className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
                         activeMode === "dark" 
                         ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
@@ -1269,7 +1447,7 @@ const App: React.FC = () => {
                       MODE_DARK
                     </button>
                     <button
-                      onClick={() => setActiveMode("light")}
+                      onClick={toggleMode}
                       className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
                         activeMode === "light" 
                         ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
