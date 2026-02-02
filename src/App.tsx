@@ -34,8 +34,7 @@ import {
   InternalThemeColors,
   ColorSpace,
   OutputSpace,
-  ColorStop,
-  SeedName
+  ColorStop
 } from "./types"
 import "./App.css"
 
@@ -90,7 +89,6 @@ const App: React.FC = () => {
   const deferredHarmony = useDeferredValue(harmony)
   const deferredSpread = useDeferredValue(spread)
   const deferredVariantCount = useDeferredValue(variantCount)
-  const deferredSaturation = useDeferredValue(saturation)
   const deferredLightBrightness = useDeferredValue(lightBrightness)
   const deferredDarkBrightness = useDeferredValue(darkBrightness)
   const deferredLightContrast = useDeferredValue(lightContrast)
@@ -351,6 +349,13 @@ const App: React.FC = () => {
     addPair("UI Elements", "Tab Active", "background-base", "tab-active", "Active tab indicator contrast", true)
     addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast")
 
+    // --- TERMINAL ---
+    const ansiColors = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+    ansiColors.forEach(color => {
+      addPair("Terminal", `ANSI ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-${color}`, `Terminal ${color} on background`)
+      addPair("Terminal", `Bright ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-bright-${color}`, `Terminal bright ${color} on background`)
+    })
+
     return pairs
   }, [themeColors])
 
@@ -440,6 +445,24 @@ const App: React.FC = () => {
     "scrollbar-track",
     "shadow",
     "overlay",
+
+    // Terminal
+    "terminal-ansi-black",
+    "terminal-ansi-red",
+    "terminal-ansi-green",
+    "terminal-ansi-yellow",
+    "terminal-ansi-blue",
+    "terminal-ansi-magenta",
+    "terminal-ansi-cyan",
+    "terminal-ansi-white",
+    "terminal-ansi-bright-black",
+    "terminal-ansi-bright-red",
+    "terminal-ansi-bright-green",
+    "terminal-ansi-bright-yellow",
+    "terminal-ansi-bright-blue",
+    "terminal-ansi-bright-magenta",
+    "terminal-ansi-bright-cyan",
+    "terminal-ansi-bright-white",
 
     // Text
     "text-base",
@@ -701,7 +724,6 @@ const App: React.FC = () => {
       }
 
       if (format === "opencode9") {
-        const currentManualOverrides = manualOverrides[activeMode] || {}
         const content = exportToOpencode9SeedJSON(themeName, lightThemeColors, darkThemeColors, lightSeeds9, darkSeeds9, manualOverrides)
         const formatInfo = exportFormats.find((f: any) => f.id === format)
         downloadFile(

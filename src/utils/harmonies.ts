@@ -431,12 +431,24 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "input-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
     "input-active": getFromScale(primaryScale, pos(0.15), primaryHex),
     "input-disabled": getFromScale(neutralScale, pos(0.05), neutralHex),
-    
-    "scrollbar-thumb": getFromScale(primaryScale, 0.3, primaryHex),
-    "scrollbar-track": getFromScale(primaryScale, 0.05, primaryHex),
-    "focus-ring": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "shadow": "rgba(0,0,0,0.5)",
-    "overlay": "rgba(0,0,0,0.7)"
+
+    // Terminal ANSI colors
+    "terminal-ansi-black": isDark ? getFromScale(primaryScale, 0.05, primaryHex) : getFromScale(primaryScale, 0.95, primaryHex),
+    "terminal-ansi-red": getFromScale(errorScale, 0.5, errorHex),
+    "terminal-ansi-green": getFromScale(successScale, 0.5, successHex),
+    "terminal-ansi-yellow": getFromScale(warningScale, 0.5, warningHex),
+    "terminal-ansi-blue": getFromScale(infoScale, 0.5, infoHex),
+    "terminal-ansi-magenta": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "terminal-ansi-cyan": getFromScale(infoScale, 0.4, infoHex),
+    "terminal-ansi-white": isDark ? getFromScale(primaryScale, 0.95, primaryHex) : getFromScale(primaryScale, 0.05, primaryHex),
+    "terminal-ansi-bright-black": isDark ? getFromScale(primaryScale, 0.2, primaryHex) : getFromScale(primaryScale, 0.8, primaryHex),
+    "terminal-ansi-bright-red": getFromScale(errorScale, 0.6, errorHex),
+    "terminal-ansi-bright-green": getFromScale(successScale, 0.6, successHex),
+    "terminal-ansi-bright-yellow": getFromScale(warningScale, 0.6, warningHex),
+    "terminal-ansi-bright-blue": getFromScale(infoScale, 0.6, infoHex),
+    "terminal-ansi-bright-magenta": getFromScale(interactiveScale, 0.6, interactiveHex),
+    "terminal-ansi-bright-cyan": getFromScale(infoScale, 0.5, infoHex),
+    "terminal-ansi-bright-white": isDark ? "#FFFFFF" : getFromScale(primaryScale, 0.1, primaryHex),
   }
   return converted
 }

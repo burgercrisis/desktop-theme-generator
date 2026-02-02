@@ -63,8 +63,8 @@ export const opencodePresets: Record<string, OpencodePreset> = {
       "icon-strong": "#e6eef5",
     },
     baseColor: { h: 180, s: 60, l: 50 },
-    harmony: "Analogous (3)",
-    variantStrategy: "Vibrant",
+    harmony: HarmonyRule.ANALOGOUS,
+    variantStrategy: VariantStrategy.VIBRANT,
   },
 
   ayu: {
@@ -115,8 +115,8 @@ export const opencodePresets: Record<string, OpencodePreset> = {
       "icon-strong": "#e0e6ed",
     },
     baseColor: { h: 35, s: 70, l: 50 },
-    harmony: "Analogous (3)",
-    variantStrategy: "Warm",
+    harmony: HarmonyRule.ANALOGOUS,
+    variantStrategy: VariantStrategy.WARM,
   },
 
   oc1: {
@@ -167,8 +167,8 @@ export const opencodePresets: Record<string, OpencodePreset> = {
       "icon-strong": "#e0e0e0",
     },
     baseColor: { h: 210, s: 50, l: 50 },
-    harmony: "Monochromatic (1)",
-    variantStrategy: "Tints & Shades",
+    harmony: HarmonyRule.MONOCHROMATIC,
+    variantStrategy: VariantStrategy.TINTS_SHADES,
   },
 
   shadesOfPurple: {
@@ -228,8 +228,8 @@ export const opencodePresets: Record<string, OpencodePreset> = {
       "surface-raised-strong": "#3e4168",
     },
     baseColor: { h: 270, s: 40, l: 45 },
-    harmony: "Analogous (3)",
-    variantStrategy: "Deep & Rich",
+    harmony: HarmonyRule.ANALOGOUS,
+    variantStrategy: VariantStrategy.DEEP,
   },
 }
 

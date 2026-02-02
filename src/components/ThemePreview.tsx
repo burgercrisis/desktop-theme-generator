@@ -87,6 +87,21 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
       overlay: get('overlay'),
       focusRing: get('focus-ring'),
       shadow: get('shadow'),
+      selectionBackground: get('selection-background'),
+      selectionForeground: get('selection-foreground'),
+      syntaxKeyword: get('syntax-keyword'),
+      syntaxFunction: get('syntax-function'),
+      syntaxString: get('syntax-string'),
+      syntaxComment: get('syntax-comment'),
+      syntaxVariable: get('syntax-variable'),
+      terminalBlack: get('terminal-ansi-black'),
+      terminalRed: get('terminal-ansi-red'),
+      terminalGreen: get('terminal-ansi-green'),
+      terminalYellow: get('terminal-ansi-yellow'),
+      terminalBlue: get('terminal-ansi-blue'),
+      terminalMagenta: get('terminal-ansi-magenta'),
+      terminalCyan: get('terminal-ansi-cyan'),
+      terminalWhite: get('terminal-ansi-white'),
     };
   }, [rawTheme]);
   const diffContent = `--- a/src/components/Button.tsx
@@ -147,6 +162,48 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
   };
 
   const diffLines = parseDiffLines(diffContent);
+
+  const highlightCode = (code: string) => {
+    // Very simple regex-based highlighting for preview purposes
+    return code.split(/(\s+|[{}()[\],;.]|'[^']*'|"[^"]*"|\/\/[^\n]*)/).map((part, i) => {
+      if (!part) return null;
+      
+      if (part.startsWith('//')) {
+        return <span key={i} style={{ color: theme.syntaxComment }}>{part}</span>;
+      }
+      if (part.startsWith("'") || part.startsWith('"')) {
+        return <span key={i} style={{ color: theme.syntaxString }}>{part}</span>;
+      }
+      if (/^(import|export|interface|return|const|boolean|void|default|as)$/.test(part)) {
+        return <span key={i} style={{ color: theme.syntaxKeyword }}>{part}</span>;
+      }
+      if (/^[A-Z][a-zA-Z0-9]*$/.test(part) || /^(onClick|children|variant|size|loading|disabled)$/.test(part)) {
+        return <span key={i} style={{ color: theme.syntaxVariable }}>{part}</span>;
+      }
+      if (part === 'Button' || part === 'Spinner' || part === 'React') {
+        return <span key={i} style={{ color: theme.syntaxFunction }}>{part}</span>;
+      }
+      
+      // Simulate selection on a specific part for visual check
+      if (part === 'loading' && code.includes('loading?: boolean;')) {
+        return (
+          <span 
+            key={i} 
+            style={{ 
+              backgroundColor: theme.selectionBackground, 
+              color: theme.selectionForeground,
+              borderRadius: '2px',
+              padding: '0 2px'
+            }}
+          >
+            {part}
+          </span>
+        );
+      }
+
+      return <span key={i}>{part}</span>;
+    });
+  };
 
   const terminalHistory = [
     { type: 'command' as const, content: '$ npm install react react-dom' },
@@ -289,14 +346,33 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
                       >
                         {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : line.type === 'header' || line.type === 'hunk' ? '' : ' '}
                       </span>
-                      <span className={line.type === 'header' ? 'opacity-60 truncate' : 'truncate'}>{line.content}</span>
+                      <span className={line.type === 'header' ? 'opacity-60 truncate' : 'truncate'}>
+                        {line.type === 'header' || line.type === 'hunk' ? line.content : highlightCode(line.content)}
+                      </span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
+          </div>
 
-            <div className="w-48 border-l shrink-0 flex flex-col" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
+          <div className="h-24 border-t px-3 py-2 font-mono text-[11px] overflow-hidden" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceBase }}>
+            <div className="flex gap-2 mb-1">
+              <span style={{ color: theme.terminalGreen }}>$</span>
+              <span style={{ color: theme.terminalWhite }}>npm run dev</span>
+            </div>
+            <div style={{ color: theme.foregroundWeak }}>{`> vite v5.0.0 dev server running at:`}</div>
+            <div className="flex gap-2">
+              <span style={{ color: theme.foregroundWeak }}>{`> Local:`}</span>
+              <span style={{ color: theme.terminalBlue }}>http://localhost:5173/</span>
+            </div>
+            <div className="flex gap-1 mt-2">
+              {[theme.terminalBlack, theme.terminalRed, theme.terminalGreen, theme.terminalYellow, theme.terminalBlue, theme.terminalMagenta, theme.terminalCyan, theme.terminalWhite].map((c, i) => (
+                <div key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="w-48 border-l shrink-0 flex flex-col" style={{ borderColor: theme.borderWeak, backgroundColor: theme.surfaceRaised }}>
               <div className="h-7 border-b flex items-center px-2" style={{ borderColor: theme.borderWeak }}>
                 <span className="text-xs font-medium" style={{ color: theme.foregroundWeak }}>Session</span>
               </div>

@@ -243,6 +243,24 @@ export interface InternalThemeColors {
   "scrollbar-track": string;
   "shadow": string;
   "overlay": string;
+
+  // Terminal ANSI
+  "terminal-ansi-black": string;
+  "terminal-ansi-red": string;
+  "terminal-ansi-green": string;
+  "terminal-ansi-yellow": string;
+  "terminal-ansi-blue": string;
+  "terminal-ansi-magenta": string;
+  "terminal-ansi-cyan": string;
+  "terminal-ansi-white": string;
+  "terminal-ansi-bright-black": string;
+  "terminal-ansi-bright-red": string;
+  "terminal-ansi-bright-green": string;
+  "terminal-ansi-bright-yellow": string;
+  "terminal-ansi-bright-blue": string;
+  "terminal-ansi-bright-magenta": string;
+  "terminal-ansi-bright-cyan": string;
+  "terminal-ansi-bright-white": string;
 }
 
 export interface SeedColor {

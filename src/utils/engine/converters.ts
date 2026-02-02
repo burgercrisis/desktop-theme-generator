@@ -47,10 +47,10 @@ export const toOutputFormat = (color: any, space: OutputSpace): string => {
                 const rgb = c.to('srgb').coords.map((cVal: number) => Math.max(0, Math.min(1, cVal)));
                 const k = 1 - Math.max(rgb[0], rgb[1], rgb[2]);
                 const denom = 1 - k || 1;
-                const c = (1 - rgb[0] - k) / denom;
+                const cyan = (1 - rgb[0] - k) / denom;
                 const m = (1 - rgb[1] - k) / denom;
                 const y = (1 - rgb[2] - k) / denom;
-                return `cmyk(${toPercentString([c, m, y, k])})`;
+                return `cmyk(${toPercentString([cyan, m, y, k])})`;
             }
 
             return c.to(mapped).toString();
@@ -186,8 +186,9 @@ export const lchToHex = (l: number, s: number, h: number, mode: 'D50'|'D65' = 'D
     } catch(e) { return hslToHex(h, Math.min(100, s), l); }
 };
 
-export const luvToHex = (l: number, s: number, h: number, mode: 'LCh'|'Luv' = 'LCh'): string => {
+export const luvToHex = (l: number, s: number, h: number, _mode: 'LCh'|'Luv' = 'LCh'): string => {
      try {
+          // 'mode' is kept for API compatibility but currently only LCh is used for Luv logic
           let c = new Color('lchuv', [l, s, h]);
           if (!c.inGamut('srgb')) c = c.toGamut({ space: 'srgb' });
           return c.to('srgb').toString({format:'hex'});
@@ -220,10 +221,11 @@ export const hslToRgb = (h: number, s: number, l: number): RGB => {
   try {
       const c = new Color("hsl", [h, s, l]);
       const rgb = c.to("srgb");
+      const coords = (rgb.coords as number[]) || [0, 0, 0];
       return {
-          r: Math.round(rgb.coords[0] * 255),
-          g: Math.round(rgb.coords[1] * 255),
-          b: Math.round(rgb.coords[2] * 255)
+          r: Math.round(coords[0] * 255),
+          g: Math.round(coords[1] * 255),
+          b: Math.round(coords[2] * 255)
       };
   } catch(e) { return { r:0, g:0, b:0 }; }
 };
@@ -231,10 +233,11 @@ export const hslToRgb = (h: number, s: number, l: number): RGB => {
 export const hexToRgb = (hex: string): RGB => {
   try {
       const c = new Color(hex).to("srgb");
+      const coords = (c.coords as number[]) || [0, 0, 0];
        return {
-          r: Math.round(c.coords[0] * 255),
-          g: Math.round(c.coords[1] * 255),
-          b: Math.round(c.coords[2] * 255)
+          r: Math.round(coords[0] * 255),
+          g: Math.round(coords[1] * 255),
+          b: Math.round(coords[2] * 255)
       };
   } catch(e) { return {r:0,g:0,b:0}; }
 };
@@ -242,10 +245,11 @@ export const hexToRgb = (hex: string): RGB => {
 export const hexToHsl = (hex: string): HSL => {
   try {
       const c = new Color(hex).to("hsl");
+      const coords = (c.coords as number[]) || [0, 0, 0];
       return {
-          h: c.coords[0] || 0,
-          s: c.coords[1] || 0,
-          l: c.coords[2] || 0
+          h: coords[0] || 0,
+          s: coords[1] || 0,
+          l: coords[2] || 0
       };
   } catch(e) { return { h:0, s:0, l:0 }; }
 };
@@ -253,10 +257,11 @@ export const hexToHsl = (hex: string): HSL => {
 export const rgbToHsl = (r: number, g: number, b: number): HSL => {
     try {
         const c = new Color("srgb", [r/255, g/255, b/255]).to("hsl");
+        const coords = (c.coords as number[]) || [0, 0, 0];
         return {
-            h: c.coords[0] || 0,
-            s: c.coords[1] || 0,
-            l: c.coords[2] || 0
+            h: coords[0] || 0,
+            s: coords[1] || 0,
+            l: coords[2] || 0
         };
     } catch(e) { return { h:0, s:0, l:0 }; }
 };
