@@ -266,44 +266,75 @@ const App: React.FC = () => {
     
     backgrounds.forEach(bg => {
       coreTexts.forEach(fg => {
-        addPair("Core Typography", `${fg.split("-")[1]} on ${bg.split("-")[1]}`, bg, fg, `${fg} on ${bg}`, false, 'read')
+        addPair("Typography", `${fg.split("-")[1].toUpperCase()} on ${bg.split("-")[1].toUpperCase()}`, bg, fg, `${fg} on ${bg}`, false, 'read')
       })
     })
 
-    // --- SURFACES & HOVERS ---
-    const mainSurfaces = ["surface-base", "surface-raised-base", "surface-float-base", "surface-weak", "surface-strong"]
-    mainSurfaces.forEach(bg => {
-      addPair("Surfaces", `Base text on ${bg.split("-")[1]}`, bg, "text-base", `text-base on ${bg}`, false, 'read')
+    // --- SURFACES & INTERACTIVE STATES ---
+    const surfaceCategories = [
+      { name: "Surface (Main)", prefix: "surface-base", items: ["base", "hover", "active"] },
+      { name: "Surface (Inset)", prefix: "surface-inset", items: ["base", "base-hover", "active", "strong", "strong-hover"] },
+      { name: "Surface (Raised)", prefix: "surface-raised", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "stronger", "stronger-hover"] },
+      { name: "Surface (Float)", prefix: "surface-float", items: ["base", "base-hover", "active"] },
+    ]
+
+    surfaceCategories.forEach(cat => {
+      cat.items.forEach(item => {
+        const bgKey = item === "base" && !cat.prefix.includes("-") ? cat.prefix : `${cat.prefix}-${item}`
+        addPair(cat.name, `${item.toUpperCase()} Contrast`, bgKey, "text-base", `text-base on ${bgKey}`, false, 'read')
+      })
     })
-    addPair("Surfaces", "Text on Base Hover", "surface-base-hover", "text-base", "Text on surface-base-hover", false, 'read')
-    addPair("Surfaces", "Text on Base Active", "surface-base-active", "text-base", "Text on surface-base-active", false, 'read')
-    addPair("Surfaces", "Text on Raised Hover", "surface-raised-base-hover", "text-base", "Text on surface-raised-base-hover", false, 'read')
-    addPair("Surfaces", "Text on Float Hover", "surface-float-base-hover", "text-base", "Text on surface-float-base-hover", false, 'read')
-    addPair("Surfaces", "Interactive Active BG", "surface-base-interactive-active", "text-on-interactive-base", "Text on surface-base-interactive-active", false, 'read')
 
     // --- BRAND & INTERACTIVE ---
-    addPair("Brand & Action", "On Brand", "surface-brand-base", "text-on-brand-base", "Text on Brand Surface", false, 'action')
-    addPair("Brand & Action", "On Brand Hover", "surface-brand-hover", "text-on-brand-base", "Text on Brand Hover", false, 'action')
-    addPair("Brand & Action", "On Brand Active", "surface-brand-active", "text-on-brand-base", "Text on Brand Active", false, 'action')
-    addPair("Brand & Action", "On Interactive", "surface-interactive-base", "text-on-interactive-base", "Text on Interactive Surface", false, 'action')
-    addPair("Brand & Action", "On Interactive Hover", "surface-interactive-hover", "text-on-interactive-base", "Text on Interactive Hover", false, 'action')
-    addPair("Brand & Action", "On Interactive Active", "surface-interactive-active", "text-on-interactive-base", "Text on Interactive Active", false, 'action')
-    addPair("Brand & Action", "On Interactive Weak", "surface-interactive-weak", "text-on-interactive-weak", "Text on Interactive Weak Surface", false, 'action')
-    addPair("Brand & Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background", false, 'action')
-    addPair("Brand & Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true, 'action')
-    addPair("Brand & Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true, 'action')
+    const interactiveSurfaces = [
+      { bg: "surface-brand-base", fg: "text-on-brand-base", label: "Brand Base" },
+      { bg: "surface-brand-hover", fg: "text-on-brand-base", label: "Brand Hover" },
+      { bg: "surface-brand-active", fg: "text-on-brand-base", label: "Brand Active" },
+      { bg: "surface-interactive-base", fg: "text-on-interactive-base", label: "Interactive Base" },
+      { bg: "surface-interactive-hover", fg: "text-on-interactive-base", label: "Interactive Hover" },
+      { bg: "surface-interactive-active", fg: "text-on-interactive-base", label: "Interactive Active" },
+      { bg: "surface-interactive-weak", fg: "text-on-interactive-weak", label: "Interactive Weak" },
+      { bg: "surface-interactive-weak-hover", fg: "text-on-interactive-weak", label: "Interactive Weak Hover" }
+    ]
+    interactiveSurfaces.forEach(s => {
+      addPair("Action", s.label, s.bg, s.fg, `Text on ${s.bg}`, false, 'action')
+    })
+    
+    addPair("Action", "Interactive Text", "background-base", "text-interactive-base", "Interactive Text on Background", false, 'action')
+    addPair("Action", "Interactive Icon", "background-base", "icon-interactive-base", "Interactive icon contrast", true, 'action')
+    addPair("Action", "Interactive Border", "background-base", "border-interactive-base", "Interactive border contrast", true, 'action')
 
     // --- SEMANTIC STATES ---
     const semanticTypes = ["success", "warning", "critical", "info"]
     semanticTypes.forEach(type => {
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text`, `surface-${type}-base`, `text-on-${type}-base`, `${type} state text contrast`, false, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Hover)`, `surface-${type}-hover`, `text-on-${type}-base`, `${type} text on hover surface`, false, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Text (Active)`, `surface-${type}-active`, `text-on-${type}-base`, `${type} text on active surface`, false, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Icon (On Surface)`, `surface-${type}-base`, `text-on-${type}-base`, `${type} icon on base surface`, true, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true, 'action')
-      addPair("Semantic", `${type.charAt(0).toUpperCase() + type.slice(1)} Weak`, `surface-${type}-weak`, `text-on-${type}-base`, `Text on weak ${type} surface`, false, 'action')
+      const states = [
+        { suffix: "base", label: "Base" },
+        { suffix: "hover", label: "Hover" },
+        { suffix: "active", label: "Active" },
+        { suffix: "weak", label: "Weak" },
+        { suffix: "strong", label: "Strong" }
+      ]
+      states.forEach(state => {
+        addPair("Semantic", `${type.toUpperCase()} ${state.label}`, `surface-${type}-${state.suffix}`, `text-on-${type}-base`, `${type} ${state.label} surface contrast`, false, 'action')
+      })
+      addPair("Semantic", `${type.toUpperCase()} Icon`, `background-base`, `icon-${type}-base`, `${type} icon on background`, true, 'action')
+      addPair("Semantic", `${type.toUpperCase()} Border`, `background-base`, `border-${type}-base`, `${type} border on background`, true, 'action')
     })
+
+    // --- DIFF STATES ---
+    const diffStates = [
+      { type: "add", label: "Add" },
+      { type: "delete", label: "Delete" }
+    ]
+    diffStates.forEach(diff => {
+      addPair("Diff", `${diff.label} Text`, `surface-diff-${diff.type}-base`, `text-diff-${diff.type}-base`, `Diff ${diff.label} text contrast`, false, 'diff')
+      addPair("Diff", `${diff.label} Weak`, `surface-diff-${diff.type}-weak`, `text-diff-${diff.type}-base`, `${diff.label} text on weak background`, false, 'diff')
+      addPair("Diff", `${diff.label} Strong`, `surface-diff-${diff.type}-strong`, `text-diff-${diff.type}-strong`, `Strong ${diff.label} text contrast`, false, 'diff')
+      addPair("Diff", `${diff.label} Stronger`, `surface-diff-${diff.type}-stronger`, `text-on-critical-base`, `${diff.label} text on stronger background`, false, 'diff')
+      addPair("Diff", `${diff.label} Icon`, `background-base`, `icon-diff-${diff.type}-base`, `Diff ${diff.label} icon on background`, true, 'diff')
+    })
+    addPair("Diff", "Skip Background", "background-base", "surface-diff-skip-base", "Skip line contrast", true, 'diff')
+    addPair("Diff", "Unchanged Background", "background-base", "surface-diff-unchanged-base", "Unchanged line contrast", true, 'diff')
 
     // --- INPUTS ---
     addPair("Inputs", "Input Text", "input-base", "text-base", "Text inside input field", false, 'shell')
@@ -311,26 +342,22 @@ const App: React.FC = () => {
     addPair("Inputs", "Input Placeholder", "input-base", "text-weaker", "Placeholder text contrast", false, 'shell')
     addPair("Inputs", "Input Hover", "input-hover", "text-base", "Text in hovered input", false, 'shell')
     addPair("Inputs", "Input Active", "input-active", "text-base", "Text in active input", false, 'shell')
+    addPair("Inputs", "Input Disabled", "background-base", "input-disabled", "Disabled input background contrast", true, 'shell')
+    addPair("Inputs", "Input Selected Border", "background-base", "border-selected", "Selected input border contrast", true, 'shell')
 
     // --- UI COMPONENTS (NON-TEXT 3:1) ---
     addPair("UI Components", "Base Border", "background-base", "border-base", "Border on background", true, 'shell')
     addPair("UI Components", "Border Hover", "background-base", "border-hover", "Border hover on background", true, 'shell')
+    addPair("UI Components", "Border Active", "background-base", "border-active", "Border active on background", true, 'shell')
+    addPair("UI Components", "Border Focus", "background-base", "border-focus", "Border focus on background", true, 'shell')
     addPair("UI Components", "Strong Border", "background-base", "border-strong-base", "Strong border on background", true, 'shell')
+    addPair("UI Components", "Weak Border", "background-base", "border-weak-base", "Weak border on background", true, 'shell')
     addPair("UI Components", "Base Icon", "background-base", "icon-base", "Icon on background", true, 'shell')
     addPair("UI Components", "Icon Hover", "background-base", "icon-hover", "Icon hover on background", true, 'shell')
-    addPair("UI Components", "Weak Icon", "background-base", "icon-weak-base", "Weak icon on background", true, 'shell')
+    addPair("UI Components", "Icon Weak", "background-base", "icon-weak-base", "Weak icon on background", true, 'shell')
+    addPair("UI Components", "Icon Brand", "background-base", "icon-brand-base", "Brand icon on background", true, 'shell')
     addPair("UI Components", "Invert Text (Base)", "background-stronger", "text-invert-base", "Inverted base text contrast", false, 'read')
     addPair("UI Components", "Invert Text (Strong)", "background-stronger", "text-invert-strong", "Inverted strong text contrast", false, 'read')
-
-    // --- DIFF STATES ---
-    addPair("Diff", "Add Text", "surface-diff-add-base", "text-diff-add-base", "Diff Add text contrast", false, 'diff')
-    addPair("Diff", "Delete Text", "surface-diff-delete-base", "text-diff-delete-base", "Diff Delete text contrast", false, 'diff')
-    addPair("Diff", "Add Weak", "surface-diff-add-weak", "text-diff-add-base", "Add text on weak background", false, 'diff')
-    addPair("Diff", "Delete Weak", "surface-diff-delete-weak", "text-diff-delete-base", "Delete text on weak background", false, 'diff')
-    addPair("Diff", "Add Strong", "surface-diff-add-strong", "text-diff-add-strong", "Strong Add text contrast", false, 'diff')
-    addPair("Diff", "Delete Strong", "surface-diff-delete-strong", "text-diff-delete-strong", "Strong Delete text contrast", false, 'diff')
-    addPair("Diff", "Add Icon", "background-base", "icon-diff-add-base", "Diff add icon on background", true, 'diff')
-    addPair("Diff", "Delete Icon", "background-base", "icon-diff-delete-base", "Diff delete icon on background", true, 'diff')
 
     // --- SELECTION & FOCUS ---
     addPair("Accessibility", "Selection", "selection-background", "selection-foreground", "Text selection contrast", false, 'read')
@@ -344,10 +371,12 @@ const App: React.FC = () => {
       "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 
       "syntax-string", "syntax-number", "syntax-type", "syntax-operator", 
       "syntax-punctuation", "syntax-object", "syntax-regexp", "syntax-primitive", 
-      "syntax-property", "syntax-constant"
+      "syntax-property", "syntax-constant", "syntax-success", "syntax-warning",
+      "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"
     ]
     syntaxTokens.forEach(token => {
-      const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
+      const parts = token.split("-")
+      const label = parts.length > 2 ? `${parts[1].charAt(0).toUpperCase() + parts[1].slice(1)} ${parts[2].charAt(0).toUpperCase() + parts[2].slice(1)}` : parts[1].charAt(0).toUpperCase() + parts[1].slice(1)
       addPair("Syntax", label, "background-base", token, `Syntax ${label} on editor background`, false, 'shell')
     })
 
@@ -355,13 +384,13 @@ const App: React.FC = () => {
     const markdownTokens = [
       "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text",
       "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong",
-      "markdown-list-item"
+      "markdown-list-item", "markdown-horizontal-rule"
     ]
     markdownTokens.forEach(token => {
       const label = token.split("-")[1].charAt(0).toUpperCase() + token.split("-")[1].slice(1)
-      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`, false, 'read')
+      const isNonText = token === "markdown-horizontal-rule"
+      addPair("Markdown", label, "background-base", token, `Markdown ${label} on background`, isNonText, 'read')
     })
-    addPair("Markdown", "Horizontal Rule", "background-base", "markdown-horizontal-rule", "Markdown horizontal rule contrast", true, 'read')
 
     // --- INDICATORS & UI ---
     addPair("UI Elements", "Line Indicator", "background-base", "line-indicator", "Line indicator contrast", true, 'shell')
@@ -372,15 +401,28 @@ const App: React.FC = () => {
     addPair("UI Elements", "Tab Hover", "background-base", "tab-hover", "Hover tab background contrast", true, 'shell')
     addPair("UI Elements", "Avatar", "avatar-background", "avatar-foreground", "Avatar text contrast", false, 'read')
     addPair("UI Elements", "Avatar on BG", "background-base", "avatar-background", "Avatar background on main BG", true, 'read')
+    addPair("UI Elements", "Code Block BG", "background-base", "code-background", "Code block background on main background", true, 'read')
+    addPair("UI Elements", "Code Block Text", "code-background", "code-foreground", "Text inside code blocks", false, 'read')
 
     // --- TERMINAL ---
-    const ansiColors = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+    const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
     ansiColors.forEach(color => {
       addPair("Terminal", `ANSI ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-${color}`, `Terminal ${color} on background`, false, 'shell')
       addPair("Terminal", `Bright ${color.charAt(0).toUpperCase() + color.slice(1)}`, "background-base", `terminal-ansi-bright-${color}`, `Terminal bright ${color} on background`, false, 'shell')
     })
 
-    return pairs
+    // --- BASE PALETTE (FOR VERIFICATION) ---
+    const basePaletteTokens = [
+      "primary-base", "primary-text", "secondary-base", "secondary-text",
+      "accent-base", "accent-text", "success-base", "success-text",
+      "warning-base", "warning-text", "critical-base", "critical-text",
+      "info-base", "info-text"
+    ]
+    basePaletteTokens.forEach(token => {
+      const parts = token.split("-")
+      const label = `${parts[0].toUpperCase()} ${parts[1].toUpperCase()}`
+      addPair("Palette", label, "background-base", token, `Base ${label} contrast`, false, 'read')
+    })
   }, [themeColors])
 
   const deferredWcagPairs = useDeferredValue(wcagPairs)
@@ -398,7 +440,7 @@ const App: React.FC = () => {
     }
   }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
 
-  // Matrix Router properties - Opencode UI tokens
+  // Exhaustive list of properties for the matrix, grouped logically
   const MATRIX_PROPERTIES = [
     // Backgrounds
     "background-base",
@@ -406,43 +448,57 @@ const App: React.FC = () => {
     "background-strong",
     "background-stronger",
 
-    // Surfaces
+    // Surfaces (Primary/Neutral)
     "surface-base",
     "surface-base-hover",
     "surface-base-active",
     "surface-base-interactive-active",
     "surface-inset-base",
     "surface-inset-base-hover",
+    "surface-inset-active",
     "surface-inset-strong",
     "surface-inset-strong-hover",
     "surface-raised-base",
-    "surface-float-base",
-    "surface-float-base-hover",
     "surface-raised-base-hover",
     "surface-raised-base-active",
     "surface-raised-strong",
     "surface-raised-strong-hover",
     "surface-raised-stronger",
     "surface-raised-stronger-hover",
+    "surface-float-base",
+    "surface-float-base-hover",
+    "surface-float-active",
     "surface-weak",
     "surface-weaker",
     "surface-strong",
+
+    // Semantic Surfaces
     "surface-brand-base",
     "surface-brand-hover",
+    "surface-brand-active",
     "surface-interactive-base",
     "surface-interactive-hover",
+    "surface-interactive-active",
     "surface-interactive-weak",
     "surface-interactive-weak-hover",
     "surface-success-base",
+    "surface-success-hover",
+    "surface-success-active",
     "surface-success-weak",
     "surface-success-strong",
     "surface-warning-base",
+    "surface-warning-hover",
+    "surface-warning-active",
     "surface-warning-weak",
     "surface-warning-strong",
     "surface-critical-base",
+    "surface-critical-hover",
+    "surface-critical-active",
     "surface-critical-weak",
     "surface-critical-strong",
     "surface-info-base",
+    "surface-info-hover",
+    "surface-info-active",
     "surface-info-weak",
     "surface-info-strong",
 
@@ -460,34 +516,6 @@ const App: React.FC = () => {
     "surface-diff-delete-strong",
     "surface-diff-delete-stronger",
 
-    // Selection & Overlays
-    "selection-background",
-    "selection-foreground",
-    "selection-inactive-background",
-    "focus-ring",
-    "scrollbar-thumb",
-    "scrollbar-track",
-    "shadow",
-    "overlay",
-
-    // Terminal
-    "terminal-ansi-black",
-    "terminal-ansi-red",
-    "terminal-ansi-green",
-    "terminal-ansi-yellow",
-    "terminal-ansi-blue",
-    "terminal-ansi-magenta",
-    "terminal-ansi-cyan",
-    "terminal-ansi-white",
-    "terminal-ansi-bright-black",
-    "terminal-ansi-bright-red",
-    "terminal-ansi-bright-green",
-    "terminal-ansi-bright-yellow",
-    "terminal-ansi-bright-blue",
-    "terminal-ansi-bright-magenta",
-    "terminal-ansi-bright-cyan",
-    "terminal-ansi-bright-white",
-
     // Text
     "text-base",
     "text-weak",
@@ -497,20 +525,26 @@ const App: React.FC = () => {
     "text-invert-weak",
     "text-invert-weaker",
     "text-invert-strong",
-    "text-interactive-base",
     "text-on-brand-base",
+    "text-interactive-base",
     "text-on-interactive-base",
     "text-on-interactive-weak",
     "text-on-success-base",
+    "text-on-warning-base",
     "text-on-critical-base",
     "text-on-critical-weak",
     "text-on-critical-strong",
-    "text-on-warning-base",
     "text-on-info-base",
     "text-diff-add-base",
+    "text-diff-add-strong",
     "text-diff-delete-base",
     "text-diff-delete-strong",
-    "text-diff-add-strong",
+
+    // Inputs
+    "input-base",
+    "input-hover",
+    "input-active",
+    "input-disabled",
 
     // Borders
     "border-base",
@@ -582,7 +616,10 @@ const App: React.FC = () => {
     "markdown-horizontal-rule",
     "markdown-list-item",
 
-    // Indicators & UI Extras
+    // UI Extras & Selection
+    "selection-background",
+    "selection-foreground",
+    "selection-inactive-background",
     "line-indicator",
     "line-indicator-active",
     "line-indicator-hover",
@@ -593,13 +630,67 @@ const App: React.FC = () => {
     "tab-hover",
     "avatar-background",
     "avatar-foreground",
-    "input-active",
-    "input-disabled",
     "focus-ring",
     "scrollbar-thumb",
     "scrollbar-track",
     "shadow",
     "overlay",
+
+    // Functional Seeds (Base Palette)
+    "primary-base",
+    "primary-hover",
+    "primary-active",
+    "primary-text",
+    "secondary-base",
+    "secondary-hover",
+    "secondary-active",
+    "secondary-text",
+    "accent-base",
+    "accent-hover",
+    "accent-active",
+    "accent-text",
+    "success-base",
+    "success-hover",
+    "success-active",
+    "success-text",
+    "warning-base",
+    "warning-hover",
+    "warning-active",
+    "warning-text",
+    "critical-base",
+    "critical-hover",
+    "critical-active",
+    "critical-text",
+    "info-base",
+    "info-hover",
+    "info-active",
+    "info-text",
+    "interactive-base",
+    "interactive-hover",
+    "interactive-active",
+    "interactive-text",
+    "diff-add-base",
+    "diff-add-foreground",
+    "diff-delete-base",
+    "diff-delete-foreground",
+
+    // Terminal
+    "terminal-ansi-black",
+    "terminal-ansi-red",
+    "terminal-ansi-green",
+    "terminal-ansi-yellow",
+    "terminal-ansi-blue",
+    "terminal-ansi-magenta",
+    "terminal-ansi-cyan",
+    "terminal-ansi-white",
+    "terminal-ansi-bright-black",
+    "terminal-ansi-bright-red",
+    "terminal-ansi-bright-green",
+    "terminal-ansi-bright-yellow",
+    "terminal-ansi-bright-blue",
+    "terminal-ansi-bright-magenta",
+    "terminal-ansi-bright-cyan",
+    "terminal-ansi-bright-white",
   ]
 
   // Handlers for Matrix Router

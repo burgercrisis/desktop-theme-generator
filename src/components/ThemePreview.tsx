@@ -456,7 +456,6 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
       </div>
     </div>
   );
-  );
 };
 
 export default ThemePreview;

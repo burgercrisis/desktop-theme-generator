@@ -187,6 +187,7 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-inset-base": getFromScale(primaryScale, pos(0.08), primaryHex),
     "surface-inset-base-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
+    "surface-inset-active": getFromScale(primaryScale, pos(0.15), primaryHex),
     "surface-inset-strong": getFromScale(primaryScale, pos(0.15), primaryHex),
     "surface-inset-strong-hover": getFromScale(primaryScale, pos(0.20), primaryHex),
 
@@ -200,6 +201,7 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     
     "surface-float-base": getFromScale(primaryScale, pos(0.25), primaryHex),
     "surface-float-base-hover": getFromScale(primaryScale, pos(0.30), primaryHex),
+    "surface-float-active": getFromScale(primaryScale, pos(0.35), primaryHex),
 
     "surface-weak": getFromScale(neutralScale, pos(0.10), neutralHex),
     "surface-weaker": getFromScale(neutralScale, pos(0.05), neutralHex),
@@ -253,6 +255,12 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "surface-diff-delete-weaker": getFromScale(diffDeleteScale, pos(0.04), diffDeleteHex),
     "surface-diff-delete-strong": getFromScale(diffDeleteScale, pos(0.4), diffDeleteHex),
     "surface-diff-delete-stronger": getFromScale(diffDeleteScale, pos(0.6), diffDeleteHex),
+
+    // Inputs
+    "input-base": getFromScale(primaryScale, pos(0.12), primaryHex),
+    "input-hover": getFromScale(primaryScale, pos(0.15), primaryHex),
+    "input-active": getFromScale(primaryScale, pos(0.18), primaryHex),
+    "input-disabled": getFromScale(neutralScale, pos(0.20), neutralHex),
 
     // Selection
     "selection-background": getFromScale(interactiveScale, pos(0.3), interactiveHex),

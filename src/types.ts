@@ -159,29 +159,51 @@ export interface InternalThemeColors {
   "surface-base": string;
   "surface-base-hover": string;
   "surface-base-active": string;
+  "surface-base-interactive-active": string;
+  "surface-inset-base": string;
+  "surface-inset-base-hover": string;
+  "surface-inset-active": string;
+  "surface-inset-strong": string;
+  "surface-inset-strong-hover": string;
   "surface-raised-base": string;
   "surface-raised-base-hover": string;
   "surface-raised-base-active": string;
   "surface-raised-strong": string;
+  "surface-raised-strong-hover": string;
+  "surface-raised-stronger": string;
+  "surface-raised-stronger-hover": string;
+  "surface-float-base": string;
+  "surface-float-base-hover": string;
+  "surface-float-active": string;
   "surface-weak": string;
   "surface-weaker": string;
   "surface-strong": string;
   "surface-brand-base": string;
   "surface-brand-hover": string;
+  "surface-brand-active": string;
   "surface-interactive-base": string;
   "surface-interactive-hover": string;
+  "surface-interactive-active": string;
   "surface-interactive-weak": string;
   "surface-interactive-weak-hover": string;
   "surface-success-base": string;
+  "surface-success-hover": string;
+  "surface-success-active": string;
   "surface-success-weak": string;
   "surface-success-strong": string;
   "surface-warning-base": string;
+  "surface-warning-hover": string;
+  "surface-warning-active": string;
   "surface-warning-weak": string;
   "surface-warning-strong": string;
   "surface-critical-base": string;
+  "surface-critical-hover": string;
+  "surface-critical-active": string;
   "surface-critical-weak": string;
   "surface-critical-strong": string;
   "surface-info-base": string;
+  "surface-info-hover": string;
+  "surface-info-active": string;
   "surface-info-weak": string;
   "surface-info-strong": string;
 
@@ -204,15 +226,30 @@ export interface InternalThemeColors {
   "text-weak": string;
   "text-weaker": string;
   "text-strong": string;
+  "text-invert-base": string;
+  "text-invert-weak": string;
+  "text-invert-weaker": string;
+  "text-invert-strong": string;
   "text-on-brand-base": string;
   "text-interactive-base": string;
   "text-on-interactive-base": string;
+  "text-on-interactive-weak": string;
   "text-on-success-base": string;
-  "text-on-critical-base": string;
   "text-on-warning-base": string;
+  "text-on-critical-base": string;
+  "text-on-critical-weak": string;
+  "text-on-critical-strong": string;
   "text-on-info-base": string;
   "text-diff-add-base": string;
+  "text-diff-add-strong": string;
   "text-diff-delete-base": string;
+  "text-diff-delete-strong": string;
+
+  // Input
+  "input-base": string;
+  "input-hover": string;
+  "input-active": string;
+  "input-disabled": string;
 
   // Border
   "border-base": string;
@@ -232,12 +269,112 @@ export interface InternalThemeColors {
   "border-critical-base": string;
   "border-info-base": string;
 
+  // Icon
+  "icon-base": string;
+  "icon-hover": string;
+  "icon-active": string;
+  "icon-selected": string;
+  "icon-disabled": string;
+  "icon-focus": string;
+  "icon-weak-base": string;
+  "icon-strong-base": string;
+  "icon-brand-base": string;
+  "icon-interactive-base": string;
+  "icon-success-base": string;
+  "icon-warning-base": string;
+  "icon-critical-base": string;
+  "icon-info-base": string;
+  "icon-diff-add-base": string;
+  "icon-diff-delete-base": string;
+
+  // Syntax
+  "syntax-comment": string;
+  "syntax-keyword": string;
+  "syntax-function": string;
+  "syntax-variable": string;
+  "syntax-string": string;
+  "syntax-number": string;
+  "syntax-type": string;
+  "syntax-operator": string;
+  "syntax-punctuation": string;
+  "syntax-object": string;
+  "syntax-regexp": string;
+  "syntax-primitive": string;
+  "syntax-property": string;
+  "syntax-constant": string;
+  "syntax-success": string;
+  "syntax-warning": string;
+  "syntax-critical": string;
+  "syntax-info": string;
+  "syntax-diff-add": string;
+  "syntax-diff-delete": string;
+
+  // Markdown
+  "markdown-text": string;
+  "markdown-heading": string;
+  "markdown-link": string;
+  "markdown-link-text": string;
+  "markdown-code": string;
+  "markdown-block-quote": string;
+  "markdown-emph": string;
+  "markdown-strong": string;
+  "markdown-horizontal-rule": string;
+  "markdown-list-item": string;
+
+  // Base
+  "primary-base": string;
+  "primary-hover": string;
+  "primary-active": string;
+  "primary-text": string;
+  "secondary-base": string;
+  "secondary-hover": string;
+  "secondary-active": string;
+  "secondary-text": string;
+  "accent-base": string;
+  "accent-hover": string;
+  "accent-active": string;
+  "accent-text": string;
+  "success-base": string;
+  "success-hover": string;
+  "success-active": string;
+  "success-text": string;
+  "warning-base": string;
+  "warning-hover": string;
+  "warning-active": string;
+  "warning-text": string;
+  "critical-base": string;
+  "critical-hover": string;
+  "critical-active": string;
+  "critical-text": string;
+  "info-base": string;
+  "info-hover": string;
+  "info-active": string;
+  "info-text": string;
+  "interactive-base": string;
+  "interactive-hover": string;
+  "interactive-active": string;
+  "interactive-text": string;
+  "diff-add-base": string;
+  "diff-add-foreground": string;
+  "diff-delete-base": string;
+  "diff-delete-foreground": string;
+
   // Selection
   "selection-background": string;
   "selection-foreground": string;
   "selection-inactive-background": string;
 
-  // Others
+  // UI Components
+  "code-background": string;
+  "code-foreground": string;
+  "tab-active": string;
+  "tab-inactive": string;
+  "tab-hover": string;
+  "line-indicator": string;
+  "line-indicator-active": string;
+  "line-indicator-hover": string;
+  "avatar-background": string;
+  "avatar-foreground": string;
   "focus-ring": string;
   "scrollbar-thumb": string;
   "scrollbar-track": string;
