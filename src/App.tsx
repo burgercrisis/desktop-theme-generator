@@ -515,7 +515,7 @@ const App: React.FC = () => {
       if (typeof bg === 'string' && typeof fg === 'string') {
         const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider');
         const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
-        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected')));
+        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected') || fgKey.includes('inactive')));
         // Status icons (success, warning, critical, info) should be treated as strong non-text
         const autoStrong = !autoWeak && autoNonText && (
           fgKey.includes('success') || 
@@ -728,16 +728,20 @@ const App: React.FC = () => {
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true, 'shell')
 
       // --- LOG_13_TREE_UI ---
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED ITEM CONTRAST", false, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_HOVER"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER ITEM CONTRAST", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_HOVER"), "background-base", "tree-background-hover", "TREE HOVER BG CONTRAST", true, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED TEXT CONTRAST", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER TEXT CONTRAST", false, 'shell')
       addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ICON CONTRAST", true, 'shell')
       addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_ON_BASE"), "background-base", "text-base", "TREE TEXT ON MAIN BACKGROUND", false, 'shell')
       addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_WEAK_ON_BASE"), "background-base", "text-weak", "TREE WEAK TEXT ON MAIN BACKGROUND", false, 'shell')
 
       // --- LOG_14_TABS_EXTENDED ---
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "tab-active-background", "tab-active-foreground", "ACTIVE TAB TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "ACTIVE TAB BG CONTRAST", true, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_TEXT"), "tab-active-background", "tab-active-foreground", "ACTIVE TAB TEXT CONTRAST", false, 'shell')
       addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "background-base", "tab-active-border", "ACTIVE TAB BORDER/INDICATOR", true, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "tab-inactive-background", "tab-inactive-foreground", "INACTIVE TAB TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "background-base", "tab-inactive-background", "INACTIVE TAB BG CONTRAST", true, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "INACTIVE TAB TEXT CONTRAST", false, 'shell')
       addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_HOVER_TEXT"), "background-base", "text-strong", "TAB HOVER TEXT CONTRAST", false, 'shell')
 
       // --- LOG_15_BREADCRUMBS ---
