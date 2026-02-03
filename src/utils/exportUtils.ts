@@ -108,9 +108,17 @@ export const exportToOpencode9SeedJSON = (
   const lightSeedMap = getSeedMap(lightSeeds, 'light')
   const darkSeedMap = getSeedMap(darkSeeds, 'dark')
 
-  // Include manual overrides if present
-  const lightOverrides: Record<string, string> = { ...(manualOverrides.light || {}) }
-  const darkOverrides: Record<string, string> = { ...(manualOverrides.dark || {}) }
+  // Include all generated tokens as overrides to ensure Opencode matches the generator exactly.
+  // Opencode's internal seed-to-token generation logic is different from this generator's engine,
+  // so we must force our calculated colors as overrides.
+  const lightOverrides: Record<string, string> = { 
+    ...lightColors,
+    ...(manualOverrides.light || {}) 
+  }
+  const darkOverrides: Record<string, string> = { 
+    ...darkColors,
+    ...(manualOverrides.dark || {}) 
+  }
 
   const lightOverrideCount = Object.keys(lightOverrides).length
   const darkOverrideCount = Object.keys(darkOverrides).length

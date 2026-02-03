@@ -191,23 +191,22 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
   // We should clamp the light mode background positions to ensure they stay in the "soft" range.
   const bgPos = (p: number) => {
     if (isDark) return p;
-    // In light mode, p=0.02 (bg-base) maps to index ~0.98 (very white).
+    // In light mode, p=0.01 (bg-base) maps to index ~0.99 (very white).
     // We want to pull it back so it's not pure white. 
-    // If we map it to 0.88 instead, it uses a slightly earlier color in the tint scale.
     const inverted = 1 - p;
     // Primary scale is usually 2n+1 long (e.g. 9 colors if count=4).
     // Indices: 0-3 (shades), 4 (base), 5-8 (tints)
-    // inverted 0.98 -> maps to index 8.
-    // We want to cap it so it stays at index 7 or lower to maintain a tint.
-    return Math.min(0.88, inverted); 
+    // We want to cap it so it stays at index 6 or lower to maintain a visible tint.
+    // Index 6 is roughly 0.67-0.75 in a 9-step scale.
+    return Math.min(0.65, inverted); 
   };
 
   const converted: OpencodeThemeColors = {
     // Backgrounds
-    "background-base": getFromScale(primaryScale, bgPos(0.02), primaryHex),
-    "background-weak": getFromScale(primaryScale, bgPos(0.05), primaryHex),
-    "background-strong": getFromScale(primaryScale, bgPos(0.08), primaryHex),
-    "background-stronger": getFromScale(primaryScale, bgPos(0.12), primaryHex),
+    "background-base": getFromScale(primaryScale, bgPos(0.01), primaryHex),
+    "background-weak": getFromScale(primaryScale, bgPos(0.04), primaryHex),
+    "background-strong": getFromScale(primaryScale, bgPos(0.07), primaryHex),
+    "background-stronger": getFromScale(primaryScale, bgPos(0.10), primaryHex),
     
     // Surfaces
     "surface-base": getFromScale(primaryScale, bgPos(0.15), primaryHex),
