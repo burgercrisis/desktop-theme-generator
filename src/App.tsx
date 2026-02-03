@@ -1008,7 +1008,7 @@ const MatrixTokenRow = React.memo(({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+      <div className="flex flex-wrap gap-1 max-w-none justify-end overflow-x-auto custom-scrollbar">
         {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
           <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
             {variants.map((variant: any, idx: number) => {
@@ -1018,7 +1018,7 @@ const MatrixTokenRow = React.memo(({
                 <button
                   key={`${property}-${seedName}-${idx}`}
                   onClick={() => handleManualOverride(property, variant.hex)}
-                  className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                  className={`w-2.5 h-3 rounded-[0.5px] transition-all relative flex items-center justify-center ${
                     isSelected 
                       ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
                       : "hover:scale-110 opacity-40 hover:opacity-100"
@@ -1590,7 +1590,7 @@ const MatrixTokenRow = React.memo(({
                       </span>
                     </div>
                     <div className={`p-3 transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent">
                         {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
                           const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
                           return (
@@ -1613,16 +1613,16 @@ const MatrixTokenRow = React.memo(({
                                   {formatAgentLabel(seedName)}
                                 </span>
                               </div>
-                              <div className="flex gap-1">
+                              <div className="flex gap-0.5">
                                 {variants.map((variant, vIdx) => {
                                   const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
                                   return (
                                     <div
                                       key={`${seedName}-${vIdx}`}
                                       onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-7 h-5 rounded-[2px] border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
+                                      className={`w-3.5 h-4 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
                                         isCurrentSeed 
-                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/40` 
+                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110 border-white/40` 
                                           : "opacity-60 hover:opacity-100 border-white/5"
                                       }`}
                                       style={{
