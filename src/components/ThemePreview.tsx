@@ -115,6 +115,14 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
       terminalMagenta: get('terminal-ansi-magenta'),
       terminalCyan: get('terminal-ansi-cyan'),
       terminalWhite: get('terminal-ansi-white'),
+      terminalBrightBlack: get('terminal-ansi-bright-black'),
+      terminalBrightRed: get('terminal-ansi-bright-red'),
+      terminalBrightGreen: get('terminal-ansi-bright-green'),
+      terminalBrightYellow: get('terminal-ansi-bright-yellow'),
+      terminalBrightBlue: get('terminal-ansi-bright-blue'),
+      terminalBrightMagenta: get('terminal-ansi-bright-magenta'),
+      terminalBrightCyan: get('terminal-ansi-bright-cyan'),
+      terminalBrightWhite: get('terminal-ansi-bright-white'),
     };
   }, [rawTheme]);
   const diffContent = `--- a/src/components/Button.tsx
@@ -400,7 +408,12 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
                     <span style={{ color: theme.terminalBlue }}>http://localhost:5173/</span>
                   </div>
                   <div className="flex gap-1 mt-2">
-                    {[theme.terminalBlack, theme.terminalRed, theme.terminalGreen, theme.terminalYellow, theme.terminalBlue, theme.terminalMagenta, theme.terminalCyan, theme.terminalWhite].map((c, i) => (
+                    {[
+                      theme.terminalBlack, theme.terminalRed, theme.terminalGreen, theme.terminalYellow, 
+                      theme.terminalBlue, theme.terminalMagenta, theme.terminalCyan, theme.terminalWhite,
+                      theme.terminalBrightBlack, theme.terminalBrightRed, theme.terminalBrightGreen, theme.terminalBrightYellow,
+                      theme.terminalBrightBlue, theme.terminalBrightMagenta, theme.terminalBrightCyan, theme.terminalBrightWhite
+                    ].map((c, i) => (
                       <div key={i} className="w-3 h-3 rounded-full" style={{ backgroundColor: c }} />
                     ))}
                   </div>

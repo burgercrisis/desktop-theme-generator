@@ -1,5 +1,6 @@
 import { hslToHex } from "./colorUtils"
 import { HSL, HarmonyRule, VariantStrategy, SeedColor, OpencodeThemeColors } from "../types"
+import { STANDARD_ANSI_DARK, STANDARD_ANSI_LIGHT } from "./terminalColors"
 
 export const generateOpencodeSeeds = (
   baseColor: HSL, 
@@ -620,22 +621,22 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "avatar-text-gray": "#ffffff",
 
     // Terminal
-    "terminal-ansi-black": isDark ? "#000000" : "#000000",
-    "terminal-ansi-red": getFromScale(errorScale, 0.5, errorHex),
-    "terminal-ansi-green": getFromScale(successScale, 0.5, successHex),
-    "terminal-ansi-yellow": getFromScale(warningScale, 0.5, warningHex),
-    "terminal-ansi-blue": getFromScale(primaryScale, 0.5, primaryHex),
-    "terminal-ansi-magenta": getFromScale(infoScale, 0.5, infoHex),
-    "terminal-ansi-cyan": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "terminal-ansi-white": isDark ? "#FFFFFF" : "#FFFFFF",
-    "terminal-ansi-bright-black": getFromScale(neutralScale, 0.6, neutralHex),
-    "terminal-ansi-bright-red": getFromScale(errorScale, 0.7, errorHex),
-    "terminal-ansi-bright-green": getFromScale(successScale, 0.7, successHex),
-    "terminal-ansi-bright-yellow": getFromScale(warningScale, 0.7, warningHex),
-    "terminal-ansi-bright-blue": getFromScale(primaryScale, 0.7, primaryHex),
-    "terminal-ansi-bright-magenta": getFromScale(infoScale, 0.7, infoHex),
-    "terminal-ansi-bright-cyan": getFromScale(interactiveScale, 0.7, interactiveHex),
-    "terminal-ansi-bright-white": isDark ? "#FFFFFF" : "#F0F0F0",
+    "terminal-ansi-black": isDark ? STANDARD_ANSI_DARK.black : STANDARD_ANSI_LIGHT.black,
+    "terminal-ansi-red": isDark ? STANDARD_ANSI_DARK.red : STANDARD_ANSI_LIGHT.red,
+    "terminal-ansi-green": isDark ? STANDARD_ANSI_DARK.green : STANDARD_ANSI_LIGHT.green,
+    "terminal-ansi-yellow": isDark ? STANDARD_ANSI_DARK.yellow : STANDARD_ANSI_LIGHT.yellow,
+    "terminal-ansi-blue": isDark ? STANDARD_ANSI_DARK.blue : STANDARD_ANSI_LIGHT.blue,
+    "terminal-ansi-magenta": isDark ? STANDARD_ANSI_DARK.magenta : STANDARD_ANSI_LIGHT.magenta,
+    "terminal-ansi-cyan": isDark ? STANDARD_ANSI_DARK.cyan : STANDARD_ANSI_LIGHT.cyan,
+    "terminal-ansi-white": isDark ? STANDARD_ANSI_DARK.white : STANDARD_ANSI_LIGHT.white,
+    "terminal-ansi-bright-black": isDark ? STANDARD_ANSI_DARK.brightBlack : STANDARD_ANSI_LIGHT.brightBlack,
+    "terminal-ansi-bright-red": isDark ? STANDARD_ANSI_DARK.brightRed : STANDARD_ANSI_LIGHT.brightRed,
+    "terminal-ansi-bright-green": isDark ? STANDARD_ANSI_DARK.brightGreen : STANDARD_ANSI_LIGHT.brightGreen,
+    "terminal-ansi-bright-yellow": isDark ? STANDARD_ANSI_DARK.brightYellow : STANDARD_ANSI_LIGHT.brightYellow,
+    "terminal-ansi-bright-blue": isDark ? STANDARD_ANSI_DARK.brightBlue : STANDARD_ANSI_LIGHT.brightBlue,
+    "terminal-ansi-bright-magenta": isDark ? STANDARD_ANSI_DARK.brightMagenta : STANDARD_ANSI_LIGHT.brightMagenta,
+    "terminal-ansi-bright-cyan": isDark ? STANDARD_ANSI_DARK.brightCyan : STANDARD_ANSI_LIGHT.brightCyan,
+    "terminal-ansi-bright-white": isDark ? STANDARD_ANSI_DARK.brightWhite : STANDARD_ANSI_LIGHT.brightWhite,
 
     // Syntax Semantic & Misc
     "syntax-success": getFromScale(successScale, pos(0.5), successHex),
