@@ -127,7 +127,7 @@ const MatrixTokenRow = React.memo(({
                 <button
                   key={`${property}-${seedName}-${idx}`}
                   onClick={() => handleManualOverride(property, variant.hex)}
-                  className={`w-4 h-3 rounded-[1px] transition-all relative flex items-center justify-center ${
+                  className={`w-2 h-3 rounded-[0.5px] transition-all relative flex items-center justify-center ${
                     isSelected 
                       ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
                       : "hover:scale-110 opacity-40 hover:opacity-100"
@@ -154,7 +154,7 @@ const App: React.FC = () => {
   const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 210, s: 50, l: 50 }))
   const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
   const [spread, setSpread] = useState(() => getInitialState("spread", 30))
-  const [variantCount, setVariantCount] = useState(() => getInitialState("variantCount", 2))
+  const [variantCount, setVariantCount] = useState(() => getInitialState("variantCount", 12))
   const [saturation, setSaturation] = useState(() => getInitialState("saturation", 50))
   const [lightBrightness, setLightBrightness] = useState(() => getInitialState("lightBrightness", 50))
   const [darkBrightness, setDarkBrightness] = useState(() => getInitialState("darkBrightness", 50))
@@ -1248,7 +1248,7 @@ const MatrixTokenRow = React.memo(({
     
     setHarmony(randomHarmony)
     setVariantStrategy(randomStrategy)
-    setVariantCount(1 + Math.floor(Math.random() * 4))
+    setVariantCount(1 + Math.floor(Math.random() * 12))
     setSpread(15 + Math.floor(Math.random() * 45))
     setLightContrast(20 + Math.floor(Math.random() * 70))
     setDarkContrast(20 + Math.floor(Math.random() * 70))
@@ -1281,7 +1281,7 @@ const MatrixTokenRow = React.memo(({
     
     setHarmony(randomHarmony)
     setVariantStrategy(randomStrategy)
-    setVariantCount(Math.floor(Math.random() * 5) + 1)
+    setVariantCount(Math.floor(Math.random() * 12) + 1)
     setSpread(Math.floor(Math.random() * 180))
   }, [])
 
@@ -1905,7 +1905,7 @@ const MatrixTokenRow = React.memo(({
                       <input
                         type="range"
                         min="1"
-                        max="5"
+                        max="12"
                         value={variantCount}
                         onChange={(e) => setVariantCount(parseInt(e.target.value))}
                         className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
@@ -2047,11 +2047,11 @@ const MatrixTokenRow = React.memo(({
                               <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/60'}`}>{seed.hex.toUpperCase()}</span>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
-                              {variants.slice(0, 5).map((stop, vIdx) => (
+                              {variants.map((stop, vIdx) => (
                                 <button
                                   key={vIdx}
                                   onClick={() => handleCopy(stop.hex)}
-                                  className={`w-7 h-5 rounded-[1px] transition-all hover:scale-110 border ${activeMode === 'light' ? 'border-gray-200 shadow-sm' : 'border-white/5 hover:border-white/20'}`}
+                                  className={`w-4 h-4 rounded-[1px] transition-all hover:scale-150 border z-0 hover:z-10 ${activeMode === 'light' ? 'border-gray-200 shadow-sm' : 'border-white/5 hover:border-white/20'}`}
                                   style={{ backgroundColor: stop.hex }}
                                   title={`COPY: ${stop.hex}`}
                                 />
