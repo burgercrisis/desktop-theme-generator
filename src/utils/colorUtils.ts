@@ -163,6 +163,19 @@ export const getWCAGLevel = (contrast: number): 'AAA' | 'AA' | 'AA Large' | 'Fai
   return 'Fail';
 };
 
+export const getHueDifference = (hex1: string, hex2: string): number => {
+  const hsl1 = hexToHsl(hex1);
+  const hsl2 = hexToHsl(hex2);
+  
+  // Only care about hue difference if both colors have some saturation
+  // If one is grayscale (s < 5), hue is essentially meaningless
+  if (hsl1.s < 5 || hsl2.s < 5) return 0;
+  
+  let diff = Math.abs(hsl1.h - hsl2.h);
+  if (diff > 180) diff = 360 - diff;
+  return diff;
+};
+
 export const getContrastScore = (
   background: string, 
   foreground: string, 
@@ -170,34 +183,50 @@ export const getContrastScore = (
   isBorder: boolean = false,
   isWeak: boolean = false,
   isStrong: boolean = false
-): { ratio: number; level: string; pass: boolean } => {
+): { ratio: number; hueDiff: number; level: string; pass: boolean } => {
   const ratio = getContrastRatio(background, foreground);
+  const hueDiff = getHueDifference(background, foreground);
   const level = getWCAGLevel(ratio);
   
-  let pass = false;
+  let contrastPass = false;
   if (isBorder) {
     // Borders only need a minimum of 1.1 contrast
-    pass = ratio >= 1.1;
+    contrastPass = ratio >= 1.1;
   } else if (isNonText) {
     if (isStrong) {
       // Status icons and strong UI elements should be very clear
       // WCAG 2.1 recommends 3:1 for non-text contrast
-      pass = ratio >= 3.0;
+      contrastPass = ratio >= 3.0;
     } else if (isWeak) {
       // Weak non-text elements (like subtle indicators) need to be visible but not distracting
       // Range 1.1 - 2.5 allows for subtle but visible elements
-      pass = ratio >= 1.1 && ratio <= 2.5;
+      contrastPass = ratio >= 1.1 && ratio <= 2.5;
     } else {
       // Standard non-text elements (icons, interactive) should be clearly visible
       // Range 2.0+ is a good middle ground for standard UI elements
-      pass = ratio >= 2.0;
+      contrastPass = ratio >= 2.0;
     }
   } else {
     // Text pairs require high contrast (AA standard)
-    pass = ratio >= 4.5;
+    contrastPass = ratio >= 4.5;
+  }
+
+  // Hue pass: 15 degrees difference is a good indicator of visual separation
+  // even if brightness is similar.
+  const huePass = hueDiff >= 15;
+
+  let pass = contrastPass;
+  if (isNonText || isBorder) {
+    // For non-text/borders, pass if either contrast OR hue is sufficient
+    pass = contrastPass || huePass;
   }
   
-  return { ratio: Math.round(ratio * 100) / 100, level, pass };
+  return { 
+    ratio: Math.round(ratio * 100) / 100, 
+    hueDiff: Math.round(hueDiff),
+    level, 
+    pass 
+  };
 };
 
 // Find the best contrasting color from a palette

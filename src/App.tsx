@@ -506,7 +506,7 @@ const App: React.FC = () => {
       isStrong?: boolean;
       category: string; 
       type: 'shell' | 'read' | 'action' | 'diff'; 
-      score: { ratio: number, level: string, pass: boolean } 
+      score: { ratio: number, hueDiff: number, level: string, pass: boolean } 
     }> = []
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
@@ -514,8 +514,8 @@ const App: React.FC = () => {
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
         const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider');
-        const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio'));
-        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker');
+        const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
+        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected')));
         // Status icons (success, warning, critical, info) should be treated as strong non-text
         const autoStrong = !autoWeak && autoNonText && (
           fgKey.includes('success') || 
@@ -1538,9 +1538,9 @@ const MatrixTokenRow = React.memo(({
                                 const score = pair.score
                                 const isFailing = !score.pass
                                 const thresholdLabel = pair.isBorder 
-                                  ? "1.1+" 
+                                  ? "1.1+ OR H:15°" 
                                   : pair.isNonText 
-                                    ? (pair.isStrong ? "3.0+" : (pair.isWeak ? "1.1-2.5" : "2.0+"))
+                                    ? (pair.isStrong ? "3.0+ OR H:15°" : (pair.isWeak ? "1.1-2.5 OR H:15°" : "2.0+ OR H:15°"))
                                     : "4.5+"
                                 
                                 // Map type to icon
@@ -1566,10 +1566,17 @@ const MatrixTokenRow = React.memo(({
                                           {pair.label}
                                         </span>
                                         <div className="flex items-center gap-2 shrink-0">
-                                          <span className={`text-[10px] font-mono font-black ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
-                                            {score.ratio.toFixed(2)}:1
-                                            <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
-                                          </span>
+                                          <div className="flex flex-col items-end">
+                                            <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
+                                              {score.ratio.toFixed(2)}:1
+                                              <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
+                                            </span>
+                                            {score.hueDiff > 0 && (
+                                              <span className={`text-[7px] font-mono leading-none mt-0.5 transition-colors ${score.hueDiff >= 15 ? (activeMode === 'light' ? 'text-blue-600' : 'text-blue-400') : 'opacity-40'}`}>
+                                                H_DIFF: {score.hueDiff}°
+                                              </span>
+                                            )}
+                                          </div>
                                           <span className={`text-[8px] font-black px-1 rounded-[2px] ${
                                             isFailing 
                                               ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
