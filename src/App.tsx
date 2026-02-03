@@ -857,6 +857,62 @@ const App: React.FC = () => {
         addPair("LOG_19_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true, 'shell')
       })
 
+      // --- LOG_20_INTERACTIVE_STATES ---
+      const interactiveTokens = [
+        { key: "hover", label: "HOVER" },
+        { key: "active", label: "ACTIVE" },
+        { key: "selected", label: "SELECTED" }
+      ]
+      interactiveTokens.forEach(state => {
+        addPair("LOG_20_INTERACTIVE_STATES", formatAgentLabel(`ICON_${state.label}`), "background-base", `icon-${state.key}`, `ICON ${state.label} ON BACKGROUND`, true, 'shell')
+        addPair("LOG_20_INTERACTIVE_STATES", formatAgentLabel(`BORDER_${state.label}`), "background-base", `border-${state.key}`, `BORDER ${state.label} ON BACKGROUND`, true, 'shell')
+      })
+
+      // --- LOG_21_SEMANTIC_DETAILED ---
+      const semanticStates = ["brand", "success", "warning", "critical", "info"]
+      semanticStates.forEach(type => {
+        const statefulIcons = ["hover", "selected"]
+        statefulIcons.forEach(state => {
+          const bgKey = `surface-${type}-base`
+          const fgKey = `icon-on-${type}-${state}`
+          addPair("LOG_21_SEMANTIC_DETAILED", formatAgentLabel(`${type}_ICON_${state}`), bgKey, fgKey, `${type.toUpperCase()} ICON ${state.toUpperCase()} ON ${type.toUpperCase()} BASE`, true, 'action')
+        })
+      })
+
+      // --- LOG_22_COMPLEX_SURFACES ---
+      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("RAISED_STRONGER_NON_ALPHA"), "background-base", "surface-raised-stronger-non-alpha", "RAISED STRONGER (NON-ALPHA) SURFACE CONTRAST", true, 'read')
+      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("FLOAT_STRONG_ACTIVE"), "background-base", "surface-float-strong-active", "FLOAT STRONG ACTIVE SURFACE CONTRAST", true, 'read')
+      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true, 'read')
+
+      // --- LOG_23_INVERTED_TEXT_ICON ---
+      const darkSurfaces = ["surface-strong", "surface-brand-base", "surface-critical-base"]
+      darkSurfaces.forEach(bg => {
+        addPair("LOG_23_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.replace("surface-", "")}`), bg, "text-invert-base", `INVERTED TEXT ON ${bg.toUpperCase()}`, false, 'read')
+        addPair("LOG_23_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.replace("surface-", "")}`), bg, "icon-invert-base", `INVERTED ICON ON ${bg.toUpperCase()}`, true, 'read')
+      })
+
+      // --- LOG_24_INPUT_DETAILED ---
+      addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false, 'shell')
+      addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true, 'shell')
+       addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true, 'shell')
+
+       // --- LOG_25_DIFF_EXTRAS ---
+       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true, 'diff')
+       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true, 'diff')
+       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true, 'diff')
+
+       // --- LOG_26_AVATAR_EXPANDED ---
+       const extraAvatars = ["blue", "green", "yellow", "red", "gray"]
+       extraAvatars.forEach(color => {
+         addPair("LOG_26_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
+       })
+
+       // --- LOG_27_MISC_BORDERS_ICONS ---
+       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true, 'shell')
+       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true, 'shell')
+       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true, 'shell')
+       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true, 'shell')
+
     return pairs
   }, [themeColors, matrixMode, formatAgentLabel])
 
