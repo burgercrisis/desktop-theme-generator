@@ -295,6 +295,33 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "surface-diff-delete-strong": getFromScale(diffDeleteScale, pos(0.4), diffDeleteHex),
     "surface-diff-delete-stronger": getFromScale(diffDeleteScale, pos(0.6), diffDeleteHex),
 
+    // Input Focus Ring
+    "input-focus-ring": getFromScale(interactiveScale, 0.5, interactiveHex),
+
+    // Terminal Extras
+    "terminal-cursor": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "terminal-selection": getFromScale(interactiveScale, pos(0.3), interactiveHex),
+
+    // Tree & List UI
+    "tree-background-selected": getFromScale(primaryScale, pos(0.2), primaryHex),
+    "tree-background-hover": getFromScale(primaryScale, pos(0.12), primaryHex),
+    "tree-foreground-selected": getFromScale(primaryScale, pos(0.95), primaryHex),
+    "tree-foreground-hover": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "tree-icon-selected": getFromScale(interactiveScale, 0.5, interactiveHex),
+
+    // Tabs Extended
+    "tab-active-background": getFromScale(primaryScale, bgPos(0.15), primaryHex),
+    "tab-active-foreground": getFromScale(primaryScale, pos(0.95), primaryHex),
+    "tab-active-border": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "tab-inactive-background": getFromScale(primaryScale, bgPos(0.05), primaryHex),
+    "tab-inactive-foreground": getFromScale(primaryScale, pos(0.6), primaryHex),
+
+    // Breadcrumbs
+    "breadcrumb-background": "transparent",
+    "breadcrumb-foreground": getFromScale(primaryScale, pos(0.7), primaryHex),
+    "breadcrumb-foreground-hover": getFromScale(primaryScale, pos(0.9), primaryHex),
+    "breadcrumb-separator": getFromScale(neutralScale, pos(0.4), neutralHex),
+
     // Buttons
     "button-secondary-base": isDark ? getFromScale(primaryScale, 0.2, primaryHex) : getFromScale(primaryScale, 0.9, primaryHex),
     "button-secondary-hover": isDark ? getFromScale(primaryScale, 0.3, primaryHex) : getFromScale(primaryScale, 0.85, primaryHex),
@@ -388,6 +415,16 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "border-strong-hover": getFromScale(primaryScale, pos(0.40), primaryHex),
     "border-strong-active": getFromScale(primaryScale, pos(0.45), primaryHex),
     "border-strong-selected": getFromScale(interactiveScale, 0.6, interactiveHex),
+
+    // Semantic Borders (Explicit)
+    "border-interactive-base": getFromScale(interactiveScale, 0.4, interactiveHex),
+    "border-interactive-hover": getFromScale(interactiveScale, 0.5, interactiveHex),
+    "border-interactive-active": getFromScale(interactiveScale, 0.6, interactiveHex),
+    "border-interactive-selected": getFromScale(interactiveScale, 0.7, interactiveHex),
+    "border-success-base": getFromScale(successScale, pos(0.4), successHex),
+    "border-warning-base": getFromScale(warningScale, pos(0.4), warningHex),
+    "border-critical-base": getFromScale(errorScale, pos(0.4), errorHex),
+    "border-info-base": getFromScale(infoScale, pos(0.4), infoHex),
     "border-strong-disabled": getFromScale(neutralScale, pos(0.3), neutralHex),
     "border-strong-focus": getFromScale(interactiveScale, 0.7, interactiveHex),
 

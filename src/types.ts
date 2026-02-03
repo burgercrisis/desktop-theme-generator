@@ -305,6 +305,34 @@ export interface InternalThemeColors {
   "border-strong-selected": string;
   "border-strong-disabled": string;
   "border-strong-focus": string;
+  // Tree UI
+  "tree-background-selected": string;
+  "tree-background-hover": string;
+  "tree-foreground-selected": string;
+  "tree-foreground-hover": string;
+  "tree-icon-selected": string;
+
+  // Tabs Extended
+  "tab-active-background": string;
+  "tab-active-foreground": string;
+  "tab-active-border": string;
+  "tab-inactive-background": string;
+  "tab-inactive-foreground": string;
+
+  // Breadcrumbs
+  "breadcrumb-background": string;
+  "breadcrumb-foreground": string;
+  "breadcrumb-foreground-hover": string;
+  "breadcrumb-separator": string;
+
+  // Input Focus Ring
+  "input-focus-ring": string;
+
+  // Terminal Extras
+  "terminal-cursor": string;
+  "terminal-selection": string;
+
+  // Border Functional (Explicit)
   "border-interactive-base": string;
   "border-interactive-hover": string;
   "border-interactive-active": string;
@@ -321,6 +349,8 @@ export interface InternalThemeColors {
   "border-info-base": string;
   "border-info-hover": string;
   "border-info-selected": string;
+  "border-strong-disabled": string;
+  "border-strong-focus": string;
   "border-color": string;
 
   // Icon

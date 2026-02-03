@@ -68,9 +68,13 @@ const MATRIX_PROPERTIES = [
   { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
   { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
   { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
-  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
-  { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
-  { category: "ICONS", keys: ["icon-base", "icon-weak-base", "icon-strong-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-delete-base"] },
+  { category: "TREE_UI", keys: ["tree-background-selected", "tree-background-hover", "tree-foreground-selected", "tree-foreground-hover", "tree-icon-selected"] },
+  { category: "BREADCRUMBS", keys: ["breadcrumb-background", "breadcrumb-foreground", "breadcrumb-foreground-hover", "breadcrumb-separator"] },
+  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover", "tab-active-background", "tab-active-foreground", "tab-active-border", "tab-inactive-background", "tab-inactive-foreground"] },
+  { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
+  { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-background-blue", "avatar-background-green", "avatar-background-yellow", "avatar-background-red", "avatar-background-gray", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime", "avatar-text-blue", "avatar-text-green", "avatar-text-yellow", "avatar-text-red", "avatar-text-gray"] },
+  { category: "ICONS", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-weak-base", "icon-strong-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-delete-base", "icon-on-brand-base", "icon-on-interactive-base", "icon-on-success-base", "icon-on-warning-base", "icon-on-critical-base", "icon-on-info-base", "icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
+  { category: "BORDERS", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-weak-base", "border-weaker-base", "border-strong-base", "border-interactive-base", "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"] },
   { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
   { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
 ]
@@ -746,6 +750,7 @@ const App: React.FC = () => {
       addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_ACTIVE"), "input-active", "text-base", "TEXT_IN_ACTIVE_INPUT", false, 'shell')
       addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_DISABLED"), "background-base", "input-disabled", "DISABLED_INPUT_BACKGROUND_CONTRAST", true, 'shell')
       addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_SELECTED_BORDER"), "background-base", "border-selected", "SELECTED_INPUT_BORDER_CONTRAST", true, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_FOCUS_RING"), "background-base", "input-focus-ring", "INPUT FOCUS RING", true, 'shell')
 
       // --- LOG_08_TERMINAL ---
       const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
@@ -753,6 +758,8 @@ const App: React.FC = () => {
         addPair("LOG_08_TERMINAL", formatAgentLabel(color), "background-base", `terminal-ansi-${color}`, `TERMINAL ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
         addPair("LOG_08_TERMINAL", formatAgentLabel(`bright-${color}`), "background-base", `terminal-ansi-bright-${color}`, `TERMINAL BRIGHT ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
       })
+      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_CURSOR"), "background-base", "terminal-cursor", "TERMINAL CURSOR CONTRAST", true, 'shell')
+      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_SELECTION"), "terminal-selection", "text-base", "TERMINAL SELECTION CONTRAST", false, 'shell')
 
       // --- LOG_09_AVATARS ---
       const avatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
@@ -779,7 +786,10 @@ const App: React.FC = () => {
       // --- LOG_11_UI_EXTRAS ---
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_HOVER"), "background-base", "line-indicator-hover", "HOVER LINE INDICATOR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB INDICATOR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("FOCUS_RING"), "background-base", "focus-ring", "FOCUS RING CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SCROLLBAR"), "scrollbar-track", "scrollbar-thumb", "SCROLLBAR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false, 'read')
@@ -796,40 +806,83 @@ const App: React.FC = () => {
       // --- LOG_13_MARKDOWN ---
       const markdownTokens = [
         "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", 
-        "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong"
+        "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong",
+        "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration",
+        "markdown-image", "markdown-image-text"
       ]
       markdownTokens.forEach(token => {
         addPair("LOG_13_MARKDOWN", formatAgentLabel(token.replace("markdown-", "")), "background-base", token, `MARKDOWN ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, false, 'read')
       })
       addPair("LOG_13_MARKDOWN", formatAgentLabel("CODE_BLOCK"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
 
-      // --- LOG_14_EDITOR ---
-      addPair("LOG_14_EDITOR", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
-      addPair("LOG_14_EDITOR", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'read')
-      addPair("LOG_14_EDITOR", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'read')
-      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true, 'read')
-      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true, 'read')
-      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true, 'read')
+      // --- LOG_14_TREE_UI ---
+      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_SELECTED_BG"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
+      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_HOVER_BG"), "background-base", "tree-background-hover", "TREE HOVER BG CONTRAST", true, 'shell')
+      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE ICON SELECTED CONTRAST", true, 'shell')
 
-      // --- LOG_15_BORDERS ---
-      const borderTokens = [
-        "border-base", "border-weak-base", "border-strong-base", "border-interactive-base",
-        "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"
-      ]
-      borderTokens.forEach(token => {
-        addPair("LOG_15_BORDERS", formatAgentLabel(token.replace("border-", "")), "background-base", token, `BORDER ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
+      // --- LOG_15_BREADCRUMBS ---
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "breadcrumb-background", "breadcrumb-foreground", "BREADCRUMB TEXT CONTRAST", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "breadcrumb-background", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT CONTRAST", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "breadcrumb-background", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
+
+      // --- LOG_16_TABS_EXTENDED ---
+      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "TAB ACTIVE BG CONTRAST", true, 'shell')
+      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_TEXT"), "tab-active-background", "tab-active-foreground", "TAB ACTIVE TEXT CONTRAST", false, 'shell')
+      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "tab-active-background", "tab-active-border", "TAB ACTIVE BORDER CONTRAST", true, 'shell')
+      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "background-base", "tab-inactive-background", "TAB INACTIVE BG CONTRAST", true, 'shell')
+      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "TAB INACTIVE TEXT CONTRAST", false, 'shell')
+
+      // --- LOG_17_BORDER_FUNCTIONAL ---
+      const functionalBorders = ["success", "warning", "critical", "info"]
+      functionalBorders.forEach(type => {
+        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER BASE`, true, 'shell')
+        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER`, true, 'shell')
+        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECTED`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED`, true, 'shell')
       })
 
-      // --- LOG_16_SELECTIONS ---
-      addPair("LOG_16_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false, 'read')
-      addPair("LOG_16_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false, 'read')
-      addPair("LOG_16_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false, 'read')
+      // --- LOG_18_EDITOR_ADDITIONAL ---
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true, 'read')
 
-      // --- LOG_17_INVERTED ---
-      addPair("LOG_17_INVERTED", formatAgentLabel("INVERT_TEXT"), "surface-strong", "text-invert-base", "INVERTED TEXT ON STRONG SURFACE", false, 'read')
-      addPair("LOG_17_INVERTED", formatAgentLabel("INVERT_ICON"), "surface-strong", "icon-invert-base", "INVERTED ICON ON STRONG SURFACE", true, 'read')
+      // --- LOG_19_BORDERS ---
+      const borderTokens = [
+        "border-base", "border-hover", "border-active", "border-selected",
+        "border-weak-base", "border-weak-hover", "border-weak-active",
+        "border-weaker-base", "border-weaker-hover", "border-weaker-active",
+        "border-strong-base", "border-strong-hover", "border-strong-active",
+        "border-interactive-base", "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"
+      ]
+      borderTokens.forEach(token => {
+        addPair("LOG_19_BORDERS", formatAgentLabel(token.replace("border-", "")), "background-base", token, `BORDER ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
+      })
 
-      // --- LOG_18_COLORED_TEXT_ICON ---
+      // --- LOG_30_ICONS_DETAILED ---
+      const iconVariants = ["base", "hover", "active", "selected"]
+      const iconStrengths = ["", "weak-", "weaker-", "strong-"]
+      iconStrengths.forEach(strength => {
+        iconVariants.forEach(variant => {
+          const token = `icon-${strength}${variant}`
+          addPair("LOG_30_ICONS_DETAILED", formatAgentLabel(token), "background-base", token, `ICON ${token.toUpperCase()} ON BACKGROUND`, true, 'shell')
+        })
+      })
+
+      // --- LOG_20_SELECTIONS ---
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false, 'read')
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false, 'read')
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false, 'read')
+
+      // --- LOG_21_INVERTED ---
+      addPair("LOG_21_INVERTED", formatAgentLabel("INVERT_TEXT"), "surface-strong", "text-invert-base", "INVERTED TEXT ON STRONG SURFACE", false, 'read')
+      addPair("LOG_21_INVERTED", formatAgentLabel("INVERT_ICON"), "surface-strong", "icon-invert-base", "INVERTED ICON ON STRONG SURFACE", true, 'read')
+
+      // --- LOG_22_COLORED_TEXT_ICON ---
       const coloredBgs = [
         { key: "brand", label: "BRAND" },
         { key: "success", label: "SUCCESS" },
@@ -842,64 +895,64 @@ const App: React.FC = () => {
         ["weak", "weaker"].forEach(variant => {
           const fgKey = `text-on-${bg.key}-${variant}`
           const bgKey = `surface-${bg.key}-base`
-          addPair("LOG_18_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_${variant.toUpperCase()}_TEXT`), bgKey, fgKey, `${variant.toUpperCase()} TEXT ON ${bg.label} BASE`, false, 'action')
+          addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_${variant.toUpperCase()}_TEXT`), bgKey, fgKey, `${variant.toUpperCase()} TEXT ON ${bg.label} BASE`, false, 'action')
         })
         
         // Icons on colored backgrounds
         const iconKey = `icon-on-${bg.key}-base`
         const bgKey = `surface-${bg.key}-base`
-        addPair("LOG_18_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_ICON`), bgKey, iconKey, `${bg.label} ICON ON ${bg.label} BASE`, true, 'action')
+        addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_ICON`), bgKey, iconKey, `${bg.label} ICON ON ${bg.label} BASE`, true, 'action')
       })
 
-      // --- LOG_19_AGENT_UI ---
+      // --- LOG_23_AGENT_UI ---
       const agentIcons = ["plan", "docs", "ask", "build"]
       agentIcons.forEach(icon => {
-        addPair("LOG_19_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true, 'shell')
+        addPair("LOG_23_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true, 'shell')
       })
 
-      // --- LOG_20_INTERACTIVE_STATES ---
+      // --- LOG_24_INTERACTIVE_STATES ---
       const interactiveTokens = [
         { key: "hover", label: "HOVER" },
         { key: "active", label: "ACTIVE" },
         { key: "selected", label: "SELECTED" }
       ]
       interactiveTokens.forEach(state => {
-        addPair("LOG_20_INTERACTIVE_STATES", formatAgentLabel(`ICON_${state.label}`), "background-base", `icon-${state.key}`, `ICON ${state.label} ON BACKGROUND`, true, 'shell')
-        addPair("LOG_20_INTERACTIVE_STATES", formatAgentLabel(`BORDER_${state.label}`), "background-base", `border-${state.key}`, `BORDER ${state.label} ON BACKGROUND`, true, 'shell')
+        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`ICON_${state.label}`), "background-base", `icon-${state.key}`, `ICON ${state.label} ON BACKGROUND`, true, 'shell')
+        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`BORDER_${state.label}`), "background-base", `border-${state.key}`, `BORDER ${state.label} ON BACKGROUND`, true, 'shell')
       })
 
-      // --- LOG_21_SEMANTIC_DETAILED ---
+      // --- LOG_25_SEMANTIC_DETAILED ---
       const semanticStates = ["brand", "success", "warning", "critical", "info"]
       semanticStates.forEach(type => {
         const statefulIcons = ["hover", "selected"]
         statefulIcons.forEach(state => {
           const bgKey = `surface-${type}-base`
           const fgKey = `icon-on-${type}-${state}`
-          addPair("LOG_21_SEMANTIC_DETAILED", formatAgentLabel(`${type}_ICON_${state}`), bgKey, fgKey, `${type.toUpperCase()} ICON ${state.toUpperCase()} ON ${type.toUpperCase()} BASE`, true, 'action')
+          addPair("LOG_25_SEMANTIC_DETAILED", formatAgentLabel(`${type}_ICON_${state}`), bgKey, fgKey, `${type.toUpperCase()} ICON ${state.toUpperCase()} ON ${type.toUpperCase()} BASE`, true, 'action')
         })
       })
 
-      // --- LOG_22_COMPLEX_SURFACES ---
-      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("RAISED_STRONGER_NON_ALPHA"), "background-base", "surface-raised-stronger-non-alpha", "RAISED STRONGER (NON-ALPHA) SURFACE CONTRAST", true, 'read')
-      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("FLOAT_STRONG_ACTIVE"), "background-base", "surface-float-strong-active", "FLOAT STRONG ACTIVE SURFACE CONTRAST", true, 'read')
-      addPair("LOG_22_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true, 'read')
+      // --- LOG_26_COMPLEX_SURFACES ---
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("RAISED_STRONGER_NON_ALPHA"), "background-base", "surface-raised-stronger-non-alpha", "RAISED STRONGER (NON-ALPHA) SURFACE CONTRAST", true, 'read')
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("FLOAT_STRONG_ACTIVE"), "background-base", "surface-float-strong-active", "FLOAT STRONG ACTIVE SURFACE CONTRAST", true, 'read')
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true, 'read')
 
-      // --- LOG_23_INVERTED_TEXT_ICON ---
+      // --- LOG_27_INVERTED_TEXT_ICON ---
       const darkSurfaces = ["surface-strong", "surface-brand-base", "surface-critical-base"]
       darkSurfaces.forEach(bg => {
-        addPair("LOG_23_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.replace("surface-", "")}`), bg, "text-invert-base", `INVERTED TEXT ON ${bg.toUpperCase()}`, false, 'read')
-        addPair("LOG_23_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.replace("surface-", "")}`), bg, "icon-invert-base", `INVERTED ICON ON ${bg.toUpperCase()}`, true, 'read')
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.replace("surface-", "")}`), bg, "text-invert-base", `INVERTED TEXT ON ${bg.toUpperCase()}`, false, 'read')
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.replace("surface-", "")}`), bg, "icon-invert-base", `INVERTED ICON ON ${bg.toUpperCase()}`, true, 'read')
       })
 
-      // --- LOG_24_INPUT_DETAILED ---
-      addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false, 'shell')
-      addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true, 'shell')
-       addPair("LOG_24_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true, 'shell')
+      // --- LOG_28_INPUT_DETAILED ---
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false, 'shell')
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true, 'shell')
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true, 'shell')
 
-       // --- LOG_25_DIFF_EXTRAS ---
-       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true, 'diff')
-       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true, 'diff')
-       addPair("LOG_25_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true, 'diff')
+      // --- LOG_29_DIFF_EXTRAS ---
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true, 'diff')
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true, 'diff')
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true, 'diff')
 
        // --- LOG_26_AVATAR_EXPANDED ---
        const extraAvatars = ["blue", "green", "yellow", "red", "gray"]
@@ -960,7 +1013,9 @@ const MATRIX_PROPERTIES = [
   { category: "SYNTAX_WEB", keys: ["syntax-tag", "syntax-attribute", "syntax-value", "syntax-namespace", "syntax-class"] },
   { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
   { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
-  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
+  { category: "TREE_UI", keys: ["tree-background-selected", "tree-background-hover", "tree-foreground-selected", "tree-foreground-hover", "tree-icon-selected"] },
+  { category: "BREADCRUMBS", keys: ["breadcrumb-background", "breadcrumb-foreground", "breadcrumb-foreground-hover", "breadcrumb-separator"] },
+  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover", "tab-active-background", "tab-active-foreground", "tab-active-border", "tab-inactive-background", "tab-inactive-foreground"] },
   { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
   { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
   { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
