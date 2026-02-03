@@ -2167,32 +2167,58 @@ const MatrixTokenRow = React.memo(({
                     {seedName}
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {variants.map((v: any, i: number) => (
-                      <button
-                        key={`${v.hex}-${i}`}
-                        className="w-3.5 h-3.5 rounded-[1px] hover:scale-125 transition-transform border border-white/5 hover:border-white/40"
-                        style={{ backgroundColor: v.hex }}
-                        title={`${seedName} variant ${i} (${v.hex})`}
-                        onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
-                      />
-                    ))}
+                    {variants.map((v: any, i: number) => {
+                      const isSelected = (themeColors[quickPicker.key as keyof OpencodeThemeColors] || "").toLowerCase() === v.hex.toLowerCase()
+                      
+                      return (
+                        <button
+                          key={`${v.hex}-${i}`}
+                          className={`w-3.5 h-3.5 rounded-[1px] transition-all border ${
+                            isSelected 
+                              ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-125 border-white/40` 
+                              : "hover:scale-125 border-white/5 hover:border-white/40"
+                          }`}
+                          style={{ backgroundColor: v.hex }}
+                          title={`${seedName} variant ${i} (${v.hex})`}
+                          onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
               ))}
             </div>
 
             <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-2 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># MANUAL_OVERRIDE</div>
-            <div className={`flex items-center gap-2 border rounded p-1.5 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-purple-100' : 'bg-black/40 border-[#2d2d4d]'}`}>
-              <input 
-                type="color" 
-                className="w-8 h-6 cursor-pointer rounded-[1px] bg-transparent border-none"
-                onChange={(e) => handleQuickOverride(quickPicker.key, e.target.value)}
-                defaultValue={themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000"}
-              />
-              <span className={`text-[10px] font-mono uppercase transition-colors ${activeMode === 'light' ? 'text-purple-700' : 'text-purple-300/60'}`}>
-                {String(themeColors[quickPicker.key as keyof OpencodeThemeColors] || "#000000").toUpperCase()}
-              </span>
-            </div>
+            {(() => {
+              const currentColor = (themeColors[quickPicker.key as keyof OpencodeThemeColors] || "").toLowerCase()
+              const isVariantMatch = Object.values(activeVariantsMap).some((variants: any) => 
+                variants.some((v: any) => v.hex.toLowerCase() === currentColor)
+              )
+              const isManualActive = !isVariantMatch
+
+              return (
+                <div className={`flex items-center gap-2 border rounded p-1.5 transition-all ${
+                  isManualActive 
+                    ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white border-purple-200' : 'ring-offset-[#0d0d17] border-purple-500/40 bg-purple-500/5'}` 
+                    : activeMode === 'light' ? 'bg-gray-50 border-purple-100' : 'bg-black/40 border-[#2d2d4d]'
+                }`}>
+                  <input 
+                    type="color" 
+                    className="w-8 h-6 cursor-pointer rounded-[1px] bg-transparent border-none"
+                    onChange={(e) => handleQuickOverride(quickPicker.key, e.target.value)}
+                    defaultValue={currentColor || "#000000"}
+                  />
+                  <span className={`text-[10px] font-mono uppercase transition-colors ${
+                    isManualActive
+                      ? 'text-purple-400 font-bold'
+                      : activeMode === 'light' ? 'text-purple-700' : 'text-purple-300/60'
+                  }`}>
+                    {currentColor.toUpperCase()}
+                  </span>
+                </div>
+              )
+            })()}
             {/* Quick Reset for this property */}
             {manualOverrides[activeMode]?.[quickPicker.key] && (
               <button
