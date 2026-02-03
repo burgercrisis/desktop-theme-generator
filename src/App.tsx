@@ -820,10 +820,6 @@ const App: React.FC = () => {
       addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false, 'read')
       addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false, 'read')
 
-      // --- LOG_21_INVERTED ---
-      addPair("LOG_21_INVERTED", formatAgentLabel("INVERT_TEXT"), "surface-strong", "text-invert-base", "INVERTED TEXT ON STRONG SURFACE", false, 'read')
-      addPair("LOG_21_INVERTED", formatAgentLabel("INVERT_ICON"), "surface-strong", "icon-invert-base", "INVERTED ICON ON STRONG SURFACE", true, 'read')
-
       // --- LOG_22_COLORED_TEXT_ICON ---
       const coloredBgs = [
         { key: "brand", label: "BRAND" },
@@ -880,10 +876,14 @@ const App: React.FC = () => {
       addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true, 'read')
 
       // --- LOG_27_INVERTED_TEXT_ICON ---
-      const darkSurfaces = ["surface-strong", "surface-brand-base", "surface-critical-base"]
+      const darkSurfaces = [
+        { key: "surface-strong", label: "STRONG" },
+        { key: "surface-brand-base", label: "BRAND" },
+        { key: "surface-critical-base", label: "CRITICAL" }
+      ]
       darkSurfaces.forEach(bg => {
-        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.replace("surface-", "")}`), bg, "text-invert-base", `INVERTED TEXT ON ${bg.toUpperCase()}`, false, 'read')
-        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.replace("surface-", "")}`), bg, "icon-invert-base", `INVERTED ICON ON ${bg.toUpperCase()}`, true, 'read')
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.label}`), bg.key, "text-invert-base", `INVERTED TEXT ON ${bg.label}`, false, 'read')
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.label}`), bg.key, "icon-invert-base", `INVERTED ICON ON ${bg.label}`, true, 'read')
       })
 
       // --- LOG_28_INPUT_DETAILED ---
