@@ -513,7 +513,7 @@ const App: React.FC = () => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
-        const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider');
+        const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule') || fgKey.includes('separator');
         const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
         const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected') || fgKey.includes('inactive')));
         // Status icons (success, warning, critical, info) should be treated as strong non-text
