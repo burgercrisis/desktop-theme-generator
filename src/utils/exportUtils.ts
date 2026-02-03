@@ -108,12 +108,12 @@ export const exportToOpencode9SeedJSON = (
   const lightSeedMap = getSeedMap(lightSeeds, 'light')
   const darkSeedMap = getSeedMap(darkSeeds, 'dark')
 
-  // Include all calculated engine colors as the baseline, then apply manual overrides
-  const lightOverrides: Record<string, string> = { ...lightColors, ...(manualOverrides.light || {}) }
-  const darkOverrides: Record<string, string> = { ...darkColors, ...(manualOverrides.dark || {}) }
+  // Include manual overrides if present
+  const lightOverrides: Record<string, string> = { ...(manualOverrides.light || {}) }
+  const darkOverrides: Record<string, string> = { ...(manualOverrides.dark || {}) }
 
-  const lightOverrideCount = Object.keys(manualOverrides.light || {}).length
-  const darkOverrideCount = Object.keys(manualOverrides.dark || {}).length
+  const lightOverrideCount = Object.keys(lightOverrides).length
+  const darkOverrideCount = Object.keys(darkOverrides).length
   
   if (lightOverrideCount > 0) console.log(`🔧 Applied ${lightOverrideCount} manual overrides for light mode`)
   if (darkOverrideCount > 0) console.log(`🔧 Applied ${darkOverrideCount} manual overrides for dark mode`)
