@@ -70,6 +70,7 @@ const MATRIX_PROPERTIES = [
   { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
   { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover"] },
   { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime"] },
+  { category: "ICONS", keys: ["icon-base", "icon-weak-base", "icon-strong-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-delete-base"] },
   { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
   { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
 ]
@@ -601,12 +602,13 @@ const App: React.FC = () => {
     }
 
       // --- LOG_01_TYPOGRAPHY ---
-      const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger", "surface-base", "surface-inset-base", "surface-raised-base", "surface-float-base"]
+      // We exclude surfaces here to avoid duplicates with LOG_02_SURFACES
+      const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger"]
       const coreTexts = ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger"]
       
       backgrounds.forEach(bg => {
         coreTexts.forEach(fg => {
-          addPair("LOG_01_TYPOGRAPHY", `${formatAgentLabel(fg.replace("text-", ""))}_ON_${formatAgentLabel(bg.replace("background-", "").replace("surface-", ""))}`, bg, fg, `${fg} ON ${bg}`, false, 'read')
+          addPair("LOG_01_TYPOGRAPHY", `${formatAgentLabel(fg.replace("text-", ""))}_ON_${formatAgentLabel(bg.replace("background-", ""))}`, bg, fg, `${fg} ON ${bg}`, false, 'read')
         })
       })
 
@@ -616,14 +618,17 @@ const App: React.FC = () => {
         { name: "LOG_02_SURFACES", prefix: "surface-inset", items: ["base", "base-hover", "base-active", "strong", "strong-hover"] },
         { name: "LOG_02_SURFACES", prefix: "surface-raised", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "stronger", "stronger-hover", "stronger-non-alpha"] },
         { name: "LOG_02_SURFACES", prefix: "surface-float", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "strong-active"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-weak", items: ["base"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-weaker", items: ["base"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-strong", items: ["base"] },
       ]
 
       surfaceCategories.forEach(cat => {
         cat.items.forEach(item => {
           // Fix mapping to match schema
           let bgKey = ""
-          if (item === "base" && cat.prefix === "surface-base") {
-            bgKey = "surface-base"
+          if (item === "base" && (cat.prefix === "surface-base" || cat.prefix === "surface-weak" || cat.prefix === "surface-weaker" || cat.prefix === "surface-strong")) {
+            bgKey = cat.prefix
           } else if (item === "hover" && cat.prefix === "surface-base") {
             bgKey = "surface-base-hover"
           } else if (item === "active" && cat.prefix === "surface-base") {
@@ -633,6 +638,11 @@ const App: React.FC = () => {
           }
 
           addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
+          
+          // Add weak text on surfaces too
+          if (item === "base") {
+            addPair("LOG_02_SURFACES", `${formatAgentLabel(bgKey.replace("surface-", ""))}_WEAK_TEXT`, bgKey, "text-weak", `TEXT_WEAK_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
+          }
         })
       })
 
@@ -775,8 +785,16 @@ const App: React.FC = () => {
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false, 'read')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", false, 'read')
 
+      // --- LOG_12_SPLASH_LOADING ---
+      // Splash screen background is usually background-base or a specific surface
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE"), "background-base", "icon-base", "OPENCODE LOGO BASE ON BACKGROUND", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG"), "background-base", "icon-strong-base", "OPENCODE LOGO STRONG ON BACKGROUND", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
+
     return pairs
-  }, [themeColors])
+  }, [themeColors, matrixMode, formatAgentLabel])
 
   const deferredWcagPairs = useDeferredValue(wcagPairs)
 
