@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, getContrastRatio, hexToHsl } from "./utils/colorUtils"
+import { getContrastScore, hexToHsl } from "./utils/colorUtils"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -58,102 +58,6 @@ const getInitialState = (key: string, defaultValue: any) => {
 }
 
 // Matrix Router properties (Categorized for easier browsing)
-const MATRIX_PROPERTIES = [
-  { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
-  { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
-  { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
-  { category: "SURFACE_RAISED", keys: ["surface-raised-base", "surface-raised-base-hover", "surface-raised-base-active", "surface-raised-strong", "surface-raised-strong-hover", "surface-raised-stronger", "surface-raised-stronger-hover", "surface-raised-stronger-non-alpha"] },
-  { category: "SURFACE_FLOAT", keys: ["surface-float-base", "surface-float-base-hover", "surface-float-base-active", "surface-float-strong", "surface-float-strong-hover", "surface-float-strong-active"] },
-  { category: "SURFACE_FUNCTIONAL", keys: ["surface-brand-base", "surface-brand-hover", "surface-brand-active", "surface-interactive-base", "surface-interactive-hover", "surface-interactive-active", "surface-interactive-weak", "surface-interactive-weak-hover", "surface-success-base", "surface-success-hover", "surface-success-active", "surface-success-weak", "surface-success-strong", "surface-warning-base", "surface-warning-hover", "surface-warning-active", "surface-warning-weak", "surface-warning-strong", "surface-critical-base", "surface-critical-hover", "surface-critical-active", "surface-critical-weak", "surface-critical-strong", "surface-info-base", "surface-info-hover", "surface-info-active", "surface-info-weak", "surface-info-strong"] },
-  { category: "SURFACE_DIFF", keys: ["surface-diff-unchanged-base", "surface-diff-skip-base", "surface-diff-add-base", "surface-diff-add-weak", "surface-diff-add-weaker", "surface-diff-add-strong", "surface-diff-add-stronger", "surface-diff-delete-base", "surface-diff-delete-weak", "surface-diff-delete-weaker", "surface-diff-delete-strong", "surface-diff-delete-stronger", "surface-diff-hidden-base", "surface-diff-hidden-weak", "surface-diff-hidden-weaker", "surface-diff-hidden-strong", "surface-diff-hidden-stronger"] },
-  { category: "SYNTAX_SEMANTIC", keys: ["syntax-success", "syntax-warning", "syntax-critical", "syntax-info", "syntax-diff-add", "syntax-diff-delete"] },
-  { category: "MARKDOWN", keys: ["markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong", "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration", "markdown-image", "markdown-image-text", "markdown-code-block"] },
-  { category: "TREE_UI", keys: ["tree-background-selected", "tree-background-hover", "tree-foreground-selected", "tree-foreground-hover", "tree-icon-selected"] },
-  { category: "BREADCRUMBS", keys: ["breadcrumb-background", "breadcrumb-foreground", "breadcrumb-foreground-hover", "breadcrumb-separator"] },
-  { category: "EDITOR_UI", keys: ["code-background", "code-foreground", "line-indicator", "line-indicator-active", "line-indicator-hover", "tab-active", "tab-inactive", "tab-hover", "tab-active-background", "tab-active-foreground", "tab-active-border", "tab-inactive-background", "tab-inactive-foreground"] },
-  { category: "TERMINAL_ANSI", keys: ["terminal-ansi-black", "terminal-ansi-red", "terminal-ansi-green", "terminal-ansi-yellow", "terminal-ansi-blue", "terminal-ansi-magenta", "terminal-ansi-cyan", "terminal-ansi-white", "terminal-ansi-bright-black", "terminal-ansi-bright-red", "terminal-ansi-bright-green", "terminal-ansi-bright-yellow", "terminal-ansi-bright-blue", "terminal-ansi-bright-magenta", "terminal-ansi-bright-cyan", "terminal-ansi-bright-white"] },
-  { category: "AVATAR", keys: ["avatar-background", "avatar-foreground", "avatar-background-pink", "avatar-background-mint", "avatar-background-orange", "avatar-background-purple", "avatar-background-cyan", "avatar-background-lime", "avatar-background-blue", "avatar-background-green", "avatar-background-yellow", "avatar-background-red", "avatar-background-gray", "avatar-text-pink", "avatar-text-mint", "avatar-text-orange", "avatar-text-purple", "avatar-text-cyan", "avatar-text-lime", "avatar-text-blue", "avatar-text-green", "avatar-text-yellow", "avatar-text-red", "avatar-text-gray"] },
-  { category: "ICONS", keys: ["icon-base", "icon-hover", "icon-active", "icon-selected", "icon-weak-base", "icon-strong-base", "icon-interactive-base", "icon-success-base", "icon-warning-base", "icon-critical-base", "icon-info-base", "icon-diff-add-base", "icon-diff-delete-base", "icon-on-brand-base", "icon-on-interactive-base", "icon-on-success-base", "icon-on-warning-base", "icon-on-critical-base", "icon-on-info-base", "icon-agent-plan-base", "icon-agent-docs-base", "icon-agent-ask-base", "icon-agent-build-base"] },
-  { category: "BORDERS", keys: ["border-base", "border-hover", "border-active", "border-selected", "border-weak-base", "border-weaker-base", "border-strong-base", "border-interactive-base", "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"] },
-  { category: "SCROLLBAR", keys: ["scrollbar-thumb", "scrollbar-track"] },
-  { category: "MISC", keys: ["focus-ring", "shadow", "overlay", "selection-background", "selection-foreground", "selection-inactive-background"] }
-]
-
-const MatrixTokenRow = React.memo(({ 
-  property, 
-  currentColor, 
-  activeMode, 
-  isOverridden, 
-  handleManualReset, 
-  handleManualOverride, 
-  setQuickPicker, 
-  formatAgentLabel, 
-  activeVariantsMap 
-}: any) => {
-  return (
-    <div className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
-      <button
-        onClick={() => handleManualReset(property)}
-        className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
-          isOverridden
-            ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-            : activeMode === 'light'
-              ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-              : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-        }`}
-        title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
-      >
-        <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
-      </button>
-
-      <div className="flex flex-col min-w-0 flex-1">
-        <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
-          {formatAgentLabel(property)}
-        </span>
-        <div className="flex items-center gap-2 mt-0.5">
-          <div 
-            className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
-            style={{ backgroundColor: currentColor }}
-            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: property, label: property })}
-            title="QUICK_PICKER"
-          />
-          <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
-        {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
-          <div key={`${property}-${seedName}`} className={`flex gap-0.5 p-0.5 rounded border ${activeMode === 'light' ? 'bg-gray-50 border-gray-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
-            {variants.map((variant: any, idx: number) => {
-              const isSelected = currentColor?.toLowerCase() === variant.hex.toLowerCase()
-
-              return (
-                <button
-                  key={`${property}-${seedName}-${idx}`}
-                  onClick={() => handleManualOverride(property, variant.hex)}
-                  className={`w-2 h-3 rounded-[0.5px] transition-all relative flex items-center justify-center ${
-                    isSelected 
-                      ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
-                      : "hover:scale-110 opacity-40 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: variant.hex }}
-                  title={`${seedName}_V${idx}: ${variant.hex}`}
-                >
-                  {isSelected && (
-                    <div 
-                      className="w-1 h-1 rounded-full bg-white/60" 
-                    />
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-})
-
 const App: React.FC = () => {
   const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 210, s: 50, l: 50 }))
   const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
@@ -428,9 +332,6 @@ const App: React.FC = () => {
   const deferredManualOverrides = useDeferredValue(manualOverrides)
   const deferredSeedOverrides = useDeferredValue(seedOverrides)
 
-  // Add deferred active mode to prevent mode-switch blocking
-  const deferredActiveMode = useDeferredValue(activeMode)
-
   // Persistence effect: Consolidated and DEBOUNCED to reduce localStorage I/O overhead
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -471,9 +372,6 @@ const App: React.FC = () => {
       outputSpace
     )
   }, [deferredBaseColor, deferredHarmony, deferredSpread, deferredVariantCount, activeMode, deferredLightContrast, deferredDarkContrast, deferredLightBrightness, deferredDarkBrightness, deferredVariantStrategy, colorSpace, outputSpace])
-
-  // DEFERRED_PALETTE_GROUPS: Further defer the complex groups if they aren't immediate
-  const deferredPaletteGroups = useDeferredValue(paletteGroups)
 
   // Generate 9 seeds for Opencode mode (functional seeds) - Separate for Light/Dark
   const lightSeeds9 = useMemo<SeedColor[]>(() => {
@@ -879,8 +777,8 @@ const App: React.FC = () => {
       addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "TAB INACTIVE TEXT CONTRAST", false, 'shell')
 
       // --- LOG_17_BORDER_FUNCTIONAL ---
-      const functionalBorders = ["success", "warning", "critical", "info"]
-      functionalBorders.forEach(type => {
+      const functionalBordersBasic = ["success", "warning", "critical", "info"]
+      functionalBordersBasic.forEach(type => {
         addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER BASE`, true, 'shell')
         addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER`, true, 'shell')
         addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECTED`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED`, true, 'shell')
@@ -1116,7 +1014,7 @@ const MatrixTokenRow = React.memo(({
                 <button
                   key={`${property}-${seedName}-${idx}`}
                   onClick={() => handleManualOverride(property, variant.hex)}
-                  className={`w-2.5 h-3 rounded-[0.5px] transition-all relative flex items-center justify-center ${
+                  className={`w-1.5 h-2.5 rounded-[0.5px] transition-all relative flex items-center justify-center ${
                     isSelected 
                       ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110` 
                       : "hover:scale-110 opacity-40 hover:opacity-100"
@@ -1126,7 +1024,7 @@ const MatrixTokenRow = React.memo(({
                 >
                   {isSelected && (
                     <div 
-                      className="w-1 h-1 rounded-full bg-white/60" 
+                      className="w-0.5 h-0.5 rounded-full bg-white/60" 
                     />
                   )}
                 </button>
@@ -1718,7 +1616,7 @@ const MatrixTokenRow = React.memo(({
                                     <div
                                       key={`${seedName}-${vIdx}`}
                                       onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-3.5 h-4 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
+                                      className={`w-2.5 h-3 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
                                         isCurrentSeed 
                                           ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110 border-white/40` 
                                           : "opacity-60 hover:opacity-100 border-white/5"
@@ -1729,7 +1627,7 @@ const MatrixTokenRow = React.memo(({
                                       title={`MOUNT_SEED: ${variant.hex}`}
                                     >
                                       {variant.isBase && (
-                                        <div className="w-1 h-1 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                                        <div className="w-0.5 h-0.5 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
                                       )}
                                     </div>
                                   )
@@ -2233,21 +2131,21 @@ const MatrixTokenRow = React.memo(({
           onClick={() => setQuickPicker(null)}
         >
           <div 
-            className={`absolute rounded border shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-2 min-w-[240px] transition-colors ${
+            className={`absolute rounded border shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-2 min-w-[460px] transition-colors ${
               activeMode === 'light' 
                 ? 'bg-white border-purple-200' 
                 : 'bg-[#0d0d17] border-[#2d2d4d]'
             }`}
             style={{ 
-              top: Math.min(window.innerHeight - 300, Math.max(10, quickPicker.y)), 
-              left: Math.min(window.innerWidth - 260, Math.max(10, quickPicker.x + 10)),
+              top: Math.min(window.innerHeight - 500, Math.max(10, quickPicker.y)), 
+              left: Math.min(window.innerWidth - 480, Math.max(10, quickPicker.x + 10)),
             }}
             onClick={e => e.stopPropagation()}
           >
             <div className={`flex items-center justify-between pb-2 border-b transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#2d2d4d]'}`}>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                <span className={`text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest truncate max-w-[300px] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
                   {formatAgentLabel(quickPicker.label)}
                 </span>
               </div>
@@ -2260,15 +2158,25 @@ const MatrixTokenRow = React.memo(({
             </div>
             
             <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-1 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># ENGINE_VARIANTS</div>
-            <div className="grid grid-cols-8 gap-1.5">
-              {Object.values(activeVariantsMap).flat().map((v, i) => (
-                <button
-                  key={`${v.hex}-${i}`}
-                  className="w-5 h-5 rounded-[1px] hover:scale-125 transition-transform border border-white/5 hover:border-white/40"
-                  style={{ backgroundColor: v.hex }}
-                  title={`${v.name || 'Color'} (${v.hex})`}
-                  onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
-                />
+            
+            <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+              {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
+                <div key={seedName} className="flex flex-col gap-1">
+                  <div className={`text-[7px] font-bold uppercase tracking-widest opacity-40 ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+                    {seedName}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {variants.map((v: any, i: number) => (
+                      <button
+                        key={`${v.hex}-${i}`}
+                        className="w-3.5 h-3.5 rounded-[1px] hover:scale-125 transition-transform border border-white/5 hover:border-white/40"
+                        style={{ backgroundColor: v.hex }}
+                        title={`${seedName} variant ${i} (${v.hex})`}
+                        onClick={() => handleQuickOverride(quickPicker.key, v.hex)}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
 
