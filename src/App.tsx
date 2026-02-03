@@ -484,6 +484,7 @@ const App: React.FC = () => {
 
   // Helper for formatting UI labels to 'AGENT LOG' style
   const formatAgentLabel = useCallback((str: string) => {
+    if (!str) return ""
     return str.replace(/-/g, '_').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()
   }, [])
 
@@ -989,7 +990,7 @@ const MatrixTokenRow = React.memo(({
         <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
       </button>
 
-      <div className="flex flex-col min-w-0 flex-1">
+      <div className="flex flex-col min-w-[120px] flex-1">
         <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
           {formatAgentLabel(property)}
         </span>
