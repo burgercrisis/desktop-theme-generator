@@ -167,7 +167,9 @@ export const getContrastScore = (
   background: string, 
   foreground: string, 
   isNonText: boolean = false,
-  isBorder: boolean = false
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false
 ): { ratio: number; level: string; pass: boolean } => {
   const ratio = getContrastRatio(background, foreground);
   const level = getWCAGLevel(ratio);
@@ -177,8 +179,19 @@ export const getContrastScore = (
     // Borders only need a minimum of 1.1 contrast
     pass = ratio >= 1.1;
   } else if (isNonText) {
-    // Non-text UI elements (like icons) should be between 1.1 and 2 for subtlety
-    pass = ratio >= 1.1 && ratio <= 2;
+    if (isStrong) {
+      // Status icons and strong UI elements should be very clear
+      // WCAG 2.1 recommends 3:1 for non-text contrast
+      pass = ratio >= 3.0;
+    } else if (isWeak) {
+      // Weak non-text elements (like subtle indicators) need to be visible but not distracting
+      // Range 1.1 - 2.5 allows for subtle but visible elements
+      pass = ratio >= 1.1 && ratio <= 2.5;
+    } else {
+      // Standard non-text elements (icons, interactive) should be clearly visible
+      // Range 2.0+ is a good middle ground for standard UI elements
+      pass = ratio >= 2.0;
+    }
   } else {
     // Text pairs require high contrast (AA standard)
     pass = ratio >= 4.5;

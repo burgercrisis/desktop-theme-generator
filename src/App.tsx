@@ -493,7 +493,21 @@ const App: React.FC = () => {
     // Return empty array if not in matrix mode to save heavy calculation
     if (!matrixMode) return []
 
-    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; isBorder?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff'; score: { ratio: number, level: string } }> = []
+    const pairs: Array<{ 
+      label: string; 
+      bg: string; 
+      fg: string; 
+      bgKey: string; 
+      fgKey: string; 
+      desc: string; 
+      isNonText?: boolean; 
+      isBorder?: boolean; 
+      isWeak?: boolean; 
+      isStrong?: boolean;
+      category: string; 
+      type: 'shell' | 'read' | 'action' | 'diff'; 
+      score: { ratio: number, level: string, pass: boolean } 
+    }> = []
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
@@ -501,8 +515,19 @@ const App: React.FC = () => {
       if (typeof bg === 'string' && typeof fg === 'string') {
         const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider');
         const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio'));
-        const score = getContrastScore(bg, fg, autoNonText, autoBorder)
-        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, type, score })
+        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker');
+        // Status icons (success, warning, critical, info) should be treated as strong non-text
+        const autoStrong = !autoWeak && autoNonText && (
+          fgKey.includes('success') || 
+          fgKey.includes('warning') || 
+          fgKey.includes('critical') || 
+          fgKey.includes('info') || 
+          fgKey.includes('strong') ||
+          fgKey.includes('brand')
+        );
+        
+        const score = getContrastScore(bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
+        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, isWeak: autoWeak, isStrong: autoStrong, type, score })
       }
     }
 
@@ -1300,7 +1325,7 @@ const MatrixTokenRow = React.memo(({
   const scoredWcagPairs = useMemo(() => {
     return deferredWcagPairs.map(pair => ({
       ...pair,
-      score: getContrastScore(pair.bg, pair.fg, pair.isNonText, pair.isBorder)
+      score: getContrastScore(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong)
     }));
   }, [deferredWcagPairs]);
 
@@ -1512,7 +1537,11 @@ const MatrixTokenRow = React.memo(({
                               {scoredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = pair.score
                                 const isFailing = !score.pass
-                                const thresholdLabel = pair.isBorder ? "1.1+" : (pair.isNonText ? "1.1-2.0" : "4.5+")
+                                const thresholdLabel = pair.isBorder 
+                                  ? "1.1+" 
+                                  : pair.isNonText 
+                                    ? (pair.isStrong ? "3.0+" : (pair.isWeak ? "1.1-2.5" : "2.0+"))
+                                    : "4.5+"
                                 
                                 // Map type to icon
                                 let typeIcon = "📄" // read
