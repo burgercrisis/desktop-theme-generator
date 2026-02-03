@@ -800,6 +800,49 @@ const App: React.FC = () => {
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE"), "background-base", "icon-base", "OPENCODE LOGO BASE ON BACKGROUND", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG"), "background-base", "icon-strong-base", "OPENCODE LOGO STRONG ON BACKGROUND", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true, 'shell')
+
+      // --- LOG_13_TREE_UI ---
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED ITEM CONTRAST", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_HOVER"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER ITEM CONTRAST", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ICON CONTRAST", true, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_ON_BASE"), "background-base", "text-base", "TREE TEXT ON MAIN BACKGROUND", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_WEAK_ON_BASE"), "background-base", "text-weak", "TREE WEAK TEXT ON MAIN BACKGROUND", false, 'shell')
+
+      // --- LOG_14_TABS_EXTENDED ---
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "tab-active-background", "tab-active-foreground", "ACTIVE TAB TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "background-base", "tab-active-border", "ACTIVE TAB BORDER/INDICATOR", true, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "tab-inactive-background", "tab-inactive-foreground", "INACTIVE TAB TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_HOVER_TEXT"), "background-base", "text-strong", "TAB HOVER TEXT CONTRAST", false, 'shell')
+
+      // --- LOG_15_BREADCRUMBS ---
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
+
+      // --- LOG_16_BORDERS_FUNCTIONAL ---
+      const functionalBorders = ["interactive", "success", "warning", "critical", "info"]
+      functionalBorders.forEach(type => {
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER ON BG`, true, 'shell')
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER ON BG`, true, 'shell')
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECT`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED ON BG`, true, 'shell')
+      })
+
+      // --- LOG_17_MARKDOWN_DETAILED ---
+      const markdownElements = [
+        { key: "markdown-text", label: "TEXT" },
+        { key: "markdown-heading", label: "HEADING" },
+        { key: "markdown-link", label: "LINK" },
+        { key: "markdown-link-text", label: "LINK_TEXT" },
+        { key: "markdown-code", label: "CODE_INLINE" },
+        { key: "markdown-block-quote", label: "BLOCKQUOTE" },
+        { key: "markdown-emph", label: "EMPHASIS" },
+        { key: "markdown-strong", label: "STRONG" }
+      ]
+      markdownElements.forEach(el => {
+        addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel(el.label), "background-base", el.key, `MARKDOWN ${el.label} ON BACKGROUND`, false, 'read')
+      })
+      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("CODE_BLOCK_BG"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
+      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("HR_LINE"), "background-base", "markdown-horizontal-rule", "MARKDOWN HORIZONTAL RULE", true, 'read')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
 
