@@ -793,6 +793,70 @@ const App: React.FC = () => {
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
 
+      // --- LOG_13_MARKDOWN ---
+      const markdownTokens = [
+        "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", 
+        "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong"
+      ]
+      markdownTokens.forEach(token => {
+        addPair("LOG_13_MARKDOWN", formatAgentLabel(token.replace("markdown-", "")), "background-base", token, `MARKDOWN ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, false, 'read')
+      })
+      addPair("LOG_13_MARKDOWN", formatAgentLabel("CODE_BLOCK"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
+
+      // --- LOG_14_EDITOR ---
+      addPair("LOG_14_EDITOR", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
+      addPair("LOG_14_EDITOR", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'read')
+      addPair("LOG_14_EDITOR", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'read')
+      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true, 'read')
+      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true, 'read')
+      addPair("LOG_14_EDITOR", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true, 'read')
+
+      // --- LOG_15_BORDERS ---
+      const borderTokens = [
+        "border-base", "border-weak-base", "border-strong-base", "border-interactive-base",
+        "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"
+      ]
+      borderTokens.forEach(token => {
+        addPair("LOG_15_BORDERS", formatAgentLabel(token.replace("border-", "")), "background-base", token, `BORDER ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
+      })
+
+      // --- LOG_16_SELECTIONS ---
+      addPair("LOG_16_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false, 'read')
+      addPair("LOG_16_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false, 'read')
+      addPair("LOG_16_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false, 'read')
+
+      // --- LOG_17_INVERTED ---
+      addPair("LOG_17_INVERTED", formatAgentLabel("INVERT_TEXT"), "surface-strong", "text-invert-base", "INVERTED TEXT ON STRONG SURFACE", false, 'read')
+      addPair("LOG_17_INVERTED", formatAgentLabel("INVERT_ICON"), "surface-strong", "icon-invert-base", "INVERTED ICON ON STRONG SURFACE", true, 'read')
+
+      // --- LOG_18_COLORED_TEXT_ICON ---
+      const coloredBgs = [
+        { key: "brand", label: "BRAND" },
+        { key: "success", label: "SUCCESS" },
+        { key: "warning", label: "WARNING" },
+        { key: "critical", label: "CRITICAL" },
+        { key: "info", label: "INFO" }
+      ]
+      coloredBgs.forEach(bg => {
+        // Text variants on colored backgrounds
+        ["weak", "weaker"].forEach(variant => {
+          const fgKey = `text-on-${bg.key}-${variant}`
+          const bgKey = `surface-${bg.key}-base`
+          addPair("LOG_18_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_${variant.toUpperCase()}_TEXT`), bgKey, fgKey, `${variant.toUpperCase()} TEXT ON ${bg.label} BASE`, false, 'action')
+        })
+        
+        // Icons on colored backgrounds
+        const iconKey = `icon-on-${bg.key}-base`
+        const bgKey = `surface-${bg.key}-base`
+        addPair("LOG_18_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_ICON`), bgKey, iconKey, `${bg.label} ICON ON ${bg.label} BASE`, true, 'action')
+      })
+
+      // --- LOG_19_AGENT_UI ---
+      const agentIcons = ["plan", "docs", "ask", "build"]
+      agentIcons.forEach(icon => {
+        addPair("LOG_19_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true, 'shell')
+      })
+
     return pairs
   }, [themeColors, matrixMode, formatAgentLabel])
 
