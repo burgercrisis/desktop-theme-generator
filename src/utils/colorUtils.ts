@@ -163,10 +163,27 @@ export const getWCAGLevel = (contrast: number): 'AAA' | 'AA' | 'AA Large' | 'Fai
   return 'Fail';
 };
 
-export const getContrastScore = (background: string, foreground: string): { ratio: number; level: string; pass: boolean } => {
+export const getContrastScore = (
+  background: string, 
+  foreground: string, 
+  isNonText: boolean = false,
+  isBorder: boolean = false
+): { ratio: number; level: string; pass: boolean } => {
   const ratio = getContrastRatio(background, foreground);
   const level = getWCAGLevel(ratio);
-  const pass = ratio >= 4.5; // AA standard for normal text
+  
+  let pass = false;
+  if (isBorder) {
+    // Borders only need a minimum of 1.1 contrast
+    pass = ratio >= 1.1;
+  } else if (isNonText) {
+    // Non-text UI elements (like icons) should be between 1.1 and 2 for subtlety
+    pass = ratio >= 1.1 && ratio <= 2;
+  } else {
+    // Text pairs require high contrast (AA standard)
+    pass = ratio >= 4.5;
+  }
+  
   return { ratio: Math.round(ratio * 100) / 100, level, pass };
 };
 

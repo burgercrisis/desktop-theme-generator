@@ -493,14 +493,16 @@ const App: React.FC = () => {
     // Return empty array if not in matrix mode to save heavy calculation
     if (!matrixMode) return []
 
-    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff'; score: { ratio: number, level: string } }> = []
+    const pairs: Array<{ label: string; bg: string; fg: string; bgKey: string; fgKey: string; desc: string; isNonText?: boolean; isBorder?: boolean; category: string; type: 'shell' | 'read' | 'action' | 'diff'; score: { ratio: number, level: string } }> = []
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
-        const score = getContrastScore(bg, fg)
-        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText, type, score })
+        const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider');
+        const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio'));
+        const score = getContrastScore(bg, fg, autoNonText, autoBorder)
+        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, type, score })
       }
     }
 
@@ -1298,16 +1300,16 @@ const MatrixTokenRow = React.memo(({
   const scoredWcagPairs = useMemo(() => {
     return deferredWcagPairs.map(pair => ({
       ...pair,
-      score: getContrastScore(pair.bg, pair.fg)
+      score: getContrastScore(pair.bg, pair.fg, pair.isNonText, pair.isBorder)
     }));
   }, [deferredWcagPairs]);
 
   const passCount = useMemo(() => {
-    return scoredWcagPairs.filter(p => p.score.ratio >= (p.isNonText ? 3 : 4.5)).length;
+    return scoredWcagPairs.filter(p => p.score.pass).length;
   }, [scoredWcagPairs]);
 
   const failCount = useMemo(() => {
-    return scoredWcagPairs.filter(p => p.score.ratio < (p.isNonText ? 3 : 4.5)).length;
+    return scoredWcagPairs.filter(p => !p.score.pass).length;
   }, [scoredWcagPairs]);
 
   return (
@@ -1509,8 +1511,8 @@ const MatrixTokenRow = React.memo(({
                             <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
                               {scoredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = pair.score
-                                const threshold = pair.isNonText ? 3 : 4.5
-                                const isFailing = score.ratio < threshold
+                                const isFailing = !score.pass
+                                const thresholdLabel = pair.isBorder ? "1.1+" : (pair.isNonText ? "1.1-2.0" : "4.5+")
                                 
                                 // Map type to icon
                                 let typeIcon = "📄" // read
@@ -1537,6 +1539,7 @@ const MatrixTokenRow = React.memo(({
                                         <div className="flex items-center gap-2 shrink-0">
                                           <span className={`text-[10px] font-mono font-black ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
                                             {score.ratio.toFixed(2)}:1
+                                            <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
                                           </span>
                                           <span className={`text-[8px] font-black px-1 rounded-[2px] ${
                                             isFailing 
