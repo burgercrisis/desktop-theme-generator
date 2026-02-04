@@ -176,6 +176,21 @@ export const getHueDifference = (hex1: string, hex2: string): number => {
   return diff;
 };
 
+export const getTargetContrast = (
+  isNonText: boolean = false,
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false
+): number => {
+  if (isBorder) return 1.1;
+  if (isNonText) {
+    if (isStrong) return 3.0;
+    if (isWeak) return 1.1; // Lower bound for weak
+    return 2.0;
+  }
+  return 4.5;
+};
+
 export const getContrastScore = (
   background: string, 
   foreground: string, 
@@ -187,28 +202,14 @@ export const getContrastScore = (
   const ratio = getContrastRatio(background, foreground);
   const hueDiff = getHueDifference(background, foreground);
   const level = getWCAGLevel(ratio);
+  const target = getTargetContrast(isNonText, isBorder, isWeak, isStrong);
   
   let contrastPass = false;
-  if (isBorder) {
-    // Borders only need a minimum of 1.1 contrast
-    contrastPass = ratio >= 1.1;
-  } else if (isNonText) {
-    if (isStrong) {
-      // Status icons and strong UI elements should be very clear
-      // WCAG 2.1 recommends 3:1 for non-text contrast
-      contrastPass = ratio >= 3.0;
-    } else if (isWeak) {
-      // Weak non-text elements (like subtle indicators) need to be visible but not distracting
-      // Range 1.1 - 2.5 allows for subtle but visible elements
-      contrastPass = ratio >= 1.1 && ratio <= 2.5;
-    } else {
-      // Standard non-text elements (icons, interactive) should be clearly visible
-      // Range 2.0+ is a good middle ground for standard UI elements
-      contrastPass = ratio >= 2.0;
-    }
+  if (isNonText && isWeak) {
+    // Weak non-text has a specific range
+    contrastPass = ratio >= 1.1 && ratio <= 2.5;
   } else {
-    // Text pairs require high contrast (AA standard)
-    contrastPass = ratio >= 4.5;
+    contrastPass = ratio >= target;
   }
 
   // Hue pass: 15 degrees difference is a good indicator of visual separation
@@ -227,6 +228,40 @@ export const getContrastScore = (
     level, 
     pass 
   };
+};
+
+export const getClosestPassingColor = (
+  background: string,
+  foreground: string,
+  isNonText: boolean = false,
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false
+): string => {
+  const target = getTargetContrast(isNonText, isBorder, isWeak, isStrong);
+  const currentScore = getContrastScore(background, foreground, isNonText, isBorder, isWeak, isStrong);
+  
+  if (currentScore.pass) return foreground;
+
+  const fgHsl = hexToHsl(foreground);
+  let bestColor = foreground;
+  let minDelta = Infinity;
+
+  // We search the entire lightness range for the closest color that satisfies the requirement
+  for (let l = 0; l <= 100; l++) {
+    const candidateHex = hslToHex(fgHsl.h, fgHsl.s, l);
+    const score = getContrastScore(background, candidateHex, isNonText, isBorder, isWeak, isStrong);
+    
+    if (score.pass) {
+      const delta = Math.abs(l - fgHsl.l);
+      if (delta < minDelta) {
+        minDelta = delta;
+        bestColor = candidateHex;
+      }
+    }
+  }
+
+  return bestColor;
 };
 
 // Find the best contrasting color from a palette

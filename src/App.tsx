@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, hexToHsl } from "./utils/colorUtils"
+import { getContrastScore, hexToHsl, getClosestPassingColor } from "./utils/colorUtils"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -1003,23 +1003,55 @@ const MatrixTokenRow = React.memo(({
   handleManualOverride, 
   setQuickPicker, 
   formatAgentLabel, 
-  activeVariantsMap 
+  activeVariantsMap,
+  themeColors
 }: any) => {
+  // Find background for this token to calculate "Fix"
+  const bgKey = property.includes('icon-on') ? 'surface-brand-base' : 'background-base';
+  const background = themeColors[bgKey] || themeColors['background-base'];
+  
+  // Detect flags for getClosestPassingColor
+  const isBorder = property.includes('border') || property.includes('rule') || property.includes('separator');
+  const isNonText = property.includes('icon') || isBorder || property.includes('indicator');
+  const isWeak = property.includes('weak');
+  const isStrong = property.includes('strong') || property.includes('success') || property.includes('warning') || property.includes('critical') || property.includes('info');
+
+  const contrast = getContrastScore(background, currentColor, isNonText, isBorder, isWeak, isStrong);
+  const isFailing = !contrast.pass;
+
   return (
     <div className="flex items-center gap-3 px-3 py-2 hover:bg-purple-500/5 transition-colors group">
-      <button
-        onClick={() => handleManualReset(property)}
-        className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
-          isOverridden
-            ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-            : activeMode === 'light'
-              ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-              : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-        }`}
-        title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
-      >
-        <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
-      </button>
+      <div className="flex flex-col items-center gap-1">
+        <button
+          onClick={() => handleManualReset(property)}
+          className={`w-5 h-5 shrink-0 rounded flex items-center justify-center transition-all border ${
+            isOverridden
+              ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+              : activeMode === 'light'
+                ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+          }`}
+          title={isOverridden ? "RESET_TOKEN" : "AUTO_INHERIT"}
+        >
+          <span className="text-[10px] font-bold">{isOverridden ? "×" : "·"}</span>
+        </button>
+        {isFailing && (
+          <button
+            onClick={() => {
+              const fixed = getClosestPassingColor(background, currentColor, isNonText, isBorder, isWeak, isStrong);
+              handleManualOverride(property, fixed);
+            }}
+            className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all ${
+              activeMode === 'light'
+                ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
+            }`}
+            title={`FIX_CONTRAST (Current: ${contrast.ratio.toFixed(2)}:1)`}
+          >
+            FIX
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-col min-w-[120px] flex-1">
         <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
@@ -1327,10 +1359,21 @@ const MatrixTokenRow = React.memo(({
 
   // Pre-calculate contrast scores for deferredWcagPairs
   const scoredWcagPairs = useMemo(() => {
-    return deferredWcagPairs.map(pair => ({
-      ...pair,
-      score: getContrastScore(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong)
-    }));
+    return deferredWcagPairs.map(pair => {
+      const isNonText = pair.isNonText || false;
+      const isBorder = pair.isBorder || false;
+      const isWeak = pair.isWeak || false;
+      const isStrong = pair.isStrong || false;
+
+      return {
+        ...pair,
+        score: getContrastScore(pair.bg, pair.fg, isNonText, isBorder, isWeak, isStrong),
+        isNonText,
+        isBorder,
+        isWeak,
+        isStrong
+      }
+    })
   }, [deferredWcagPairs]);
 
   const passCount = useMemo(() => {
@@ -1597,6 +1640,22 @@ const MatrixTokenRow = React.memo(({
                                           <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0 ml-2">
+                                          {isFailing && (
+                                            <button
+                                              onClick={() => {
+                                                const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                handleManualOverride(pair.fgKey, fixed);
+                                              }}
+                                              className={`text-[8px] font-black px-1.5 py-0.5 rounded-[2px] mr-1 transition-all ${
+                                                activeMode === 'light'
+                                                  ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
+                                              }`}
+                                              title="AUTO_FIX_CONTRAST"
+                                            >
+                                              FIX
+                                            </button>
+                                          )}
                                           <button 
                                             className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
                                             style={{ backgroundColor: pair.bg }} 
@@ -1717,6 +1776,7 @@ const MatrixTokenRow = React.memo(({
                                 setQuickPicker={setQuickPicker}
                                 formatAgentLabel={formatAgentLabel}
                                 activeVariantsMap={activeVariantsMap}
+                                themeColors={themeColors}
                               />
                             )
                           })}
