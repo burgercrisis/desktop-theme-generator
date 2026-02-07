@@ -1639,22 +1639,40 @@ const MatrixTokenRow = React.memo(({
                                         <div className="flex items-center gap-1.5 overflow-hidden">
                                           <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                           {isFailing && (
-                                            <button
-                                              onClick={() => {
-                                                const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
-                                                handleManualOverride(pair.fgKey, fixed);
-                                              }}
-                                              className={`text-[8px] font-black px-1.5 py-0.5 rounded-[2px] mr-1 transition-all ${
-                                                activeMode === 'light'
-                                                  ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
-                                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
-                                              }`}
-                                              title="AUTO_FIX_CONTRAST"
-                                            >
-                                              FIX
-                                            </button>
+                                            <>
+                                              <button
+                                                onClick={() => {
+                                                  const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  handleManualOverride(pair.bgKey, fixed);
+                                                }}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                  activeMode === 'light'
+                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
+                                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
+                                                }`}
+                                                title={`FIX_BG: ${pair.bgKey}`}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
+                                                FIX_BG
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  handleManualOverride(pair.fgKey, fixed);
+                                                }}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                  activeMode === 'light'
+                                                    ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                                                    : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
+                                                }`}
+                                                title={`FIX_FG: ${pair.fgKey}`}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
+                                                FIX_FG
+                                              </button>
+                                            </>
                                           )}
                                           <button 
                                             className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
