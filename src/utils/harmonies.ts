@@ -418,17 +418,6 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "border-strong-selected": getFromScale(interactiveScale, 0.6, interactiveHex),
 
     // Semantic Borders (Explicit)
-    "border-interactive-base": getFromScale(interactiveScale, 0.4, interactiveHex),
-    "border-interactive-hover": getFromScale(interactiveScale, 0.5, interactiveHex),
-    "border-interactive-active": getFromScale(interactiveScale, 0.6, interactiveHex),
-    "border-interactive-selected": getFromScale(interactiveScale, 0.7, interactiveHex),
-    "border-success-base": getFromScale(successScale, pos(0.4), successHex),
-    "border-warning-base": getFromScale(warningScale, pos(0.4), warningHex),
-    "border-critical-base": getFromScale(errorScale, pos(0.4), errorHex),
-    "border-info-base": getFromScale(infoScale, pos(0.4), infoHex),
-    "border-strong-disabled": getFromScale(neutralScale, pos(0.3), neutralHex),
-    "border-strong-focus": getFromScale(interactiveScale, 0.7, interactiveHex),
-
     "border-interactive-base": getFromScale(interactiveScale, pos(0.4), interactiveHex),
     "border-interactive-hover": getFromScale(interactiveScale, pos(0.5), interactiveHex),
     "border-interactive-active": getFromScale(interactiveScale, pos(0.6), interactiveHex),
@@ -445,6 +434,8 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "border-info-base": getFromScale(infoScale, pos(0.41), infoHex),
     "border-info-hover": getFromScale(infoScale, pos(0.51), infoHex),
     "border-info-selected": getFromScale(infoScale, pos(0.61), infoHex),
+    "border-strong-disabled": getFromScale(neutralScale, pos(0.3), neutralHex),
+    "border-strong-focus": getFromScale(interactiveScale, 0.7, interactiveHex),
     
     // Icons
     "icon-base": getFromScale(primaryScale, pos(0.7), primaryHex),
@@ -637,14 +628,6 @@ export const generateOpencodeThemeColors = (seeds: SeedColor[], variants: Record
     "terminal-ansi-bright-magenta": isDark ? STANDARD_ANSI_DARK.brightMagenta : STANDARD_ANSI_LIGHT.brightMagenta,
     "terminal-ansi-bright-cyan": isDark ? STANDARD_ANSI_DARK.brightCyan : STANDARD_ANSI_LIGHT.brightCyan,
     "terminal-ansi-bright-white": isDark ? STANDARD_ANSI_DARK.brightWhite : STANDARD_ANSI_LIGHT.brightWhite,
-
-    // Syntax Semantic & Misc
-    "syntax-success": getFromScale(successScale, pos(0.5), successHex),
-    "syntax-warning": getFromScale(warningScale, pos(0.5), warningHex),
-    "syntax-critical": getFromScale(errorScale, pos(0.5), errorHex),
-    "syntax-info": getFromScale(infoScale, pos(0.5), infoHex),
-    "syntax-diff-add": getFromScale(successScale, pos(0.7), successHex),
-    "syntax-diff-delete": getFromScale(errorScale, pos(0.7), errorHex),
 
     // Editor Misc
     "code-background": getFromScale(primaryScale, pos(0.02), primaryHex),
