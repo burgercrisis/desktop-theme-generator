@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import { getContrastScore, hexToHsl, getClosestPassingColor } from "./utils/colorUtils"
+import { getCachedContrastScore } from "./utils/cachedContrast"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -36,7 +37,7 @@ import {
   OutputSpace,
   ColorStop
 } from "./types"
-import "./App.css"
+import "./App.css" // Standard App styles
 
 const getInitialState = (key: string, defaultValue: any) => {
   const saved = localStorage.getItem(key)
@@ -526,7 +527,7 @@ const App: React.FC = () => {
           fgKey.includes('brand')
         );
         
-        const score = getContrastScore(bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
+        const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
         pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, isWeak: autoWeak, isStrong: autoStrong, type, score })
       }
     }

@@ -238,30 +238,36 @@ export const getClosestPassingColor = (
   isWeak: boolean = false,
   isStrong: boolean = false
 ): string => {
-  const target = getTargetContrast(isNonText, isBorder, isWeak, isStrong);
   const currentScore = getContrastScore(background, foreground, isNonText, isBorder, isWeak, isStrong);
-  
+
   if (currentScore.pass) return foreground;
 
   const fgHsl = hexToHsl(foreground);
-  let bestColor = foreground;
+  let bestL = -1;
   let minDelta = Infinity;
 
-  // We search the entire lightness range for the closest color that satisfies the requirement
+  // Search entire lightness range for closest passing color
   for (let l = 0; l <= 100; l++) {
     const candidateHex = hslToHex(fgHsl.h, fgHsl.s, l);
     const score = getContrastScore(background, candidateHex, isNonText, isBorder, isWeak, isStrong);
-    
+
     if (score.pass) {
       const delta = Math.abs(l - fgHsl.l);
       if (delta < minDelta) {
         minDelta = delta;
-        bestColor = candidateHex;
+        bestL = l;
+      } else if (delta === minDelta && bestL !== -1) {
+        // Tie-breaker: when equidistant, prefer moving toward middle gray (l=50)
+        // This prevents always favoring the darker end when looping 0..100
+        const distToMid = (val: number) => Math.abs(val - 50);
+        if (distToMid(l) < distToMid(bestL)) {
+          bestL = l;
+        }
       }
     }
   }
 
-  return bestColor;
+  return bestL === -1 ? foreground : hslToHex(fgHsl.h, fgHsl.s, bestL);
 };
 
 // Find the best contrasting color from a palette

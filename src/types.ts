@@ -349,8 +349,6 @@ export interface InternalThemeColors {
   "border-info-base": string;
   "border-info-hover": string;
   "border-info-selected": string;
-  "border-strong-disabled": string;
-  "border-strong-focus": string;
   "border-color": string;
 
   // Icon
