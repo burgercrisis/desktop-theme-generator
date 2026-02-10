@@ -12,8 +12,8 @@ export interface SyncConfig {
 }
 
 export const defaultConfig: SyncConfig = {
-  // Default path: go up from desktop-theme-generator to opencode/packages/ui/src/styles
-  opencodeThemePath: '../../opencode/packages/ui/src/styles',
+  // Default path: write to local public folder
+  opencodeThemePath: 'public',
   customThemeFilename: 'custom-theme.css',
   debounceMs: 200,
   enabled: true

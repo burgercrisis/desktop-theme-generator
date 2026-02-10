@@ -1036,9 +1036,12 @@ const MatrixTokenRow = React.memo(({
 
       const harmonyRules = Object.values(HarmonyRule);
       
-      // Higher resolution search
+      // We want to penalize ANALOGOUS if it's not a significantly better fit
+      // because it's a "catch-all" that often wins by accident in low-weighting scenarios.
+      
       for (const hRule of harmonyRules) {
-        for (let sVal = 0; sVal <= 180; sVal += 2) {
+        // Step of 1 for high precision in spread matching
+        for (let sVal = 0; sVal <= 180; sVal += 1) {
           const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50);
           
           let ruleHueError = 0;
@@ -1052,17 +1055,31 @@ const MatrixTokenRow = React.memo(({
               const satDiff = Math.abs(match.hsl.s - target.hsl.s);
               const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
               
-              // Hue is most important for harmony, but sat/lum help break ties
-              ruleHueError += (hueDiff * 2) + (satDiff * 0.5) + (lumDiff * 0.5);
+              // CRITICAL WEIGHTING:
+              // Hue error is the primary identifier of a harmony rule.
+              // We use a non-linear penalty for hue differences to favor exact matches.
+              const hueWeight = hueDiff < 5 ? 1 : hueDiff < 15 ? 5 : 15;
+              
+              ruleHueError += (hueDiff * hueWeight) + (satDiff * 0.2) + (lumDiff * 0.2);
               matchCount++;
             }
           });
 
           const avgError = matchCount > 0 ? ruleHueError / matchCount : 999;
           
-          // Penalty for complex rules that don't provide much benefit over simple ones
-          const complexityPenalty = (hRule !== HarmonyRule.MONOCHROMATIC && hRule !== HarmonyRule.SHADES) ? 5 : 0;
-          const finalError = avgError + complexityPenalty;
+          // COMPLEXITY & BIAS PENALTIES:
+          // 1. Analogous is the most common "accidental" winner, so we give it a slight penalty
+          // to ensure other rules win if they are close.
+          let ruleBias = 0;
+          if (hRule === HarmonyRule.ANALOGOUS) ruleBias = 10;
+          if (hRule === HarmonyRule.MONOCHROMATIC || hRule === HarmonyRule.SHADES) ruleBias = 5;
+          
+          // 2. Favor specific rules like Complementary or Triadic if they match well
+          if (hRule === HarmonyRule.COMPLEMENTARY || hRule === HarmonyRule.TRIADIC || hRule === HarmonyRule.SQUARE) {
+            ruleBias = -2; // Slight bonus for distinct harmonies
+          }
+
+          const finalError = avgError + ruleBias;
 
           if (finalError < minTotalError) {
             minTotalError = finalError;
@@ -1116,6 +1133,9 @@ const MatrixTokenRow = React.memo(({
           const themeData = await response.json();
           console.log("🎨 Loaded custom-theme.json:", themeData);
           
+          // CRITICAL: We update multiple states. React batches these, 
+          // but we need to ensure handleAnalyzeSeeds sees the NEW seeds.
+          
           if (themeData.light?.seeds || themeData.dark?.seeds) {
             setSeedOverrides({
               light: themeData.light?.seeds || {},
@@ -1134,18 +1154,19 @@ const MatrixTokenRow = React.memo(({
             setThemeName(themeData.name);
           }
 
-          // Automatically trigger analysis once data is loaded to sync engine params
-          // We wait a tick to ensure state updates have processed
+          // Force analysis to run AFTER state updates are processed
+          // handleAnalyzeSeeds depends on seeds9 which depends on seedOverrides
           setTimeout(() => {
+            console.log("🔍 Triggering post-load analysis...");
             handleAnalyzeSeeds();
-          }, 100);
+          }, 300); // 300ms to be safe
         }
       } catch (err) {
         console.warn("⚠️ Could not load custom-theme.json:", err);
       }
     };
     
-    // Always check for custom-theme.json on mount to ensure synchronization
+    // Always check for custom-theme.json on mount
     loadCustomTheme();
   }, [handleAnalyzeSeeds]);
 
@@ -1384,6 +1405,23 @@ const MatrixTokenRow = React.memo(({
 
   return (
     <div className={`min-h-screen transition-colors ${activeMode === 'light' ? 'bg-gray-100' : ''}`} style={{ backgroundColor: activeMode === 'light' ? undefined : "#0d0d17" }}>
+      {/* Calculating Overlay */}
+      {isAnalyzing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className={`p-8 rounded-lg border shadow-2xl flex flex-col items-center gap-4 transition-colors ${activeMode === 'light' ? 'bg-white border-purple-200' : 'bg-[#1a1a2e] border-purple-500/30'}`}>
+            <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+            <div className="flex flex-col items-center">
+              <h2 className={`text-sm font-black uppercase tracking-[0.3em] ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+                ANALYZING_SEEDS
+              </h2>
+              <p className={`text-[10px] font-mono mt-1 animate-pulse ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-400/60'}`}>
+                REVERSE_ENGINEERING_PARAMETERS...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className={`px-6 py-2 border-b flex items-center justify-between sticky top-0 z-50 backdrop-blur-md transition-colors ${activeMode === 'light' ? 'bg-white/80 border-gray-200' : 'bg-[#1a1a2e]/80 border-[#2d2d4d]'}`}>
         <div className="flex items-center gap-4">
           <div className={`w-9 h-9 rounded flex items-center justify-center border transition-all shadow-[0_0_15px_rgba(168,85,247,0.15)] ${activeMode === 'light' ? 'bg-gray-100 border-purple-200' : 'bg-[#2d2d4d] border-purple-500/30'}`}>
@@ -1751,12 +1789,12 @@ const MatrixTokenRow = React.memo(({
                       </span>
                     </div>
                     <div className={`p-3 transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
-                      <div className="flex flex-col gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent">
+                      <div className="flex flex-col gap-2">
                         {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
                           const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
                           return (
                             <div key={seedName} className="flex items-center gap-2 group">
-                              <div className="flex items-center gap-1.5 w-20 shrink-0">
+                              <div className="flex items-center gap-1.5 w-24 shrink-0">
                                 <button
                                   onClick={() => handleSeedReset(seedName)}
                                   className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${
@@ -1774,16 +1812,16 @@ const MatrixTokenRow = React.memo(({
                                   {formatAgentLabel(seedName)}
                                 </span>
                               </div>
-                              <div className="flex gap-0.5 max-w-[400px] overflow-x-auto no-scrollbar">
+                              <div className="flex gap-1 flex-wrap">
                                 {variants.map((variant, vIdx) => {
                                   const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
                                   return (
                                     <div
                                       key={`${seedName}-${vIdx}`}
                                       onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-4 h-4 shrink-0 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
+                                      className={`w-5 h-5 shrink-0 rounded-sm border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
                                         isCurrentSeed 
-                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110 border-white/40` 
+                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/60` 
                                           : "opacity-80 hover:opacity-100 border-white/10"
                                       }`}
                                       style={{
@@ -1792,7 +1830,7 @@ const MatrixTokenRow = React.memo(({
                                       title={`MOUNT_SEED: ${variant.hex} (v${vIdx})`}
                                     >
                                       {variant.isBase && (
-                                        <div className="w-1 h-1 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
                                       )}
                                     </div>
                                   )
