@@ -337,7 +337,13 @@ const App: React.FC = () => {
                                fgKey.includes('modified') ||
                                fgKey.includes('hidden');
 
-        const autoBorder = !isExplicitText && (fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule'));
+        const autoBorder = !isExplicitText && (
+          fgKey.includes('border') || 
+          fgKey.includes('ring') || 
+          fgKey.includes('divider') || 
+          fgKey.includes('rule') || 
+          fgKey.includes('separator')
+        );
         
         // CRITICAL: Any property containing 'surface' or 'background' is Non-Text and Weak (Target 1.1:1)
         const isSurfaceOrBg = fgKey.toLowerCase().includes('surface') || fgKey.toLowerCase().includes('background');
@@ -388,8 +394,9 @@ const App: React.FC = () => {
             bgKey = `${cat.prefix}-${item}`
           }
 
-          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'read')
+          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
           addPair("LOG_02_SURFACES", `TEXT_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
+          addPair("LOG_02_SURFACES", `ICON_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "icon-base", `ICON_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, true, 'shell')
         })
       })
 
@@ -567,7 +574,7 @@ const App: React.FC = () => {
       // --- LOG_15_BREADCRUMBS ---
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
 
       // --- LOG_16_BORDERS_FUNCTIONAL ---

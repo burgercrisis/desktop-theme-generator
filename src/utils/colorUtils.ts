@@ -63,19 +63,16 @@ export const getThresholdLabel = (
   isStrong: boolean = false,
   category?: string
 ): string => {
-  // Special handling for LOG_12_SPLASH_LOADING
-  if (category === "LOG_12_SPLASH_LOADING") {
+  // Use 1.1/15° rule for all borders and weak non-text/surfaces
+  if (isBorder || (isNonText && isWeak) || category === "LOG_12_SPLASH_LOADING") {
     return "1.1/15°";
   }
 
-  if (isBorder) return "1.1+";
   if (isNonText) {
-    if (isStrong) return "4.5+";
-    if (isWeak) return "1.1-2.5";
-    return "3.0+";
+    if (isStrong) return "4.5/15°";
+    return "3.0/15°";
   }
   // Text targets
-  if (isStrong) return "4.5+"; // Matching getTargetContrast
   return "4.5+";
 };
 
@@ -95,8 +92,8 @@ export const getContrastScore = (
   
   let contrastPass = false;
   if (isNonText && isWeak && category !== "LOG_12_SPLASH_LOADING") {
-    // Weak non-text has a specific range, unless it's Splash Loading which is 1.1+
-    contrastPass = ratio >= 1.1 && ratio <= 2.5;
+    // Weak non-text has a minimum of 1.1. (Removed the upper bound 2.5 to allow H-DIFF logic)
+    contrastPass = ratio >= 1.1;
   } else {
     contrastPass = ratio >= target;
   }
@@ -106,6 +103,7 @@ export const getContrastScore = (
   const huePass = hueDiff >= 15;
 
   let pass = contrastPass;
+  // Borders, Non-Text items (Icons/Indicators), and Splash Loading allow for Hue Pass
   if (isNonText || isBorder || category === "LOG_12_SPLASH_LOADING") {
     // For non-text/borders or Splash category, pass if either contrast OR hue is sufficient
     pass = contrastPass || huePass;
