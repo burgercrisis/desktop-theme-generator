@@ -1,4 +1,19 @@
-import { getLuminance, hexToHsl, hslToHex } from "./colorUtils";
+import { hexToHsl, hslToHex, hexToRgb } from "./engine/converters";
+
+export { hexToHsl, hslToHex, hexToRgb };
+
+export const getLuminance = (hex: string): number => {
+  try {
+    const rgb = hexToRgb(hex);
+    const res = [rgb.r, rgb.g, rgb.b].map((v) => {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return res[0] * 0.2126 + res[1] * 0.7152 + res[2] * 0.0722;
+  } catch (e) {
+    return 0;
+  }
+};
 
 export const getContrastRatio = (c1: string, c2: string): number => {
   const l1 = getLuminance(c1);
@@ -42,11 +57,10 @@ export const getTargetContrast = (
   if (isBorder) return 1.1;
 
   if (isNonText) {
-    // Icons/UI components - WCAG 2.1 requires 3:1 for non-text contrast (AA).
-    // User requested 4.5 for icons/strong elements.
+    // Icons and Indicators that don't print text only require 1.1/15° (isStrong=false)
+    // Icons and Indicators that DO print text require 4.5/15° (isStrong=true)
     if (isStrong) return 4.5;
-    if (isWeak) return 1.1; // Restore to 1.1 for surfaces/weak elements to allow subtle separation
-    return 3.0; // Standard non-text requirement
+    return 1.1; 
   }
 
   // Text requirements: WCAG AA is 4.5:1, AAA is 7:1.
@@ -69,8 +83,10 @@ export const getThresholdLabel = (
   }
 
   if (isNonText) {
+    // Icons/Indicators that print text (isStrong=true) get 4.5/15°
+    // Pure icons (isStrong=false) get 1.1/15°
     if (isStrong) return "4.5/15°";
-    return "3.0/15°";
+    return "1.1/15°";
   }
   // Text targets
   return "4.5+";

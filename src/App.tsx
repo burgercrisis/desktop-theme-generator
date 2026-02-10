@@ -350,10 +350,20 @@ const App: React.FC = () => {
         const autoNonText = isSurfaceOrBg || (!isExplicitText && !autoBorder && (isNonText || fgKey.toLowerCase().includes('icon') || fgKey.toLowerCase().includes('indicator') || fgKey.toLowerCase().includes('checkbox') || fgKey.toLowerCase().includes('radio')));
         const autoWeak = isSurfaceOrBg || fgKey.toLowerCase().includes('weak') || fgKey.toLowerCase().includes('weaker') || (autoNonText && (fgKey.toLowerCase().includes('hover') || fgKey.toLowerCase().includes('selected') || fgKey.toLowerCase().includes('inactive')));
         
-        // Treat semantic and strong tokens as "strong" for higher contrast targets
-        // CRITICAL: Surfaces are NEVER strong
+        // isStrong determines if a Non-Text item should hit 4.5 (Symbolic Text) or 1.1 (Pure Icon)
         const autoStrong = !autoWeak && !isSurfaceOrBg && (
-          fgKey.toLowerCase().includes('strong')
+          fgKey.toLowerCase().includes('strong') ||
+          // Elements that we know behave like text or print characters in the app
+          fgKey.includes('terminal-cursor') ||
+          fgKey.includes('line-indicator-active') ||
+          fgKey.includes('tab-active') ||
+          fgKey.includes('breadcrumb-item-active') ||
+          fgKey.includes('nav-item-active') ||
+          fgKey.includes('button-icon') ||
+          fgKey.includes('input-icon') ||
+          fgKey.includes('status-icon') ||
+          fgKey.includes('badge-icon') ||
+          fgKey.includes('avatar-icon')
         );
         
         const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong, category)
@@ -860,7 +870,17 @@ const MatrixTokenRow = React.memo(({
     property.includes('info') ||
     property.includes('add') || 
     property.includes('delete') || 
-    property.includes('modified')
+    property.includes('modified') ||
+    property.includes('terminal-cursor') ||
+    property.includes('line-indicator-active') ||
+    property.includes('tab-active') ||
+    property.includes('breadcrumb-item-active') ||
+    property.includes('nav-item-active') ||
+    property.includes('button-icon') ||
+    property.includes('input-icon') ||
+    property.includes('status-icon') ||
+    property.includes('badge-icon') ||
+    property.includes('avatar-icon')
   );
 
   const contrast = getContrastScore(background, currentColor, isNonText, isBorder, isWeak, isStrong);
