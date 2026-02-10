@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, hexToHsl, getClosestPassingColor } from "./utils/colorUtils"
+import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor } from "./utils/colorUtils"
 import { getCachedContrastScore } from "./utils/cachedContrast"
 import {
   generateHarmony,
@@ -507,8 +507,13 @@ const App: React.FC = () => {
       type: 'shell' | 'read' | 'action' | 'diff'; 
       score: { ratio: number, hueDiff: number, level: string, pass: boolean } 
     }> = []
+    const seenPairs = new Set<string>()
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
+      const pairId = `${bgKey}:${fgKey}`
+      if (seenPairs.has(pairId)) return
+      seenPairs.add(pairId)
+
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
@@ -538,26 +543,30 @@ const App: React.FC = () => {
                                fgKey.includes('value') ||
                                fgKey.includes('namespace') ||
                                fgKey.includes('class') ||
-                               fgKey.includes('emph') ||
-                               fgKey.includes('strong') ||
+                               fgKey.includes('emph') || 
+                               (fgKey.includes('strong') && !fgKey.includes('surface')) ||
                                fgKey.includes('line-indicator') ||
                                fgKey.includes('separator');
 
         const autoBorder = !isExplicitText && (fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule'));
-        const autoNonText = !isExplicitText && !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
-        const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected') || fgKey.includes('inactive')));
+        
+        // CRITICAL: Any property containing 'surface' or 'background' is Non-Text and Weak (Target 1.1:1)
+        const isSurfaceOrBg = fgKey.toLowerCase().includes('surface') || fgKey.toLowerCase().includes('background');
+        const autoNonText = isSurfaceOrBg || (!isExplicitText && !autoBorder && (isNonText || fgKey.toLowerCase().includes('icon') || fgKey.toLowerCase().includes('indicator') || fgKey.toLowerCase().includes('checkbox') || fgKey.toLowerCase().includes('radio')));
+        const autoWeak = isSurfaceOrBg || fgKey.toLowerCase().includes('weak') || fgKey.toLowerCase().includes('weaker') || (autoNonText && (fgKey.toLowerCase().includes('hover') || fgKey.toLowerCase().includes('selected') || fgKey.toLowerCase().includes('inactive')));
         
         // Treat semantic and strong tokens as "strong" for higher contrast targets
-        const autoStrong = !autoWeak && (
-          fgKey.includes('strong') || 
-          fgKey.includes('brand') ||
-          fgKey.includes('success') || 
-          fgKey.includes('warning') || 
-          fgKey.includes('critical') || 
-          fgKey.includes('info') ||
-          fgKey.includes('add') ||
-          fgKey.includes('delete') ||
-          fgKey.includes('modified')
+        // CRITICAL: Surfaces are NEVER strong
+        const autoStrong = !autoWeak && !isSurfaceOrBg && (
+          fgKey.toLowerCase().includes('strong') || 
+          fgKey.toLowerCase().includes('brand') ||
+          fgKey.toLowerCase().includes('success') || 
+          fgKey.toLowerCase().includes('warning') || 
+          fgKey.toLowerCase().includes('critical') || 
+          fgKey.toLowerCase().includes('info') ||
+          fgKey.toLowerCase().includes('add') || 
+          fgKey.toLowerCase().includes('delete') || 
+          fgKey.toLowerCase().includes('modified')
         );
         
         const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
@@ -567,8 +576,8 @@ const App: React.FC = () => {
 
       // --- LOG_01_TYPOGRAPHY ---
       // We exclude surfaces here to avoid duplicates with LOG_02_SURFACES
-      const backgrounds = ["background-base", "background-weak", "background-strong", "background-stronger"]
-      const coreTexts = ["text-base", "text-weak", "text-weaker", "text-strong", "text-stronger"]
+      const backgrounds = ["background-base", "background-strong"]
+      const coreTexts = ["text-base", "text-weak", "text-strong"]
       
       backgrounds.forEach(bg => {
         coreTexts.forEach(fg => {
@@ -578,13 +587,10 @@ const App: React.FC = () => {
 
       // --- LOG_02_SURFACES ---
       const surfaceCategories = [
-        { name: "LOG_02_SURFACES", prefix: "surface-base", items: ["base", "hover", "active"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-inset", items: ["base", "base-hover", "base-active", "strong", "strong-hover"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-raised", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "stronger", "stronger-hover", "stronger-non-alpha"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-float", items: ["base", "base-hover", "base-active", "strong", "strong-hover", "strong-active"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-weak", items: ["base"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-weaker", items: ["base"] },
-        { name: "LOG_02_SURFACES", prefix: "surface-strong", items: ["base"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-base", items: ["base", "hover"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-inset", items: ["base", "strong"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-raised", items: ["base", "strong", "stronger-non-alpha"] },
+        { name: "LOG_02_SURFACES", prefix: "surface-float", items: ["base", "strong"] },
       ]
 
       surfaceCategories.forEach(cat => {
@@ -601,12 +607,8 @@ const App: React.FC = () => {
             bgKey = `${cat.prefix}-${item}`
           }
 
-          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
-          
-          // Add weak text on surfaces too
-          if (item === "base") {
-            addPair("LOG_02_SURFACES", `${formatAgentLabel(bgKey.replace("surface-", ""))}_WEAK_TEXT`, bgKey, "text-weak", `TEXT_WEAK_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
-          }
+          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'read')
+          addPair("LOG_02_SURFACES", `TEXT_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
         })
       })
 
@@ -800,27 +802,20 @@ const App: React.FC = () => {
         { key: "markdown-code", label: "CODE_INLINE" },
         { key: "markdown-block-quote", label: "BLOCKQUOTE" },
         { key: "markdown-emph", label: "EMPHASIS" },
-        { key: "markdown-strong", label: "STRONG" }
+        { key: "markdown-strong", label: "STRONG" },
+        { key: "markdown-list-item", label: "LIST_ITEM" },
+        { key: "markdown-list-enumeration", label: "LIST_ENUM" },
+        { key: "markdown-image", label: "IMAGE" },
+        { key: "markdown-image-text", label: "IMAGE_TEXT" }
       ]
       markdownElements.forEach(el => {
         addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel(el.label), "background-base", el.key, `MARKDOWN ${el.label} ON BACKGROUND`, false, 'read')
       })
       addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("CODE_BLOCK_BG"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
       addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("HR_LINE"), "background-base", "markdown-horizontal-rule", "MARKDOWN HORIZONTAL RULE", true, 'read')
+      
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
-
-      // --- LOG_13_MARKDOWN ---
-      const markdownTokens = [
-        "markdown-text", "markdown-heading", "markdown-link", "markdown-link-text", 
-        "markdown-code", "markdown-block-quote", "markdown-emph", "markdown-strong",
-        "markdown-horizontal-rule", "markdown-list-item", "markdown-list-enumeration",
-        "markdown-image", "markdown-image-text"
-      ]
-      markdownTokens.forEach(token => {
-        addPair("LOG_13_MARKDOWN", formatAgentLabel(token.replace("markdown-", "")), "background-base", token, `MARKDOWN ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, false, 'read')
-      })
-      addPair("LOG_13_MARKDOWN", formatAgentLabel("CODE_BLOCK"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
 
       // --- LOG_14_TREE_UI ---
       addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_SELECTED_BG"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
@@ -1071,23 +1066,29 @@ const MatrixTokenRow = React.memo(({
                          property.includes('value') ||
                          property.includes('namespace') ||
                          property.includes('class') ||
-                         property.includes('emph') ||
-                         property.includes('strong') ||
+                         property.includes('emph') || 
+                         (property.includes('strong') && !property.includes('surface')) ||
                          property.includes('line-indicator') ||
                          property.includes('separator');
 
   const isBorder = !isExplicitText && (property.includes('border') || property.includes('rule') || property.includes('separator'));
-  const isNonText = !isExplicitText && (property.includes('icon') || isBorder || property.includes('indicator') || property.includes('surface') || property.includes('background'));
-  const isWeak = property.includes('weak') || property.includes('weaker') || (isNonText && (property.includes('hover') || property.includes('selected') || property.includes('inactive')));
-  const isStrong = !isWeak && (
+  
+  // CRITICAL: Any property containing 'surface' or 'background' is Non-Text and Weak (Target 1.1:1)
+  const isSurfaceOrBg = property.includes('surface') || property.includes('background');
+  const isNonText = isSurfaceOrBg || (!isExplicitText && (property.includes('icon') || isBorder || property.includes('indicator')));
+  const isWeak = isSurfaceOrBg || property.includes('weak') || property.includes('weaker') || (isNonText && (property.includes('hover') || property.includes('selected') || property.includes('inactive')));
+  
+  // Apply "strong" logic to Matrix rows too
+  // CRITICAL: Surfaces are NEVER strong
+  const isStrong = !isWeak && !isSurfaceOrBg && (
     property.includes('strong') || 
     property.includes('brand') ||
     property.includes('success') || 
     property.includes('warning') || 
     property.includes('critical') || 
     property.includes('info') ||
-    property.includes('add') ||
-    property.includes('delete') ||
+    property.includes('add') || 
+    property.includes('delete') || 
     property.includes('modified')
   );
 
@@ -1714,9 +1715,8 @@ const MatrixTokenRow = React.memo(({
                                         <div className="flex items-center gap-1.5 overflow-hidden">
                                           <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
                                         </div>
-                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                           {isFailing && (
-                                            <>
+                                            <div className="grid grid-cols-2 gap-1 shrink-0">
                                               <button
                                                 onClick={() => {
                                                   const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
@@ -1727,10 +1727,10 @@ const MatrixTokenRow = React.memo(({
                                                     ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
                                                     : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
                                                 }`}
-                                                title={`FIX_BG: ${pair.bgKey}`}
+                                                title={`FIX_BG_LUM: ${pair.bgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
-                                                FIX_BG
+                                                L_BG
                                               </button>
                                               <button
                                                 onClick={() => {
@@ -1742,15 +1742,48 @@ const MatrixTokenRow = React.memo(({
                                                     ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
                                                     : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
                                                 }`}
-                                                title={`FIX_FG: ${pair.fgKey}`}
+                                                title={`FIX_FG_LUM: ${pair.fgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
-                                                FIX_FG
+                                                L_FG
                                               </button>
-                                            </>
+                                              
+                                              {/* Hue Fix Buttons */}
+                                              <button
+                                                onClick={() => {
+                                                  const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  handleManualOverride(pair.bgKey, fixed);
+                                                }}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                  activeMode === 'light'
+                                                    ? 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200'
+                                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/40'
+                                                }`}
+                                                title={`FIX_BG_HUE: ${pair.bgKey}`}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
+                                                H_BG
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  handleManualOverride(pair.fgKey, fixed);
+                                                }}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                  activeMode === 'light'
+                                                    ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'
+                                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40'
+                                                }`}
+                                                title={`FIX_FG_HUE: ${pair.fgKey}`}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
+                                                H_FG
+                                              </button>
+                                            </div>
                                           )}
-                                          <button 
-                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
+                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                            <button 
+                                              className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
                                             style={{ backgroundColor: pair.bg }} 
                                             title={`BG: ${pair.bgKey}`}
                                             onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}

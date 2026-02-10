@@ -189,7 +189,7 @@ export const getTargetContrast = (
     // Icons/UI components - WCAG 2.1 requires 3:1 for non-text contrast (AA).
     // User requested 4.5 for icons/strong elements.
     if (isStrong) return 4.5;
-    if (isWeak) return 1.5; // Bumped from 1.1 for better visibility
+    if (isWeak) return 1.1; // Restore to 1.1 for surfaces/weak elements to allow subtle separation
     return 3.0; // Standard non-text requirement
   }
 
@@ -277,6 +277,42 @@ export const getClosestPassingColor = (
   }
 
   return bestL === -1 ? foreground : hslToHex(fgHsl.h, fgHsl.s, bestL);
+};
+
+export const getClosestHuePassingColor = (
+  background: string,
+  foreground: string,
+  isNonText: boolean = false,
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false
+): string => {
+  const currentScore = getContrastScore(background, foreground, isNonText, isBorder, isWeak, isStrong);
+
+  if (currentScore.pass) return foreground;
+
+  const fgHsl = hexToHsl(foreground);
+  let bestH = -1;
+  let minDelta = Infinity;
+
+  // Search entire hue range for closest color that satisfies the 15° H_DIFF rule
+  // while maintaining the same lightness and saturation.
+  for (let h = 0; h < 360; h++) {
+    const candidateHex = hslToHex(h, fgHsl.s, fgHsl.l);
+    const score = getContrastScore(background, candidateHex, isNonText, isBorder, isWeak, isStrong);
+
+    if (score.pass) {
+      let delta = Math.abs(h - fgHsl.h);
+      if (delta > 180) delta = 360 - delta;
+      
+      if (delta < minDelta) {
+        minDelta = delta;
+        bestH = h;
+      }
+    }
+  }
+
+  return bestH === -1 ? foreground : hslToHex(bestH, fgHsl.s, fgHsl.l);
 };
 
 // Find the best contrasting color from a palette
