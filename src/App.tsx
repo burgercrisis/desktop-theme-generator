@@ -347,18 +347,10 @@ const App: React.FC = () => {
         // Treat semantic and strong tokens as "strong" for higher contrast targets
         // CRITICAL: Surfaces are NEVER strong
         const autoStrong = !autoWeak && !isSurfaceOrBg && (
-          fgKey.toLowerCase().includes('strong') || 
-          fgKey.toLowerCase().includes('brand') ||
-          fgKey.toLowerCase().includes('success') || 
-          fgKey.toLowerCase().includes('warning') || 
-          fgKey.toLowerCase().includes('critical') || 
-          fgKey.toLowerCase().includes('info') ||
-          fgKey.toLowerCase().includes('add') || 
-          fgKey.toLowerCase().includes('delete') || 
-          fgKey.toLowerCase().includes('modified')
+          fgKey.toLowerCase().includes('strong')
         );
         
-        const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
+        const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong, category)
         pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, isWeak: autoWeak, isStrong: autoStrong, type, score })
       }
     }
@@ -551,6 +543,9 @@ const App: React.FC = () => {
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE"), "background-base", "icon-base", "OPENCODE LOGO BASE ON BACKGROUND", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG"), "background-base", "icon-strong-base", "OPENCODE LOGO STRONG ON BACKGROUND", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_STRONG"), "icon-base", "icon-strong-base", "LOGO BASE VS STRONG", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_WEAK"), "icon-base", "icon-weak-base", "LOGO BASE VS WEAK", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG_WEAK"), "icon-strong-base", "icon-weak-base", "LOGO STRONG VS WEAK", true, 'shell')
 
       // --- LOG_13_TREE_UI ---
       addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
@@ -1657,7 +1652,7 @@ const MatrixTokenRow = React.memo(({
                               {scoredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = pair.score
                                 const isFailing = !score.pass
-                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                 
                                 // Map type to icon
                                 let typeIcon = "📄" // read

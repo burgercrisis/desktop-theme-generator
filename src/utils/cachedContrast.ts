@@ -29,17 +29,18 @@ export function getCachedContrastScore(
   isNonText: boolean,
   isBorder: boolean,
   isWeak: boolean,
-  isStrong: boolean
+  isStrong: boolean,
+  category?: string
 ): { ratio: number; hueDiff: number; level: string; pass: boolean } {
   // Cache key includes the actual hex values, not just the keys
-  const cacheKey = `${bgKey}:${fgKey}:${bg}:${fg}:${isNonText}:${isBorder}:${isWeak}:${isStrong}`
+  const cacheKey = `${bgKey}:${fgKey}:${bg}:${fg}:${isNonText}:${isBorder}:${isWeak}:${isStrong}:${category || ''}`
   
   const cached = contrastScoreCache.get(cacheKey)
   if (cached) {
     return cached
   }
   
-  const score = originalGetContrastScore(bg, fg, isNonText, isBorder, isWeak, isStrong)
+  const score = originalGetContrastScore(bg, fg, isNonText, isBorder, isWeak, isStrong, category)
   contrastScoreCache.set(cacheKey, score)
   return score
 }
