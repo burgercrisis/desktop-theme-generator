@@ -184,9 +184,9 @@ export const getTargetContrast = (
 ): number => {
   if (isBorder) return 1.1;
   if (isNonText) {
-    if (isStrong) return 3.0;
+    if (isStrong) return 4.5;
     if (isWeak) return 1.1; // Lower bound for weak
-    return 2.0;
+    return 3.0;
   }
   return 4.5;
 };
