@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useDeferredValue } from "react"
+import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor } from "./utils/colorUtils"
@@ -36,6 +36,7 @@ import {
   OutputSpace,
   ColorStop
 } from "./types"
+import { opencodePresets, getPresetOverrides } from "./utils/themePresets"
 import "./App.css" // Standard App styles
 
 const getInitialState = (key: string, defaultValue: any) => {
@@ -74,7 +75,7 @@ const App: React.FC = () => {
   })
 
   // Synchronize body class for theme generator's own UI
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeMode === 'light') {
       document.body.classList.add('light-mode')
     } else {
@@ -86,7 +87,7 @@ const App: React.FC = () => {
   const toggleMode = useCallback(() => {
     setActiveMode(prev => prev === "light" ? "dark" : "light")
   }, [])
-  const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>(() => getInitialState("variantStrategy", VariantStrategy.TINTS_SHADES))
+  const [variantStrategy, setVariantStrategy] = useState<VariantStrategy>(() => getInitialState("variantStrategy", VariantStrategy.GLACIAL))
   const [colorSpace, setColorSpace] = useState<ColorSpace>(() => getInitialState("colorSpace", "HSL"))
   const [outputSpace, setOutputSpace] = useState<OutputSpace>(() => getInitialState("outputSpace", "sRGB"))
   const [useOpencodeMode, setUseOpencodeMode] = useState(() => getInitialState("useOpencodeMode", true))
@@ -95,226 +96,12 @@ const App: React.FC = () => {
 
   // Matrix Router state
   const [matrixMode, setMatrixMode] = useState(() => getInitialState("matrixMode", false))
-  const [manualOverrides, setManualOverrides] = useState<Record<string, Record<string, string>>>(() => {
-    const saved = getInitialState("manualOverrides", { light: {}, dark: {} })
-    // If dark overrides are missing or suspicious, restore Ipomoea defaults
-    const darkOverrides = saved.dark || {}
-    if (Object.keys(darkOverrides).length < 50) {
-      console.log("🛠️ Restoring Ipomoea Dark Overrides...")
-      const ipomoeaDark = {
-        "background-base": "#0d0d17",
-        "background-weak": "#161625",
-        "background-strong": "#1a1a2e",
-        "background-stronger": "#2d2d4d",
-        "surface-base": "#1a1a2e",
-        "surface-base-hover": "#252541",
-        "surface-base-active": "#2d2d4d",
-        "surface-base-interactive-active": "#3d3d6d",
-        "surface-weak": "#161625",
-        "surface-weaker": "#0d0d17",
-        "surface-strong": "#2d2d4d",
-        "surface-inset-base": "#0d0d17",
-        "surface-inset-base-hover": "#161625",
-        "surface-inset-base-active": "#1a1a2e",
-        "surface-inset-strong": "#161625",
-        "surface-inset-strong-hover": "#1a1a2e",
-        "surface-raised-base": "#252541",
-        "surface-raised-base-hover": "#2d2d4d",
-        "surface-raised-base-active": "#3d3d6d",
-        "surface-raised-strong": "#2d2d4d",
-        "surface-raised-strong-hover": "#3d3d6d",
-        "surface-raised-stronger": "#3d3d6d",
-        "surface-raised-stronger-hover": "#4d4d8d",
-        "surface-raised-stronger-non-alpha": "#1a1a2e",
-        "surface-float-base": "#2d2d4d",
-        "surface-float-base-hover": "#3d3d6d",
-        "surface-float-base-active": "#4d4d8d",
-        "surface-float-strong": "#3d3d6d",
-        "surface-float-strong-hover": "#4d4d8d",
-        "surface-float-strong-active": "#5d5dad",
-        "surface-brand-base": "#8b5cf6",
-        "surface-brand-hover": "#a78bfa",
-        "surface-brand-active": "#7c3aed",
-        "surface-interactive-base": "#a78bfa",
-        "surface-interactive-hover": "#c4b5fd",
-        "surface-interactive-active": "#8b5cf6",
-        "surface-interactive-weak": "#2d2d4d",
-        "surface-interactive-weak-hover": "#3d3d6d",
-        "surface-success-base": "#10b981",
-        "surface-success-hover": "#34d399",
-        "surface-success-active": "#059669",
-        "surface-success-weak": "#064e3b",
-        "surface-success-strong": "#10b981",
-        "surface-warning-base": "#f59e0b",
-        "surface-warning-hover": "#fbbf24",
-        "surface-warning-active": "#d97706",
-        "surface-warning-weak": "#78350f",
-        "surface-warning-strong": "#f59e0b",
-        "surface-critical-base": "#ef4444",
-        "surface-critical-hover": "#f87171",
-        "surface-critical-active": "#dc2626",
-        "surface-critical-weak": "#7f1d1d",
-        "surface-critical-strong": "#ef4444",
-        "surface-info-base": "#3b82f6",
-        "surface-info-hover": "#60a5fa",
-        "surface-info-active": "#2563eb",
-        "surface-info-weak": "#1e3a8a",
-        "surface-info-strong": "#3b82f6",
-        "surface-diff-unchanged-base": "transparent",
-        "surface-diff-skip-base": "#1a1a2e",
-        "surface-diff-add-base": "#064e3b",
-        "surface-diff-add-weak": "#065f46",
-        "surface-diff-add-weaker": "#064e3b",
-        "surface-diff-add-strong": "#10b981",
-        "surface-diff-add-stronger": "#34d399",
-        "surface-diff-delete-base": "#7f1d1d",
-        "surface-diff-delete-weak": "#991b1b",
-        "surface-diff-delete-weaker": "#7f1d1d",
-        "surface-diff-delete-strong": "#ef4444",
-        "surface-diff-delete-stronger": "#f87171",
-        "surface-diff-hidden-base": "#1a1a2e",
-        "surface-diff-hidden-weak": "#161625",
-        "surface-diff-hidden-weaker": "#0d0d17",
-        "surface-diff-hidden-strong": "#2d2d4d",
-        "surface-diff-hidden-stronger": "#3d3d6d",
-        "icon-weak-base": "#6b7280",
-        "icon-weak-hover": "#9ca3af",
-        "icon-weak-active": "#d1d5db",
-        "icon-weak-selected": "#8b5cf6",
-        "icon-weak-disabled": "#374151",
-        "icon-weak-focus": "#9ca3af",
-        "icon-strong-base": "#e5e7eb",
-        "icon-strong-hover": "#f3f4f6",
-        "icon-strong-active": "#ffffff",
-        "icon-strong-selected": "#8b5cf6",
-        "icon-strong-disabled": "#4b5563",
-        "icon-strong-focus": "#f3f4f6",
-        "icon-brand-base": "#8b5cf6",
-        "icon-interactive-base": "#a78bfa",
-        "icon-success-base": "#10b981",
-        "icon-warning-base": "#f59e0b",
-        "icon-critical-base": "#ef4444",
-        "icon-info-base": "#3b82f6",
-        "icon-diff-add-base": "#10b981",
-        "icon-diff-add-hover": "#34d399",
-        "icon-diff-add-active": "#059669",
-        "icon-diff-delete-base": "#ef4444",
-        "icon-diff-delete-hover": "#f87171",
-        "icon-diff-modified-base": "#f59e0b",
-        "icon-on-brand-base": "#ffffff",
-        "icon-on-brand-hover": "#ffffff",
-        "icon-on-brand-selected": "#ffffff",
-        "icon-on-interactive-base": "#000000",
-        "icon-on-success-base": "#ffffff",
-        "icon-on-success-hover": "#ffffff",
-        "icon-on-success-selected": "#ffffff",
-        "icon-on-warning-base": "#000000",
-        "icon-on-warning-hover": "#000000",
-        "icon-on-warning-selected": "#000000",
-        "icon-on-critical-base": "#ffffff",
-        "icon-on-critical-hover": "#ffffff",
-        "icon-on-critical-selected": "#ffffff",
-        "icon-on-info-base": "#ffffff",
-        "icon-on-info-hover": "#ffffff",
-        "icon-on-info-selected": "#ffffff",
-        "icon-agent-plan-base": "#8b5cf6",
-        "icon-agent-docs-base": "#3b82f6",
-        "icon-agent-ask-base": "#10b981",
-        "icon-agent-build-base": "#f59e0b",
-        "terminal-ansi-black": "#000000",
-        "terminal-ansi-red": "#ef4444",
-        "terminal-ansi-green": "#10b981",
-        "terminal-ansi-yellow": "#f59e0b",
-        "terminal-ansi-blue": "#3b82f6",
-        "terminal-ansi-magenta": "#8b5cf6",
-        "terminal-ansi-cyan": "#06b6d4",
-        "terminal-ansi-white": "#e5e7eb",
-        "terminal-ansi-bright-black": "#4b5563",
-        "terminal-ansi-bright-red": "#f87171",
-        "terminal-ansi-bright-green": "#34d399",
-        "terminal-ansi-bright-yellow": "#fbbf24",
-        "terminal-ansi-bright-blue": "#60a5fa",
-        "terminal-ansi-bright-magenta": "#a78bfa",
-        "terminal-ansi-bright-cyan": "#22d3ee",
-        "terminal-ansi-bright-white": "#ffffff",
-        "syntax-comment": "#6b7280",
-        "syntax-keyword": "#8b5cf6",
-        "syntax-function": "#3b82f6",
-        "syntax-variable": "#e5e7eb",
-        "syntax-string": "#10b981",
-        "syntax-number": "#f59e0b",
-        "syntax-type": "#06b6d4",
-        "syntax-operator": "#9ca3af",
-        "syntax-punctuation": "#6b7280",
-        "syntax-object": "#a78bfa",
-        "syntax-regexp": "#ef4444",
-        "syntax-primitive": "#f59e0b",
-        "syntax-property": "#60a5fa",
-        "syntax-constant": "#f59e0b",
-        "syntax-tag": "#8b5cf6",
-        "syntax-attribute": "#a78bfa",
-        "syntax-value": "#10b981",
-        "syntax-namespace": "#3b82f6",
-        "syntax-class": "#06b6d4",
-        "syntax-success": "#10b981",
-        "syntax-warning": "#f59e0b",
-        "syntax-critical": "#ef4444",
-        "syntax-info": "#3b82f6",
-        "syntax-diff-add": "#10b981",
-        "syntax-diff-delete": "#ef4444",
-        "markdown-text": "#e5e7eb",
-        "markdown-heading": "#ffffff",
-        "markdown-link": "#3b82f6",
-        "markdown-link-text": "#60a5fa",
-        "markdown-code": "#a78bfa",
-        "markdown-block-quote": "#6b7280",
-        "markdown-emph": "#e5e7eb",
-        "markdown-strong": "#ffffff",
-        "markdown-horizontal-rule": "#2d2d4d",
-        "markdown-list-item": "#e5e7eb",
-        "markdown-list-enumeration": "#e5e7eb",
-        "markdown-image": "#3b82f6",
-        "markdown-image-text": "#60a5fa",
-        "markdown-code-block": "#161625",
-        "code-background": "#0d0d17",
-        "code-foreground": "#e5e7eb",
-        "line-indicator": "#2d2d4d",
-        "line-indicator-active": "#8b5cf6",
-        "line-indicator-hover": "#3d3d6d",
-        "tab-active": "#1a1a2e",
-        "tab-inactive": "#0d0d17",
-        "tab-hover": "#161625",
-        "avatar-background": "#2d2d4d",
-        "avatar-foreground": "#e5e7eb",
-        "avatar-background-pink": "#db2777",
-        "avatar-background-mint": "#059669",
-        "avatar-background-orange": "#d97706",
-        "avatar-background-purple": "#7c3aed",
-        "avatar-background-cyan": "#0891b2",
-        "avatar-background-lime": "#65a30d",
-        "avatar-text-pink": "#ffffff",
-        "avatar-text-mint": "#ffffff",
-        "avatar-text-orange": "#ffffff",
-        "avatar-text-purple": "#ffffff",
-        "avatar-text-cyan": "#ffffff",
-        "avatar-text-lime": "#ffffff",
-        "scrollbar-thumb": "#2d2d4d",
-        "scrollbar-track": "#0d0d17",
-        "focus-ring": "#8b5cf6",
-        "shadow": "rgba(0,0,0,0.5)",
-        "overlay": "rgba(0,0,0,0.4)",
-        "selection-background": "rgba(139,92,246,0.3)",
-        "selection-foreground": "#ffffff",
-        "selection-inactive-background": "rgba(139,92,246,0.1)"
-      }
-      return { ...saved, dark: ipomoeaDark }
-    }
-    return saved
-  })
+  const [manualOverrides, setManualOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("manualOverrides", { light: {}, dark: {} }))
   const [seedOverrides, setSeedOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("seedOverrides", { light: {}, dark: {} }))
   const [activePreset, setActivePreset] = useState<string | null>(null)
   const [writeStatus, setWriteStatus] = useState<"idle" | "writing" | "success" | "error">("idle")
   const [writeError, setWriteError] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [quickPicker, setQuickPicker] = useState<{ x: number, y: number, key: string, label: string } | null>(null)
 
   // DEFERRED INPUTS: Use React 18 Deferred Value to keep sliders/wheel snappy
@@ -473,12 +260,7 @@ const App: React.FC = () => {
     const currentOverrides = deferredManualOverrides[activeMode] || {}
     
     // Apply manual overrides
-    const hasOverrides = Object.keys(currentOverrides).length > 0
-    if (hasOverrides) {
-      return { ...baseColors, ...currentOverrides }
-    }
-    
-    return baseColors
+    return { ...baseColors, ...currentOverrides }
   }, [activeMode, lightThemeColors, darkThemeColors, deferredManualOverrides])
 
   // Helper for formatting UI labels to 'AGENT LOG' style
@@ -510,7 +292,7 @@ const App: React.FC = () => {
     const seenPairs = new Set<string>()
     
     const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
-      const pairId = `${bgKey}:${fgKey}`
+      const pairId = `${category}:${bgKey}:${fgKey}`
       if (seenPairs.has(pairId)) return
       seenPairs.add(pairId)
 
@@ -784,6 +566,7 @@ const App: React.FC = () => {
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", false, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
 
       // --- LOG_16_BORDERS_FUNCTIONAL ---
       const functionalBorders = ["interactive", "success", "warning", "critical", "info"]
@@ -816,34 +599,6 @@ const App: React.FC = () => {
       
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
       addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
-
-      // --- LOG_14_TREE_UI ---
-      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_SELECTED_BG"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
-      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED TEXT CONTRAST", false, 'shell')
-      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_HOVER_BG"), "background-base", "tree-background-hover", "TREE HOVER BG CONTRAST", true, 'shell')
-      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER TEXT CONTRAST", false, 'shell')
-      addPair("LOG_14_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE ICON SELECTED CONTRAST", true, 'shell')
-
-      // --- LOG_15_BREADCRUMBS ---
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "breadcrumb-background", "breadcrumb-foreground", "BREADCRUMB TEXT CONTRAST", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "breadcrumb-background", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT CONTRAST", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "breadcrumb-background", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", false, 'shell')
-
-      // --- LOG_16_TABS_EXTENDED ---
-      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "TAB ACTIVE BG CONTRAST", true, 'shell')
-      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_TEXT"), "tab-active-background", "tab-active-foreground", "TAB ACTIVE TEXT CONTRAST", false, 'shell')
-      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "tab-active-background", "tab-active-border", "TAB ACTIVE BORDER CONTRAST", true, 'shell')
-      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "background-base", "tab-inactive-background", "TAB INACTIVE BG CONTRAST", true, 'shell')
-      addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "TAB INACTIVE TEXT CONTRAST", false, 'shell')
-
-      // --- LOG_17_BORDER_FUNCTIONAL ---
-      const functionalBordersBasic = ["success", "warning", "critical", "info"]
-      functionalBordersBasic.forEach(type => {
-        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER BASE`, true, 'shell')
-        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER`, true, 'shell')
-        addPair("LOG_17_BORDER_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECTED`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED`, true, 'shell')
-      })
 
       // --- LOG_18_EDITOR_ADDITIONAL ---
       addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
@@ -956,17 +711,17 @@ const App: React.FC = () => {
       addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true, 'diff')
       addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true, 'diff')
 
-       // --- LOG_26_AVATAR_EXPANDED ---
+       // --- LOG_31_AVATAR_EXPANDED ---
        const extraAvatars = ["blue", "green", "yellow", "red", "gray"]
        extraAvatars.forEach(color => {
-         addPair("LOG_26_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
+         addPair("LOG_31_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
        })
 
-       // --- LOG_27_MISC_BORDERS_ICONS ---
-       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true, 'shell')
-       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true, 'shell')
-       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true, 'shell')
-       addPair("LOG_27_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true, 'shell')
+       // --- LOG_32_MISC_BORDERS_ICONS ---
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true, 'shell')
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true, 'shell')
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true, 'shell')
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true, 'shell')
 
     return pairs
   }, [themeColors, matrixMode, formatAgentLabel])
@@ -1226,6 +981,173 @@ const MatrixTokenRow = React.memo(({
     setManualOverrides({ light: {}, dark: {} })
     setSeedOverrides({ light: {}, dark: {} })
   }, [])
+
+  // Reverse-engineer parameters from current seed values
+  const handleAnalyzeSeeds = useCallback(async () => {
+    const currentSeeds = seeds9;
+    
+    setIsAnalyzing(true);
+    
+    // Allow UI to render the loading state
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    try {
+      // 1. Analyze BRIGHTNESS (Average lightness of core seeds)
+      const coreSeeds = ["primary", "neutral"];
+      let totalL = 0;
+      let countL = 0;
+      coreSeeds.forEach(name => {
+        const s = currentSeeds.find(s => s.name === name);
+        if (s) {
+          totalL += s.hsl.l;
+          countL++;
+        }
+      });
+      const avgL = countL > 0 ? totalL / countL : 50;
+      if (activeMode === "light") {
+        setLightBrightness(Math.round(avgL));
+      } else {
+        setDarkBrightness(Math.round(avgL));
+      }
+
+      // 2. Analyze SATURATION
+      let totalS = 0;
+      currentSeeds.forEach(s => totalS += s.hsl.s);
+      const avgS = totalS / currentSeeds.length;
+      setSaturation(Math.round(avgS));
+
+      // 3. Analyze CONTRAST (Lightness spread)
+      const baseSeed = currentSeeds.find(s => s.name === "seed-base");
+      const strongSeed = currentSeeds.find(s => s.name === "seed-strong");
+      if (baseSeed && strongSeed) {
+        const lDiff = Math.abs(baseSeed.hsl.l - strongSeed.hsl.l);
+        const guessedContrast = Math.min(100, Math.max(0, lDiff * 2.5));
+        if (activeMode === "light") setLightContrast(Math.round(guessedContrast));
+        else setDarkContrast(Math.round(guessedContrast));
+      }
+
+      // 4. Analyze HARMONY and SPREAD
+      const baseHue = currentSeeds.find(s => s.name === "primary")?.hsl.h || 0;
+      setBaseColor(prev => ({ ...prev, h: baseHue }));
+
+      let bestHarmony = harmony;
+      let bestSpread = spread;
+      let minTotalError = Infinity;
+
+      const harmonyRules = Object.values(HarmonyRule);
+      
+      // Higher resolution search
+      for (const hRule of harmonyRules) {
+        for (let sVal = 0; sVal <= 180; sVal += 2) {
+          const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50);
+          
+          let ruleHueError = 0;
+          let matchCount = 0;
+
+          // Compare all seeds that exist in both sets
+          currentSeeds.forEach(target => {
+            const match = testSeeds.find(ts => ts.name === target.name);
+            if (match) {
+              const hueDiff = Math.min(Math.abs(match.hsl.h - target.hsl.h), 360 - Math.abs(match.hsl.h - target.hsl.h));
+              const satDiff = Math.abs(match.hsl.s - target.hsl.s);
+              const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
+              
+              // Hue is most important for harmony, but sat/lum help break ties
+              ruleHueError += (hueDiff * 2) + (satDiff * 0.5) + (lumDiff * 0.5);
+              matchCount++;
+            }
+          });
+
+          const avgError = matchCount > 0 ? ruleHueError / matchCount : 999;
+          
+          // Penalty for complex rules that don't provide much benefit over simple ones
+          const complexityPenalty = (hRule !== HarmonyRule.MONOCHROMATIC && hRule !== HarmonyRule.SHADES) ? 5 : 0;
+          const finalError = avgError + complexityPenalty;
+
+          if (finalError < minTotalError) {
+            minTotalError = finalError;
+            bestHarmony = hRule;
+            bestSpread = sVal;
+          }
+        }
+      }
+
+      setHarmony(bestHarmony);
+      setSpread(bestSpread);
+      setVariantCount(12);
+
+      // 5. Guess STRATEGY_MAP
+      // Actually try to match the variants for the primary seed
+      let finalStrategy = variantStrategy;
+      const primarySeed = currentSeeds.find(s => s.name === "primary");
+      if (primarySeed) {
+        const strategies = Object.values(VariantStrategy);
+        let minVarError = Infinity;
+
+        strategies.forEach(strat => {
+          const testVars = generateVariants(primarySeed.hsl, 12, (activeMode === "light" ? lightContrast : darkContrast), strat, colorSpace, outputSpace, 50);
+          const currentVars = activeVariantsMap["primary"] || [];
+          
+          let varError = 0;
+          for (let i = 0; i < Math.min(testVars.length, currentVars.length); i++) {
+            varError += Math.abs(testVars[i].hsl.l - currentVars[i].hsl.l);
+          }
+          
+          if (varError < minVarError) {
+            minVarError = varError;
+            finalStrategy = strat;
+          }
+        });
+        setVariantStrategy(finalStrategy);
+      }
+      
+      console.log(`[Analysis] Result: Harmony=${bestHarmony}, Spread=${bestSpread}, Strategy=${finalStrategy}`);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [seeds9, seedOverrides, activeMode, harmony, spread, variantStrategy, lightContrast, darkContrast, activeVariantsMap, colorSpace, outputSpace]);
+
+  // Load theme from public/custom-theme.json if it exists
+  useEffect(() => {
+    const loadCustomTheme = async () => {
+      try {
+        const response = await fetch("/custom-theme.json");
+        if (response.ok) {
+          const themeData = await response.json();
+          console.log("🎨 Loaded custom-theme.json:", themeData);
+          
+          if (themeData.light?.seeds || themeData.dark?.seeds) {
+            setSeedOverrides({
+              light: themeData.light?.seeds || {},
+              dark: themeData.dark?.seeds || {}
+            });
+          }
+          
+          if (themeData.light?.overrides || themeData.dark?.overrides) {
+            setManualOverrides({
+              light: themeData.light?.overrides || {},
+              dark: themeData.dark?.overrides || {}
+            });
+          }
+          
+          if (themeData.name) {
+            setThemeName(themeData.name);
+          }
+
+          // Automatically trigger analysis once data is loaded to sync engine params
+          // We wait a tick to ensure state updates have processed
+          setTimeout(() => {
+            handleAnalyzeSeeds();
+          }, 100);
+        }
+      } catch (err) {
+        console.warn("⚠️ Could not load custom-theme.json:", err);
+      }
+    };
+    
+    // Always check for custom-theme.json on mount to ensure synchronization
+    loadCustomTheme();
+  }, [handleAnalyzeSeeds]);
 
   const handleResetMode = useCallback(() => {
     setActivePreset(null)
@@ -1544,6 +1466,20 @@ const MatrixTokenRow = React.memo(({
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={handleAnalyzeSeeds}
+                    disabled={isAnalyzing}
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border relative ${
+                      isAnalyzing
+                        ? "bg-purple-600 text-white border-purple-400 animate-pulse cursor-wait"
+                        : activeMode === 'light'
+                          ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+                          : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                    }`}
+                    title="Analyze current seed values to reverse-engineer harmony and strategy parameters"
+                  >
+                    {isAnalyzing ? "CALCULATING..." : "ANALYZE_SEEDS"}
+                  </button>
+                  <button
                     onClick={() => setMatrixMode(!matrixMode)}
                     className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
                       matrixMode 
@@ -1838,25 +1774,25 @@ const MatrixTokenRow = React.memo(({
                                   {formatAgentLabel(seedName)}
                                 </span>
                               </div>
-                              <div className="flex gap-0.5">
+                              <div className="flex gap-0.5 max-w-[400px] overflow-x-auto no-scrollbar">
                                 {variants.map((variant, vIdx) => {
                                   const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
                                   return (
                                     <div
                                       key={`${seedName}-${vIdx}`}
                                       onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-2.5 h-3 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
+                                      className={`w-4 h-4 shrink-0 rounded-[1.5px] border flex items-center justify-center transition-all hover:scale-125 cursor-pointer ${
                                         isCurrentSeed 
                                           ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-110 border-white/40` 
-                                          : "opacity-60 hover:opacity-100 border-white/5"
+                                          : "opacity-80 hover:opacity-100 border-white/10"
                                       }`}
                                       style={{
                                         backgroundColor: variant.hex,
                                       }}
-                                      title={`MOUNT_SEED: ${variant.hex}`}
+                                      title={`MOUNT_SEED: ${variant.hex} (v${vIdx})`}
                                     >
                                       {variant.isBase && (
-                                        <div className="w-0.5 h-0.5 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                                        <div className="w-1 h-1 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
                                       )}
                                     </div>
                                   )

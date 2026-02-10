@@ -162,7 +162,6 @@ export const writeOpencode9ThemeFile = async (
 
   const apiUrls = [
     "http://127.0.0.1:3032/api/write-theme",
-    "/api/write-theme",
     "http://localhost:3032/api/write-theme",
   ]
 
@@ -242,7 +241,6 @@ export const writeCustomThemeFile = async (
   const json = exportToOpencodeJSON(theme)
 
   const apiUrls = [
-    "/api/write-theme",
     "http://localhost:3032/api/write-theme",
     "http://127.0.0.1:3032/api/write-theme",
   ]

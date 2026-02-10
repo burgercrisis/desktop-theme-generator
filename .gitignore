@@ -28,3 +28,4 @@ dist-ssr
 .runtime/mcp-coordination-hub.sqlite
 .runtime/mcp-coordination-hub.sqlite-shm
 .runtime/mcp-coordination-hub.sqlite-wal
+.runtime/
