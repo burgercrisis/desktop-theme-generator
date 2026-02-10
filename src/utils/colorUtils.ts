@@ -75,8 +75,6 @@ export const getTargetContrast = (
 export const getThresholdLabel = (
   isNonText: boolean = false,
   isBorder: boolean = false,
-  isWeak: boolean = false,
-  isStrong: boolean = false,
   category?: string
 ): string => {
   if (isBorder || isNonText || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {

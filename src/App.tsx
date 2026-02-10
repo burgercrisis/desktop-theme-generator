@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } fr
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor, getThresholdLabel } from "./utils/colorUtils"
-import { getCachedContrastScore, getContrastCacheStats, clearContrastCache } from "./utils/cachedContrast"
+import { getCachedContrastScore, clearContrastCache } from "./utils/cachedContrast"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -1684,7 +1684,7 @@ const MatrixTokenRow = React.memo(({
                               {scoredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = pair.score
                                 const isFailing = !score.pass
-                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
+                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.category);
                                 
                                 // Map type to icon
                                 let typeIcon = "📄" // read
