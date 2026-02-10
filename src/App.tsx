@@ -364,7 +364,7 @@ const App: React.FC = () => {
           fgKey.includes('status-icon') ||
           fgKey.includes('badge-icon') ||
           fgKey.includes('avatar-icon')
-        );
+        ) && !fgKey.includes('logo');
         
         const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong, category)
         pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, isWeak: autoWeak, isStrong: autoStrong, type, score })

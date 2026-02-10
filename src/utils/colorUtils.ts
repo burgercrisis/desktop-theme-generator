@@ -57,6 +57,9 @@ export const getTargetContrast = (
   if (isBorder) return 1.1;
 
   if (isNonText) {
+    // Special case for LOGO: always 1.1/15° regardless of 'strong' name
+    if (category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) return 1.1;
+
     // Icons and Indicators that don't print text only require 1.1/15° (isStrong=false)
     // Icons and Indicators that DO print text require 4.5/15° (isStrong=true)
     if (isStrong) return 4.5;
@@ -78,7 +81,7 @@ export const getThresholdLabel = (
   category?: string
 ): string => {
   // Use 1.1/15° rule for all borders and weak non-text/surfaces
-  if (isBorder || (isNonText && isWeak) || category === "LOG_12_SPLASH_LOADING") {
+  if (isBorder || (isNonText && isWeak) || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
     return "1.1/15°";
   }
 
