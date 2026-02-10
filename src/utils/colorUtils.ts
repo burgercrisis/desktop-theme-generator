@@ -182,13 +182,22 @@ export const getTargetContrast = (
   isWeak: boolean = false,
   isStrong: boolean = false
 ): number => {
+  // Border contrast can be low as it's often just a subtle separator
   if (isBorder) return 1.1;
+
   if (isNonText) {
+    // Icons/UI components - WCAG 2.1 requires 3:1 for non-text contrast (AA).
+    // User requested 4.5 for icons/strong elements.
     if (isStrong) return 4.5;
-    if (isWeak) return 1.1; // Lower bound for weak
-    return 3.0;
+    if (isWeak) return 1.5; // Bumped from 1.1 for better visibility
+    return 3.0; // Standard non-text requirement
   }
-  return 4.5;
+
+  // Text requirements: WCAG AA is 4.5:1, AAA is 7:1.
+  // We favor text having at least 4.5.
+  if (isStrong) return 7.0; // Text-strong should aim for AAA
+  if (isWeak) return 4.5;   // Even weak text should meet AA
+  return 4.5;              // Default text requirement
 };
 
 export const getContrastScore = (

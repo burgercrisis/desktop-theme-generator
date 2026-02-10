@@ -24,7 +24,6 @@ import {
   exportFormats,
   writeOpencode9ThemeFile,
 } from "./utils/exportUtils"
-import { opencodePresets, getPresetOverrides } from "./utils/themePresets"
 import { 
   HSL, 
   HarmonyRule, 
@@ -58,10 +57,9 @@ const getInitialState = (key: string, defaultValue: any) => {
   }
 }
 
-// Matrix Router properties (Categorized for easier browsing)
 const App: React.FC = () => {
-  const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 210, s: 50, l: 50 }))
-  const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.ANALOGOUS))
+  const [baseColor, setBaseColor] = useState<HSL>(() => getInitialState("baseColor", { h: 280, s: 65, l: 15 }))
+  const [harmony, setHarmony] = useState<HarmonyRule>(() => getInitialState("harmony", HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY))
   const [spread, setSpread] = useState(() => getInitialState("spread", 30))
   const [variantCount, setVariantCount] = useState(() => getInitialState("variantCount", 12))
   const [saturation, setSaturation] = useState(() => getInitialState("saturation", 50))
@@ -514,17 +512,52 @@ const App: React.FC = () => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
-        const autoBorder = fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule') || fgKey.includes('separator');
-        const autoNonText = !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
+        const isExplicitText = fgKey.includes('text') || 
+                               fgKey.includes('foreground') || 
+                               fgKey.includes('syntax') || 
+                               fgKey.includes('markdown') || 
+                               fgKey.includes('ansi') || 
+                               fgKey.includes('label') || 
+                               fgKey.includes('heading') || 
+                               fgKey.includes('link') || 
+                               fgKey.includes('comment') || 
+                               fgKey.includes('keyword') || 
+                               fgKey.includes('variable') || 
+                               fgKey.includes('string') || 
+                               fgKey.includes('number') || 
+                               fgKey.includes('type') || 
+                               fgKey.includes('operator') || 
+                               fgKey.includes('punctuation') ||
+                               fgKey.includes('constant') ||
+                               fgKey.includes('property') ||
+                               fgKey.includes('regexp') ||
+                               fgKey.includes('primitive') ||
+                               fgKey.includes('object') ||
+                               fgKey.includes('tag') ||
+                               fgKey.includes('attribute') ||
+                               fgKey.includes('value') ||
+                               fgKey.includes('namespace') ||
+                               fgKey.includes('class') ||
+                               fgKey.includes('emph') ||
+                               fgKey.includes('strong') ||
+                               fgKey.includes('line-indicator') ||
+                               fgKey.includes('separator');
+
+        const autoBorder = !isExplicitText && (fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule'));
+        const autoNonText = !isExplicitText && !autoBorder && (isNonText || fgKey.includes('icon') || fgKey.includes('indicator') || fgKey.includes('checkbox') || fgKey.includes('radio') || fgKey.includes('background') || fgKey.includes('surface'));
         const autoWeak = fgKey.includes('weak') || fgKey.includes('weaker') || (autoNonText && (fgKey.includes('hover') || fgKey.includes('selected') || fgKey.includes('inactive')));
-        // Status icons (success, warning, critical, info) should be treated as strong non-text
-        const autoStrong = !autoWeak && autoNonText && (
+        
+        // Treat semantic and strong tokens as "strong" for higher contrast targets
+        const autoStrong = !autoWeak && (
+          fgKey.includes('strong') || 
+          fgKey.includes('brand') ||
           fgKey.includes('success') || 
           fgKey.includes('warning') || 
           fgKey.includes('critical') || 
-          fgKey.includes('info') || 
-          fgKey.includes('strong') ||
-          fgKey.includes('brand')
+          fgKey.includes('info') ||
+          fgKey.includes('add') ||
+          fgKey.includes('delete') ||
+          fgKey.includes('modified')
         );
         
         const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong)
@@ -711,9 +744,9 @@ const App: React.FC = () => {
       })
 
       // --- LOG_11_UI_EXTRAS ---
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_HOVER"), "background-base", "line-indicator-hover", "HOVER LINE INDICATOR CONTRAST", true, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false, 'shell')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_HOVER"), "background-base", "line-indicator-hover", "HOVER LINE INDICATOR CONTRAST", false, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB INDICATOR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB INDICATOR CONTRAST", true, 'shell')
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB INDICATOR CONTRAST", true, 'shell')
@@ -748,7 +781,7 @@ const App: React.FC = () => {
       // --- LOG_15_BREADCRUMBS ---
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", false, 'shell')
 
       // --- LOG_16_BORDERS_FUNCTIONAL ---
       const functionalBorders = ["interactive", "success", "warning", "critical", "info"]
@@ -800,7 +833,7 @@ const App: React.FC = () => {
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "breadcrumb-background", "breadcrumb-foreground", "BREADCRUMB TEXT CONTRAST", false, 'shell')
       addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "breadcrumb-background", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT CONTRAST", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "breadcrumb-background", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "breadcrumb-background", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", false, 'shell')
 
       // --- LOG_16_TABS_EXTENDED ---
       addPair("LOG_16_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "TAB ACTIVE BG CONTRAST", true, 'shell')
@@ -819,8 +852,8 @@ const App: React.FC = () => {
 
       // --- LOG_18_EDITOR_ADDITIONAL ---
       addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", true, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false, 'read')
       addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true, 'read')
       addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true, 'read')
       addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true, 'read')
@@ -958,7 +991,7 @@ const App: React.FC = () => {
     }
   }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
 
-  // Matrix Router properties (Categorized for easier browsing)
+// Matrix Router properties (Categorized for easier browsing)
 const MATRIX_PROPERTIES = [
   { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
   { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
@@ -1012,10 +1045,51 @@ const MatrixTokenRow = React.memo(({
   const background = themeColors[bgKey] || themeColors['background-base'];
   
   // Detect flags for getClosestPassingColor
-  const isBorder = property.includes('border') || property.includes('rule') || property.includes('separator');
-  const isNonText = property.includes('icon') || isBorder || property.includes('indicator');
-  const isWeak = property.includes('weak');
-  const isStrong = property.includes('strong') || property.includes('success') || property.includes('warning') || property.includes('critical') || property.includes('info');
+  const isExplicitText = property.includes('text') || 
+                         property.includes('foreground') || 
+                         property.includes('syntax') || 
+                         property.includes('markdown') || 
+                         property.includes('ansi') || 
+                         property.includes('label') || 
+                         property.includes('heading') || 
+                         property.includes('link') || 
+                         property.includes('comment') || 
+                         property.includes('keyword') || 
+                         property.includes('variable') || 
+                         property.includes('string') || 
+                         property.includes('number') || 
+                         property.includes('type') || 
+                         property.includes('operator') || 
+                         property.includes('punctuation') ||
+                         property.includes('constant') ||
+                         property.includes('property') ||
+                         property.includes('regexp') ||
+                         property.includes('primitive') ||
+                         property.includes('object') ||
+                         property.includes('tag') ||
+                         property.includes('attribute') ||
+                         property.includes('value') ||
+                         property.includes('namespace') ||
+                         property.includes('class') ||
+                         property.includes('emph') ||
+                         property.includes('strong') ||
+                         property.includes('line-indicator') ||
+                         property.includes('separator');
+
+  const isBorder = !isExplicitText && (property.includes('border') || property.includes('rule') || property.includes('separator'));
+  const isNonText = !isExplicitText && (property.includes('icon') || isBorder || property.includes('indicator') || property.includes('surface') || property.includes('background'));
+  const isWeak = property.includes('weak') || property.includes('weaker') || (isNonText && (property.includes('hover') || property.includes('selected') || property.includes('inactive')));
+  const isStrong = !isWeak && (
+    property.includes('strong') || 
+    property.includes('brand') ||
+    property.includes('success') || 
+    property.includes('warning') || 
+    property.includes('critical') || 
+    property.includes('info') ||
+    property.includes('add') ||
+    property.includes('delete') ||
+    property.includes('modified')
+  );
 
   const contrast = getContrastScore(background, currentColor, isNonText, isBorder, isWeak, isStrong);
   const isFailing = !contrast.pass;
