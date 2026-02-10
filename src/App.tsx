@@ -1124,18 +1124,21 @@ const MatrixTokenRow = React.memo(({
     }
   }, [seeds9, seedOverrides, activeMode, harmony, spread, variantStrategy, lightContrast, darkContrast, activeVariantsMap, colorSpace, outputSpace]);
 
-  // Load theme from public/custom-theme.json if it exists
+  // Load theme from /api/read-theme if it exists
   useEffect(() => {
     const loadCustomTheme = async () => {
       try {
-        const response = await fetch("/custom-theme.json");
+        const response = await fetch("/api/read-theme");
         if (response.ok) {
           const themeData = await response.json();
-          console.log("🎨 Loaded custom-theme.json:", themeData);
+          console.log("🎨 Loaded theme from /api/read-theme:", themeData);
           
-          // CRITICAL: We update multiple states. React batches these, 
-          // but we need to ensure handleAnalyzeSeeds sees the NEW seeds.
-          
+          // Store the content string to prevent immediate re-sync
+          const contentString = JSON.stringify(themeData, null, 2);
+          lastWrittenRef.current = contentString;
+          localStorage.setItem("lastSyncedContent", contentString);
+
+          // Update states
           if (themeData.light?.seeds || themeData.dark?.seeds) {
             setSeedOverrides({
               light: themeData.light?.seeds || {},
@@ -1155,20 +1158,18 @@ const MatrixTokenRow = React.memo(({
           }
 
           // Force analysis to run AFTER state updates are processed
-          // handleAnalyzeSeeds depends on seeds9 which depends on seedOverrides
           setTimeout(() => {
             console.log("🔍 Triggering post-load analysis...");
             handleAnalyzeSeeds();
-          }, 300); // 300ms to be safe
+          }, 300);
         }
       } catch (err) {
-        console.warn("⚠️ Could not load custom-theme.json:", err);
+        console.warn("⚠️ Could not load theme from API:", err);
       }
     };
     
-    // Always check for custom-theme.json on mount
     loadCustomTheme();
-  }, [handleAnalyzeSeeds]);
+  }, []); // Run ONCE on mount
 
   const handleResetMode = useCallback(() => {
     setActivePreset(null)

@@ -104,6 +104,39 @@ export const themeWritePlugin = (options: ThemeWriteOptions): Plugin => {
           }
         }
 
+        // 4. Handle /api/read-theme
+        if (url === "/api/read-theme" || url === "/api/read-theme/") {
+          if (req.method === "GET") {
+            try {
+              // Read from the first theme directory (assuming they are in sync)
+              const themeDir = themeDirs[0]
+              const filePath = path.join(themeDir, filename)
+              
+              if (fs.existsSync(filePath)) {
+                const content = fs.readFileSync(filePath, "utf-8")
+                res.writeHead(200, {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                })
+                res.end(content)
+              } else {
+                res.writeHead(404, {
+                  "Content-Type": "application/json",
+                  "Access-Control-Allow-Origin": "*",
+                })
+                res.end(JSON.stringify({ success: false, error: "Theme file not found" }))
+              }
+            } catch (err: any) {
+              res.writeHead(500, {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+              })
+              res.end(JSON.stringify({ success: false, error: err.message }))
+            }
+            return
+          }
+        }
+
         next()
       })
     },
