@@ -226,27 +226,6 @@ const ThemePreview: React.FC<ThemePreviewProps> = ({ theme: rawTheme }) => {
     });
   };
 
-  const terminalHistory = [
-    { type: 'command' as const, content: '$ npm install react react-dom' },
-    { type: 'output' as const, content: 'added 127 packages in 3s' },
-    { type: 'command' as const, content: '$ npm run dev' },
-    { type: 'output' as const, content: '> vite v5.0.0 dev server running at:' },
-    { type: 'output' as const, content: '> Local: http://localhost:5173/' },
-    { type: 'output' as const, content: '> Network: use --host to expose' },
-  ];
-
-  const sessionItems = [
-    { icon: '📁', name: 'src/components', type: 'folder' as const, expanded: true },
-    { icon: '📄', name: 'Button.tsx', type: 'file' as const, active: true },
-    { icon: '📄', name: 'Button.css', type: 'file' as const },
-    { icon: '📄', name: 'index.ts', type: 'file' as const },
-    { icon: '📁', name: 'src/utils', type: 'folder' as const },
-    { icon: '📄', name: 'format.ts', type: 'file' as const },
-    { icon: '📄', name: 'package.json', type: 'file' as const },
-    { icon: '📄', name: 'tsconfig.json', type: 'file' as const },
-    { icon: '📄', name: 'vite.config.ts', type: 'file' as const },
-  ];
-
   const sidebarItems = [
     { 
       icon: (
