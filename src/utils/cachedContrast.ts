@@ -22,18 +22,16 @@ const contrastScoreCache = new Map<string, {
  * Uses structural sharing - same color combinations return identical objects.
  */
 export function getCachedContrastScore(
-  bgKey: string,
-  fgKey: string,
   bg: string,
   fg: string,
-  isNonText: boolean,
-  isBorder: boolean,
-  isWeak: boolean,
-  isStrong: boolean,
+  isNonText: boolean = false,
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false,
   category?: string
 ): { ratio: number; hueDiff: number; level: string; pass: boolean } {
-  // Cache key includes the actual hex values, not just the keys
-  const cacheKey = `${bgKey}:${fgKey}:${bg}:${fg}:${isNonText}:${isBorder}:${isWeak}:${isStrong}:${category || ''}`
+  // Cache key includes the actual hex values
+  const cacheKey = `${bg}:${fg}:${isNonText}:${isBorder}:${isWeak}:${isStrong}:${category || ''}`
   
   const cached = contrastScoreCache.get(cacheKey)
   if (cached) {

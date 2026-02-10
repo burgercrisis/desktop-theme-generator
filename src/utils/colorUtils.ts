@@ -60,9 +60,8 @@ export const getTargetContrast = (
     // Special case for LOGO: always 1.1/15° regardless of 'strong' name
     if (category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) return 1.1;
 
-    // Icons and Indicators that don't print text only require 1.1/15° (isStrong=false)
-    // Icons and Indicators that DO print text require 4.5/15° (isStrong=true)
-    if (isStrong) return 4.5;
+    // Non-text elements like surfaces and purely decorative icons require 1.1/15°
+    // The functional icons that "print text" are handled as text (isNonText=false)
     return 1.1; 
   }
 
@@ -80,15 +79,7 @@ export const getThresholdLabel = (
   isStrong: boolean = false,
   category?: string
 ): string => {
-  // Use 1.1/15° rule for all borders and weak non-text/surfaces
-  if (isBorder || (isNonText && isWeak) || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
-    return "1.1/15°";
-  }
-
-  if (isNonText) {
-    // Icons/Indicators that print text (isStrong=true) get 4.5/15°
-    // Pure icons (isStrong=false) get 1.1/15°
-    if (isStrong) return "4.5/15°";
+  if (isBorder || isNonText || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
     return "1.1/15°";
   }
   // Text targets
@@ -109,22 +100,12 @@ export const getContrastScore = (
   const level = getWCAGLevel(ratio);
   const target = getTargetContrast(isNonText, isBorder, isWeak, isStrong, category);
   
-  let contrastPass = false;
-  if (isNonText && isWeak && category !== "LOG_12_SPLASH_LOADING") {
-    // Weak non-text has a minimum of 1.1. (Removed the upper bound 2.5 to allow H-DIFF logic)
-    contrastPass = ratio >= 1.1;
-  } else {
-    contrastPass = ratio >= target;
-  }
-
-  // Hue pass: 15 degrees difference is a good indicator of visual separation
-  // even if brightness is similar.
+  const contrastPass = ratio >= target;
   const huePass = hueDiff >= 15;
 
   let pass = contrastPass;
-  // Borders, Non-Text items (Icons/Indicators), and Splash Loading allow for Hue Pass
-  if (isNonText || isBorder || category === "LOG_12_SPLASH_LOADING") {
-    // For non-text/borders or Splash category, pass if either contrast OR hue is sufficient
+  // Non-text elements (icons, surfaces, borders) and splash loading allow for Hue Pass fallback
+  if (isNonText || isBorder || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
     pass = contrastPass || huePass;
   }
   

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } fr
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
 import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor, getThresholdLabel } from "./utils/colorUtils"
-import { getCachedContrastScore } from "./utils/cachedContrast"
+import { getCachedContrastScore, getContrastCacheStats, clearContrastCache } from "./utils/cachedContrast"
 import {
   generateHarmony,
 } from "./utils/engine/harmonies"
@@ -274,6 +274,7 @@ const App: React.FC = () => {
     // Return empty array if not in matrix mode to save heavy calculation
     if (!matrixMode) return []
 
+    clearContrastCache()
     const pairs: Array<{ 
       label: string; 
       bg: string; 
@@ -291,7 +292,7 @@ const App: React.FC = () => {
     }> = []
     const seenPairs = new Set<string>()
     
-    const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonText = false, type: 'shell' | 'read' | 'action' | 'diff' = 'read') => {
+    const addPair = (category: string, label: string, bgKey: string, fgKey: string, desc: string, isNonTextParam = false) => {
       const pairId = `${category}:${bgKey}:${fgKey}`
       if (seenPairs.has(pairId)) return
       seenPairs.add(pairId)
@@ -308,68 +309,53 @@ const App: React.FC = () => {
         const isExplicitText = !isBorderElement && (
                                fgKey.includes('text') || 
                                fgKey.includes('foreground') || 
-                               fgKey.includes('syntax') || 
-                               fgKey.includes('markdown') || 
-                               fgKey.includes('ansi') || 
+                               fgKey.includes('title') || 
                                fgKey.includes('label') || 
-                               fgKey.includes('heading') || 
-                               fgKey.includes('link') || 
-                               fgKey.includes('comment') || 
-                               fgKey.includes('keyword') || 
-                               fgKey.includes('variable') || 
-                               fgKey.includes('string') || 
-                               fgKey.includes('number') || 
-                               fgKey.includes('type') || 
-                               fgKey.includes('operator') || 
-                               fgKey.includes('punctuation') ||
-                               fgKey.includes('constant') ||
-                               fgKey.includes('property') ||
-                               fgKey.includes('regexp') ||
-                               fgKey.includes('primitive') ||
-                               fgKey.includes('object') ||
-                               fgKey.includes('tag') ||
-                               fgKey.includes('attribute') ||
-                               fgKey.includes('value') ||
-                               fgKey.includes('namespace') ||
-                               fgKey.includes('class') ||
-                               fgKey.includes('emph') || 
-                               (fgKey.includes('strong') && !fgKey.includes('surface')) ||
-                               fgKey.includes('line-indicator') ||
-                               fgKey.includes('separator') ||
-                               fgKey.includes('DIFF_DELETE_TEXT') ||
-                               fgKey.includes('DIFF_ADD_TEXT') ||
-                               fgKey.includes('DIFF_HIDDEN_TEXT') ||
-                               fgKey.includes('delete') ||
-                               fgKey.includes('add') ||
-                               fgKey.includes('modified') ||
-                               fgKey.includes('hidden')
-        );
+                               fgKey.includes('placeholder') || 
+                               fgKey.includes('description') ||
+                               // Functional icons that actually print text (like diff +/-)
+                               (fgKey.includes('icon') && (
+                                 category.includes('DIFF')
+                               ))
+                             );
 
-        const autoBorder = isBorderElement;
+        const isNonText = isNonTextParam || !isExplicitText;
+        const isStrong = fgKey.includes('strong');
+        const isWeak = fgKey.includes('weak');
+
+        // Use cached contrast score
+        const contrastScore = getCachedContrastScore(
+          bg, 
+          fg, 
+          isNonText,
+          isBorderElement, 
+          isWeak, 
+          isStrong, 
+          category
+        );
         
-        // CRITICAL: Any property containing 'surface' or 'background' is Non-Text and Weak (Target 1.1:1)
-        const isSurfaceOrBg = fgKey.toLowerCase().includes('surface') || fgKey.toLowerCase().includes('background');
-        const autoNonText = isSurfaceOrBg || (!isExplicitText && !autoBorder && (isNonText || fgKey.toLowerCase().includes('icon') || fgKey.toLowerCase().includes('indicator') || fgKey.toLowerCase().includes('checkbox') || fgKey.toLowerCase().includes('radio')));
-        const autoWeak = isSurfaceOrBg || fgKey.toLowerCase().includes('weak') || fgKey.toLowerCase().includes('weaker') || (autoNonText && (fgKey.toLowerCase().includes('hover') || fgKey.toLowerCase().includes('selected') || fgKey.toLowerCase().includes('inactive')));
-        
-        // isStrong determines if a Non-Text item should hit 4.5 (Symbolic Text) or 1.1 (Pure Icon)
-        const autoStrong = !autoWeak && !isSurfaceOrBg && (
-          fgKey.toLowerCase().includes('strong') ||
-          // Elements that we know behave like text or print characters in the app
-          fgKey.includes('terminal-cursor') ||
-          fgKey.includes('line-indicator-active') ||
-          fgKey.includes('tab-active') ||
-          fgKey.includes('breadcrumb-item-active') ||
-          fgKey.includes('nav-item-active') ||
-          fgKey.includes('button-icon') ||
-          fgKey.includes('input-icon') ||
-          fgKey.includes('status-icon') ||
-          fgKey.includes('badge-icon') ||
-          fgKey.includes('avatar-icon')
-        ) && !fgKey.includes('logo');
-        
-        const score = getCachedContrastScore(bgKey, fgKey, bg, fg, autoNonText, autoBorder, autoWeak, autoStrong, category)
-        pairs.push({ category, label, bg, fg, bgKey, fgKey, desc, isNonText: autoNonText, isBorder: autoBorder, isWeak: autoWeak, isStrong: autoStrong, type, score })
+        // Determine type based on category
+        let type: 'shell' | 'read' | 'action' | 'diff' = 'shell';
+        if (category.includes('SURFACES')) type = 'shell';
+        else if (category.includes('TYPOGRAPHY')) type = 'read';
+        else if (category.includes('INTERACTIVE') || category.includes('ACTIONS') || category.includes('BUTTONS')) type = 'action';
+        else if (category.includes('STATUS') || category.includes('SEMANTIC')) type = 'diff';
+
+        pairs.push({
+          category,
+          label,
+          bg,
+          fg,
+          bgKey,
+          fgKey,
+          desc,
+          isNonText,
+          isBorder: isBorderElement,
+          isStrong,
+          isWeak,
+          type,
+          score: contrastScore
+        })
       }
     }
 
@@ -380,7 +366,7 @@ const App: React.FC = () => {
       
       backgrounds.forEach(bg => {
         coreTexts.forEach(fg => {
-          addPair("LOG_01_TYPOGRAPHY", `${formatAgentLabel(fg.replace("text-", ""))}_ON_${formatAgentLabel(bg.replace("background-", ""))}`, bg, fg, `${fg} ON ${bg}`, false, 'read')
+          addPair("LOG_01_TYPOGRAPHY", `${formatAgentLabel(fg.replace("text-", ""))}_ON_${formatAgentLabel(bg.replace("background-", ""))}`, bg, fg, `${fg} ON ${bg}`, false)
         })
       })
 
@@ -406,9 +392,9 @@ const App: React.FC = () => {
             bgKey = `${cat.prefix}-${item}`
           }
 
-          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
-          addPair("LOG_02_SURFACES", `TEXT_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false, 'read')
-          addPair("LOG_02_SURFACES", `ICON_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "icon-base", `ICON_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, true, 'shell')
+          addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true)
+          addPair("LOG_02_SURFACES", `TEXT_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false)
+          addPair("LOG_02_SURFACES", `ICON_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "icon-base", `ICON_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, true)
         })
       })
 
@@ -425,24 +411,24 @@ const App: React.FC = () => {
         { bg: "surface-interactive-weak-hover", fg: "text-on-interactive-weak", label: "INTERACTIVE_WEAK_HOVER" }
       ]
       interactiveSurfaces.forEach(s => {
-        addPair("LOG_03_ACTIONS", formatAgentLabel(s.label), s.bg, s.fg, `TEXT_ON_${s.bg.toUpperCase().replace(/-/g, '_')}`, false, 'action')
+        addPair("LOG_03_ACTIONS", formatAgentLabel(s.label), s.bg, s.fg, `TEXT_ON_${s.bg.toUpperCase().replace(/-/g, '_')}`, false)
       })
       
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_TEXT"), "background-base", "text-interactive-base", "INTERACTIVE_TEXT_ON_BACKGROUND", false, 'action')
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_ICON"), "background-base", "icon-interactive-base", "INTERACTIVE_ICON_CONTRAST", true, 'action')
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER"), "background-base", "border-interactive-base", "INTERACTIVE_BORDER_CONTRAST", true, 'action')
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_HOVER"), "background-base", "border-interactive-hover", "INTERACTIVE_BORDER_HOVER_CONTRAST", true, 'action')
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_ACTIVE"), "background-base", "border-interactive-active", "INTERACTIVE_BORDER_ACTIVE_CONTRAST", true, 'action')
-      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_SELECTED"), "background-base", "border-interactive-selected", "INTERACTIVE_BORDER_SELECTED_CONTRAST", true, 'action')
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_TEXT"), "background-base", "text-interactive-base", "INTERACTIVE_TEXT_ON_BACKGROUND", false)
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_ICON"), "background-base", "icon-interactive-base", "INTERACTIVE_ICON_CONTRAST", true)
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER"), "background-base", "border-interactive-base", "INTERACTIVE_BORDER_CONTRAST", true)
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_HOVER"), "background-base", "border-interactive-hover", "INTERACTIVE_BORDER_HOVER_CONTRAST", true)
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_ACTIVE"), "background-base", "border-interactive-active", "INTERACTIVE_BORDER_ACTIVE_CONTRAST", true)
+      addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_BORDER_SELECTED"), "background-base", "border-interactive-selected", "INTERACTIVE_BORDER_SELECTED_CONTRAST", true)
 
       // --- LOG_04_BUTTONS ---
-      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_BASE"), "button-secondary-base", "text-base", "SECONDARY_BUTTON_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_HOVER"), "button-secondary-hover", "text-base", "SECONDARY_BUTTON_HOVER_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER"), "button-ghost-hover", "text-base", "GHOST_BUTTON_HOVER_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER2"), "button-ghost-hover2", "text-base", "GHOST_BUTTON_HOVER2_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_BASE"), "button-danger-base", "text-on-critical-base", "DANGER_BUTTON_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER"), "button-danger-hover", "text-on-critical-base", "DANGER_BUTTON_HOVER_TEXT", false, 'action')
-      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE"), "button-danger-active", "text-on-critical-base", "DANGER_BUTTON_ACTIVE_TEXT", false, 'action')
+      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_BASE"), "button-secondary-base", "text-base", "SECONDARY_BUTTON_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_HOVER"), "button-secondary-hover", "text-base", "SECONDARY_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER"), "button-ghost-hover", "text-base", "GHOST_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER2"), "button-ghost-hover2", "text-base", "GHOST_BUTTON_HOVER2_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_BASE"), "button-danger-base", "text-on-critical-base", "DANGER_BUTTON_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER"), "button-danger-hover", "text-on-critical-base", "DANGER_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE"), "button-danger-active", "text-on-critical-base", "DANGER_BUTTON_ACTIVE_TEXT", false)
 
       // --- LOG_05_SEMANTIC ---
       const semanticTypes = ["success", "warning", "critical", "info"]
@@ -460,17 +446,17 @@ const App: React.FC = () => {
             ? `text-on-${type}-${state.suffix === 'strong' ? 'strong' : 'base'}`
             : `text-on-${type}-base`;
           
-          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_${state.label}`), bgKey, fgKey, `${type.toUpperCase()}_${state.label}_SURFACE_CONTRAST`, false, 'action')
+          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_${state.label}`), bgKey, fgKey, `${type.toUpperCase()}_${state.label}_SURFACE_CONTRAST`, false)
           
           // Verify strong text on all semantic surfaces
-          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_${state.label}`), bgKey, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_${state.label}_SURFACE`, false, 'action')
+          addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_${state.label}`), bgKey, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_${state.label}_SURFACE`, false)
         })
-        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_ICON`), `background-base`, `icon-${type}-base`, `${type.toUpperCase()}_ICON_ON_BACKGROUND`, true, 'action')
-        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BORDER`), `background-base`, `border-${type}-base`, `${type.toUpperCase()}_BORDER_ON_BACKGROUND`, true, 'action')
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_ICON`), `background-base`, `icon-${type}-base`, `${type.toUpperCase()}_ICON_ON_BACKGROUND`, true)
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BORDER`), `background-base`, `border-${type}-base`, `${type.toUpperCase()}_BORDER_ON_BACKGROUND`, true)
         
         // --- NEW: STRONG VARIANTS ON BACKGROUND ---
-        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_BG`), `background-base`, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_MAIN_BG`, false, 'action')
-        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BASE_ON_BG`), `background-base`, `text-on-${type}-base`, `${type.toUpperCase()}_BASE_TEXT_ON_MAIN_BG`, false, 'action')
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_BG`), `background-base`, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_MAIN_BG`, false)
+        addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BASE_ON_BG`), `background-base`, `text-on-${type}-base`, `${type.toUpperCase()}_BASE_TEXT_ON_MAIN_BG`, false)
       })
 
       // --- LOG_06_DIFFS ---
@@ -481,69 +467,69 @@ const App: React.FC = () => {
       ]
       diffStates.forEach(diff => {
         // Base text contrast
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_TEXT`), `surface-diff-${diff.type}-base`, `text-diff-${diff.type}-base`, `DIFF_${diff.label}_TEXT_CONTRAST`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_TEXT`), `surface-diff-${diff.type}-base`, `text-diff-${diff.type}-base`, `DIFF_${diff.label}_TEXT_CONTRAST`, false)
         
         // Weak/Weaker background variations with base text
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_WEAK`), `surface-diff-${diff.type}-weak`, `text-diff-${diff.type}-base`, `${diff.label}_TEXT_ON_WEAK_BACKGROUND`, false, 'diff')
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_WEAKER`), `surface-diff-${diff.type}-weaker`, `text-diff-${diff.type}-base`, `${diff.label}_TEXT_ON_WEAKER_BACKGROUND`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_WEAK`), `surface-diff-${diff.type}-weak`, `text-diff-${diff.type}-base`, `${diff.label}_TEXT_ON_WEAK_BACKGROUND`, false)
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_WEAKER`), `surface-diff-${diff.type}-weaker`, `text-diff-${diff.type}-base`, `${diff.label}_TEXT_ON_WEAKER_BACKGROUND`, false)
         
         // Strong background variations with strong text
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONG`), `surface-diff-${diff.type}-strong`, `text-diff-${diff.type}-strong`, `STRONG_${diff.label}_TEXT_CONTRAST`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONG`), `surface-diff-${diff.type}-strong`, `text-diff-${diff.type}-strong`, `STRONG_${diff.label}_TEXT_CONTRAST`, false)
         
         // Stronger background (often used for intense highlighting)
         const strongerFg = diff.type === 'delete' ? 'text-on-critical-base' : (diff.type === 'add' ? 'text-on-success-base' : 'text-base')
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONGER`), `surface-diff-${diff.type}-stronger`, strongerFg, `${diff.label}_TEXT_ON_STRONGER_BACKGROUND`, false, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_STRONGER`), `surface-diff-${diff.type}-stronger`, strongerFg, `${diff.label}_TEXT_ON_STRONGER_BACKGROUND`, false)
         
         // Icon contrast on main background
-        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_ICON`), `background-base`, `icon-diff-${diff.type}-base`, `DIFF_${diff.label}_ICON_ON_BACKGROUND`, true, 'diff')
+        addPair("LOG_06_DIFFS", formatAgentLabel(`${diff.label}_ICON`), `background-base`, `icon-diff-${diff.type}-base`, `DIFF_${diff.label}_ICON_ON_BACKGROUND`, true)
       })
-      addPair("LOG_06_DIFFS", formatAgentLabel("SKIP_BACKGROUND"), "background-base", "surface-diff-skip-base", "SKIP_LINE_CONTRAST", true, 'diff')
-      addPair("LOG_06_DIFFS", formatAgentLabel("UNCHANGED_BACKGROUND"), "background-base", "surface-diff-unchanged-base", "UNCHANGED_LINE_CONTRAST", true, 'diff')
+      addPair("LOG_06_DIFFS", formatAgentLabel("SKIP_BACKGROUND"), "background-base", "surface-diff-skip-base", "SKIP_LINE_CONTRAST", true)
+      addPair("LOG_06_DIFFS", formatAgentLabel("UNCHANGED_BACKGROUND"), "background-base", "surface-diff-unchanged-base", "UNCHANGED_LINE_CONTRAST", true)
       
       // Syntax diff highlights (used in code editors for diffs)
-      addPair("LOG_06_DIFFS", formatAgentLabel("SYNTAX_DIFF_ADD"), "code-background", "syntax-diff-add", "SYNTAX_DIFF_ADD_ON_CODE_BG", false, 'diff')
-      addPair("LOG_06_DIFFS", formatAgentLabel("SYNTAX_DIFF_DELETE"), "code-background", "syntax-diff-delete", "SYNTAX_DIFF_DELETE_ON_CODE_BG", false, 'diff')
+      addPair("LOG_06_DIFFS", formatAgentLabel("SYNTAX_DIFF_ADD"), "code-background", "syntax-diff-add", "SYNTAX_DIFF_ADD_ON_CODE_BG", false)
+      addPair("LOG_06_DIFFS", formatAgentLabel("SYNTAX_DIFF_DELETE"), "code-background", "syntax-diff-delete", "SYNTAX_DIFF_DELETE_ON_CODE_BG", false)
 
       // --- LOG_07_INPUTS ---
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_TEXT"), "input-base", "text-base", "TEXT_INSIDE_INPUT_FIELD", false, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_BORDER"), "background-base", "border-base", "INPUT_BORDER_ON_BACKGROUND", true, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_PLACEHOLDER"), "input-base", "text-weaker", "PLACEHOLDER_TEXT_CONTRAST", false, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_HOVER"), "input-hover", "text-base", "TEXT_IN_HOVERED_INPUT", false, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_ACTIVE"), "input-active", "text-base", "TEXT_IN_ACTIVE_INPUT", false, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_DISABLED"), "background-base", "input-disabled", "DISABLED_INPUT_BACKGROUND_CONTRAST", true, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_SELECTED_BORDER"), "background-base", "border-selected", "SELECTED_INPUT_BORDER_CONTRAST", true, 'shell')
-      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_FOCUS_RING"), "background-base", "input-focus-ring", "INPUT FOCUS RING", true, 'shell')
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_TEXT"), "input-base", "text-base", "TEXT_INSIDE_INPUT_FIELD", false)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_BORDER"), "background-base", "border-base", "INPUT_BORDER_ON_BACKGROUND", true)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_PLACEHOLDER"), "input-base", "text-weaker", "PLACEHOLDER_TEXT_CONTRAST", false)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_HOVER"), "input-hover", "text-base", "TEXT_IN_HOVERED_INPUT", false)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_ACTIVE"), "input-active", "text-base", "TEXT_IN_ACTIVE_INPUT", false)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_DISABLED"), "background-base", "input-disabled", "DISABLED_INPUT_BACKGROUND_CONTRAST", true)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_SELECTED_BORDER"), "background-base", "border-selected", "SELECTED_INPUT_BORDER_CONTRAST", true)
+      addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_FOCUS_RING"), "background-base", "input-focus-ring", "INPUT FOCUS RING", true)
 
       // --- LOG_08_TERMINAL ---
       const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
       ansiColors.forEach(color => {
-        addPair("LOG_08_TERMINAL", formatAgentLabel(color), "background-base", `terminal-ansi-${color}`, `TERMINAL ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
-        addPair("LOG_08_TERMINAL", formatAgentLabel(`bright-${color}`), "background-base", `terminal-ansi-bright-${color}`, `TERMINAL BRIGHT ${color.toUpperCase()} ON BACKGROUND`, false, 'shell')
+        addPair("LOG_08_TERMINAL", formatAgentLabel(color), "background-base", `terminal-ansi-${color}`, `TERMINAL ${color.toUpperCase()} ON BACKGROUND`, false)
+        addPair("LOG_08_TERMINAL", formatAgentLabel(`bright-${color}`), "background-base", `terminal-ansi-bright-${color}`, `TERMINAL BRIGHT ${color.toUpperCase()} ON BACKGROUND`, false)
       })
-      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_CURSOR"), "background-base", "terminal-cursor", "TERMINAL CURSOR CONTRAST", true, 'shell')
-      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_SELECTION"), "terminal-selection", "text-base", "TERMINAL SELECTION CONTRAST", false, 'shell')
+      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_CURSOR"), "background-base", "terminal-cursor", "TERMINAL CURSOR CONTRAST", true)
+      addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_SELECTION"), "terminal-selection", "text-base", "TERMINAL SELECTION CONTRAST", false)
 
       // --- LOG_09_COMPARISONS (1.1 vs 4.5) ---
       // This section explicitly compares decorative elements (1.1) vs functional/text elements (4.5)
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("TEXT_BASE_VS_ICON_BASE"), "background-base", "text-base", "TEXT (4.5:1) VS ICON (1.1:1)", false, 'read')
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_BASE_VS_TEXT_BASE"), "background-base", "icon-base", "ICON (1.1:1) VS TEXT (4.5:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TEXT_BASE_VS_ICON_BASE"), "background-base", "text-base", "TEXT (4.5:1) VS ICON (1.1:1)", false)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_BASE_VS_TEXT_BASE"), "background-base", "icon-base", "ICON (1.1:1) VS TEXT (4.5:1)", true)
       
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("ACTIVE_INDICATOR_VS_BORDER"), "background-base", "line-indicator-active", "ACTIVE INDICATOR (4.5:1) VS BORDER (1.1:1)", true, 'read')
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("BORDER_VS_ACTIVE_INDICATOR"), "background-base", "border-base", "BORDER (1.1:1) VS ACTIVE INDICATOR (4.5:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ACTIVE_INDICATOR_VS_BORDER"), "background-base", "line-indicator-active", "ACTIVE INDICATOR (4.5:1) VS BORDER (1.1:1)", true)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("BORDER_VS_ACTIVE_INDICATOR"), "background-base", "border-base", "BORDER (1.1:1) VS ACTIVE INDICATOR (4.5:1)", true)
       
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("STATUS_ICON_VS_DECORATIVE"), "background-base", "status-icon", "STATUS ICON (4.5:1) VS DECORATIVE (1.1:1)", true, 'read')
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_WEAK_VS_STATUS"), "background-base", "icon-weak", "WEAK ICON (1.1:1) VS STATUS (4.5:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("STATUS_ICON_VS_DECORATIVE"), "background-base", "status-icon", "STATUS ICON (4.5:1) VS DECORATIVE (1.1:1)", true)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_WEAK_VS_STATUS"), "background-base", "icon-weak", "WEAK ICON (1.1:1) VS STATUS (4.5:1)", true)
       
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("TAB_ACTIVE_VS_INACTIVE"), "background-base", "tab-active", "ACTIVE TAB (4.5:1) VS INACTIVE (1.1:1)", true, 'read')
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("SURFACE_WEAK_VS_ACTIVE"), "background-base", "surface-weak", "WEAK SURFACE (1.1:1) VS ACTIVE (4.5:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TAB_ACTIVE_VS_INACTIVE"), "background-base", "tab-active", "ACTIVE TAB (4.5:1) VS INACTIVE (1.1:1)", true)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("SURFACE_WEAK_VS_ACTIVE"), "background-base", "surface-weak", "WEAK SURFACE (1.1:1) VS ACTIVE (4.5:1)", true)
 
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("TERMINAL_CURSOR_VS_BORDER"), "background-base", "terminal-cursor", "CURSOR (4.5:1) VS BORDER (1.1:1)", true, 'read')
-      addPair("LOG_09_COMPARISONS", formatAgentLabel("LOGO_VS_TEXT"), "background-base", "logo-base-strong", "LOGO (1.1:1) VS TEXT (4.5:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TERMINAL_CURSOR_VS_BORDER"), "background-base", "terminal-cursor", "CURSOR (4.5:1) VS BORDER (1.1:1)", true)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("LOGO_VS_TEXT"), "background-base", "logo-base-strong", "LOGO (1.1:1) VS TEXT (4.5:1)", true)
 
       // --- LOG_09_AVATARS ---
       const avatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
       avatarColors.forEach(color => {
-        addPair("LOG_09_AVATARS", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
+        addPair("LOG_09_AVATARS", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false)
       })
 
       // --- LOG_10_SYNTAX ---
@@ -559,59 +545,59 @@ const App: React.FC = () => {
       syntaxTokensDetailed.forEach(token => {
         const parts = token.split("-")
         const label = formatAgentLabel(parts.length > 2 ? `${parts[1]}_${parts[2]}` : parts[1])
-        addPair("LOG_10_SYNTAX", label, "code-background", token, `SYNTAX ${label} ON EDITOR BACKGROUND`, false, 'read')
+        addPair("LOG_10_SYNTAX", label, "code-background", token, `SYNTAX ${label} ON EDITOR BACKGROUND`, false)
       })
 
       // --- LOG_11_UI_EXTRAS ---
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_HOVER"), "background-base", "line-indicator-hover", "HOVER LINE INDICATOR CONTRAST", false, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB INDICATOR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB INDICATOR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB INDICATOR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("FOCUS_RING"), "background-base", "focus-ring", "FOCUS RING CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SCROLLBAR"), "scrollbar-track", "scrollbar-thumb", "SCROLLBAR CONTRAST", true, 'shell')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false, 'read')
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", false, 'read')
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("LINE_INDICATOR_HOVER"), "background-base", "line-indicator-hover", "HOVER LINE INDICATOR CONTRAST", false)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB INDICATOR CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB INDICATOR CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB INDICATOR CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("FOCUS_RING"), "background-base", "focus-ring", "FOCUS RING CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SCROLLBAR"), "scrollbar-track", "scrollbar-thumb", "SCROLLBAR CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", false)
 
       // --- LOG_12_SPLASH_LOADING ---
       // Splash screen background is usually background-base or a specific surface
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE"), "background-base", "icon-base", "OPENCODE LOGO BASE ON BACKGROUND", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG"), "background-base", "icon-strong-base", "OPENCODE LOGO STRONG ON BACKGROUND", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_STRONG"), "icon-base", "icon-strong-base", "LOGO BASE VS STRONG", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_WEAK"), "icon-base", "icon-weak-base", "LOGO BASE VS WEAK", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG_WEAK"), "icon-strong-base", "icon-weak-base", "LOGO STRONG VS WEAK", true, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE"), "background-base", "icon-base", "OPENCODE LOGO BASE ON BACKGROUND", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG"), "background-base", "icon-strong-base", "OPENCODE LOGO STRONG ON BACKGROUND", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_WEAK"), "background-base", "icon-weak-base", "OPENCODE LOGO WEAK ON BACKGROUND", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_STRONG"), "icon-base", "icon-strong-base", "LOGO BASE VS STRONG", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_BASE_WEAK"), "icon-base", "icon-weak-base", "LOGO BASE VS WEAK", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOGO_STRONG_WEAK"), "icon-strong-base", "icon-weak-base", "LOGO STRONG VS WEAK", true)
 
       // --- LOG_13_TREE_UI ---
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_HOVER"), "background-base", "tree-background-hover", "TREE HOVER BG CONTRAST", true, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED TEXT CONTRAST", false, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER TEXT CONTRAST", false, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ICON CONTRAST", true, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_ON_BASE"), "background-base", "text-base", "TREE TEXT ON MAIN BACKGROUND", false, 'shell')
-      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_WEAK_ON_BASE"), "background-base", "text-weak", "TREE WEAK TEXT ON MAIN BACKGROUND", false, 'shell')
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_SELECTED"), "background-base", "tree-background-selected", "TREE SELECTED BG CONTRAST", true)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_BG_HOVER"), "background-base", "tree-background-hover", "TREE HOVER BG CONTRAST", true)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED TEXT CONTRAST", false)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER TEXT CONTRAST", false)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_ICON_SELECTED"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ICON CONTRAST", true)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_ON_BASE"), "background-base", "text-base", "TREE TEXT ON MAIN BACKGROUND", false)
+      addPair("LOG_13_TREE_UI", formatAgentLabel("TREE_TEXT_WEAK_ON_BASE"), "background-base", "text-weak", "TREE WEAK TEXT ON MAIN BACKGROUND", false)
 
       // --- LOG_14_TABS_EXTENDED ---
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "ACTIVE TAB BG CONTRAST", true, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_TEXT"), "tab-active-background", "tab-active-foreground", "ACTIVE TAB TEXT CONTRAST", false, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "background-base", "tab-active-border", "ACTIVE TAB BORDER/INDICATOR", true, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "background-base", "tab-inactive-background", "INACTIVE TAB BG CONTRAST", true, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "INACTIVE TAB TEXT CONTRAST", false, 'shell')
-      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_HOVER_TEXT"), "background-base", "text-strong", "TAB HOVER TEXT CONTRAST", false, 'shell')
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BG"), "background-base", "tab-active-background", "ACTIVE TAB BG CONTRAST", true)
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_TEXT"), "tab-active-background", "tab-active-foreground", "ACTIVE TAB TEXT CONTRAST", false)
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_ACTIVE_BORDER"), "background-base", "tab-active-border", "ACTIVE TAB BORDER/INDICATOR", true)
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_BG"), "background-base", "tab-inactive-background", "INACTIVE TAB BG CONTRAST", true)
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_INACTIVE_TEXT"), "tab-inactive-background", "tab-inactive-foreground", "INACTIVE TAB TEXT CONTRAST", false)
+      addPair("LOG_14_TABS_EXTENDED", formatAgentLabel("TAB_HOVER_TEXT"), "background-base", "text-strong", "TAB HOVER TEXT CONTRAST", false)
 
       // --- LOG_15_BREADCRUMBS ---
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true, 'shell')
-      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true, 'shell')
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_TEXT"), "background-base", "breadcrumb-foreground", "BREADCRUMB TEXT ON BG", false)
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_HOVER"), "background-base", "breadcrumb-foreground-hover", "BREADCRUMB HOVER TEXT ON BG", false)
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_SEP"), "background-base", "breadcrumb-separator", "BREADCRUMB SEPARATOR CONTRAST", true)
+      addPair("LOG_15_BREADCRUMBS", formatAgentLabel("BREADCRUMB_BG"), "background-base", "breadcrumb-background", "BREADCRUMB BG CONTRAST", true)
 
       // --- LOG_16_BORDERS_FUNCTIONAL ---
       const functionalBorders = ["interactive", "success", "warning", "critical", "info"]
       functionalBorders.forEach(type => {
-        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER ON BG`, true, 'shell')
-        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER ON BG`, true, 'shell')
-        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECT`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED ON BG`, true, 'shell')
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_BASE`), "background-base", `border-${type}-base`, `${type.toUpperCase()} BORDER ON BG`, true)
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_HOVER`), "background-base", `border-${type}-hover`, `${type.toUpperCase()} BORDER HOVER ON BG`, true)
+        addPair("LOG_16_BORDERS_FUNCTIONAL", formatAgentLabel(`${type}_BORDER_SELECT`), "background-base", `border-${type}-selected`, `${type.toUpperCase()} BORDER SELECTED ON BG`, true)
       })
 
       // --- LOG_17_MARKDOWN_DETAILED ---
@@ -630,21 +616,21 @@ const App: React.FC = () => {
         { key: "markdown-image-text", label: "IMAGE_TEXT" }
       ]
       markdownElements.forEach(el => {
-        addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel(el.label), "background-base", el.key, `MARKDOWN ${el.label} ON BACKGROUND`, false, 'read')
+        addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel(el.label), "background-base", el.key, `MARKDOWN ${el.label} ON BACKGROUND`, false)
       })
-      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("CODE_BLOCK_BG"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true, 'read')
-      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("HR_LINE"), "background-base", "markdown-horizontal-rule", "MARKDOWN HORIZONTAL RULE", true, 'read')
+      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("CODE_BLOCK_BG"), "background-base", "markdown-code-block", "MARKDOWN CODE BLOCK CONTRAST", true)
+      addPair("LOG_17_MARKDOWN_DETAILED", formatAgentLabel("HR_LINE"), "background-base", "markdown-horizontal-rule", "MARKDOWN HORIZONTAL RULE", true)
       
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true, 'shell')
-      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false, 'shell')
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_SPINNER"), "background-base", "icon-interactive-base", "LOADING SPINNER CONTRAST", true)
+      addPair("LOG_12_SPLASH_LOADING", formatAgentLabel("LOADING_TEXT"), "background-base", "text-weak", "LOADING TEXT CONTRAST", false)
 
       // --- LOG_18_EDITOR_ADDITIONAL ---
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true, 'read')
-      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true, 'read')
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("CODE_FOREGROUND"), "code-background", "code-foreground", "EDITOR DEFAULT TEXT CONTRAST", false)
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR"), "background-base", "line-indicator", "LINE INDICATOR CONTRAST", false)
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("LINE_INDICATOR_ACTIVE"), "background-base", "line-indicator-active", "ACTIVE LINE INDICATOR CONTRAST", false)
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_ACTIVE"), "background-base", "tab-active", "ACTIVE TAB CONTRAST", true)
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_INACTIVE"), "background-base", "tab-inactive", "INACTIVE TAB CONTRAST", true)
+      addPair("LOG_18_EDITOR_ADDITIONAL", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB CONTRAST", true)
 
       // --- LOG_19_BORDERS ---
       const borderTokens = [
@@ -655,7 +641,7 @@ const App: React.FC = () => {
         "border-interactive-base", "border-success-base", "border-warning-base", "border-critical-base", "border-info-base"
       ]
       borderTokens.forEach(token => {
-        addPair("LOG_19_BORDERS", formatAgentLabel(token.replace("border-", "")), "background-base", token, `BORDER ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true, 'shell')
+        addPair("LOG_19_BORDERS", formatAgentLabel(token.replace("border-", "")), "background-base", token, `BORDER ${token.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true)
       })
 
       // --- LOG_30_ICONS_DETAILED ---
@@ -664,14 +650,14 @@ const App: React.FC = () => {
       iconStrengths.forEach(strength => {
         iconVariants.forEach(variant => {
           const token = `icon-${strength}${variant}`
-          addPair("LOG_30_ICONS_DETAILED", formatAgentLabel(token), "background-base", token, `ICON ${token.toUpperCase()} ON BACKGROUND`, true, 'shell')
+          addPair("LOG_30_ICONS_DETAILED", formatAgentLabel(token), "background-base", token, `ICON ${token.toUpperCase()} ON BACKGROUND`, true)
         })
       })
 
       // --- LOG_20_SELECTIONS ---
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false, 'read')
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false, 'read')
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false, 'read')
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false)
 
       // --- LOG_22_COLORED_TEXT_ICON ---
       const coloredBgs = [
@@ -686,19 +672,19 @@ const App: React.FC = () => {
         ["weak", "weaker"].forEach(variant => {
           const fgKey = `text-on-${bg.key}-${variant}`
           const bgKey = `surface-${bg.key}-base`
-          addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_${variant.toUpperCase()}_TEXT`), bgKey, fgKey, `${variant.toUpperCase()} TEXT ON ${bg.label} BASE`, false, 'action')
+          addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_${variant.toUpperCase()}_TEXT`), bgKey, fgKey, `${variant.toUpperCase()} TEXT ON ${bg.label} BASE`, false)
         })
         
         // Icons on colored backgrounds
         const iconKey = `icon-on-${bg.key}-base`
         const bgKey = `surface-${bg.key}-base`
-        addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_ICON`), bgKey, iconKey, `${bg.label} ICON ON ${bg.label} BASE`, true, 'action')
+        addPair("LOG_22_COLORED_TEXT_ICON", formatAgentLabel(`${bg.label}_ICON`), bgKey, iconKey, `${bg.label} ICON ON ${bg.label} BASE`, true)
       })
 
       // --- LOG_23_AGENT_UI ---
       const agentIcons = ["plan", "docs", "ask", "build"]
       agentIcons.forEach(icon => {
-        addPair("LOG_23_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true, 'shell')
+        addPair("LOG_23_AGENT_UI", formatAgentLabel(`AGENT_${icon.toUpperCase()}_ICON`), "background-base", `icon-agent-${icon}-base`, `AGENT ${icon.toUpperCase()} ICON CONTRAST`, true)
       })
 
       // --- LOG_24_INTERACTIVE_STATES ---
@@ -708,8 +694,8 @@ const App: React.FC = () => {
         { key: "selected", label: "SELECTED" }
       ]
       interactiveTokens.forEach(state => {
-        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`ICON_${state.label}`), "background-base", `icon-${state.key}`, `ICON ${state.label} ON BACKGROUND`, true, 'shell')
-        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`BORDER_${state.label}`), "background-base", `border-${state.key}`, `BORDER ${state.label} ON BACKGROUND`, true, 'shell')
+        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`ICON_${state.label}`), "background-base", `icon-${state.key}`, `ICON ${state.label} ON BACKGROUND`, true)
+        addPair("LOG_24_INTERACTIVE_STATES", formatAgentLabel(`BORDER_${state.label}`), "background-base", `border-${state.key}`, `BORDER ${state.label} ON BACKGROUND`, true)
       })
 
       // --- LOG_25_SEMANTIC_DETAILED ---
@@ -719,14 +705,14 @@ const App: React.FC = () => {
         statefulIcons.forEach(state => {
           const bgKey = `surface-${type}-base`
           const fgKey = `icon-on-${type}-${state}`
-          addPair("LOG_25_SEMANTIC_DETAILED", formatAgentLabel(`${type}_ICON_${state}`), bgKey, fgKey, `${type.toUpperCase()} ICON ${state.toUpperCase()} ON ${type.toUpperCase()} BASE`, true, 'action')
+          addPair("LOG_25_SEMANTIC_DETAILED", formatAgentLabel(`${type}_ICON_${state}`), bgKey, fgKey, `${type.toUpperCase()} ICON ${state.toUpperCase()} ON ${type.toUpperCase()} BASE`, true)
         })
       })
 
       // --- LOG_26_COMPLEX_SURFACES ---
-      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("RAISED_STRONGER_NON_ALPHA"), "background-base", "surface-raised-stronger-non-alpha", "RAISED STRONGER (NON-ALPHA) SURFACE CONTRAST", true, 'read')
-      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("FLOAT_STRONG_ACTIVE"), "background-base", "surface-float-strong-active", "FLOAT STRONG ACTIVE SURFACE CONTRAST", true, 'read')
-      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true, 'read')
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("RAISED_STRONGER_NON_ALPHA"), "background-base", "surface-raised-stronger-non-alpha", "RAISED STRONGER (NON-ALPHA) SURFACE CONTRAST", true)
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("FLOAT_STRONG_ACTIVE"), "background-base", "surface-float-strong-active", "FLOAT STRONG ACTIVE SURFACE CONTRAST", true)
+      addPair("LOG_26_COMPLEX_SURFACES", formatAgentLabel("INTERACTIVE_ACTIVE_SURFACE"), "background-base", "surface-base-interactive-active", "INTERACTIVE ACTIVE SURFACE CONTRAST", true)
 
       // --- LOG_27_INVERTED_TEXT_ICON ---
       const darkSurfaces = [
@@ -735,31 +721,31 @@ const App: React.FC = () => {
         { key: "surface-critical-base", label: "CRITICAL" }
       ]
       darkSurfaces.forEach(bg => {
-        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.label}`), bg.key, "text-invert-base", `INVERTED TEXT ON ${bg.label}`, false, 'read')
-        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.label}`), bg.key, "icon-invert-base", `INVERTED ICON ON ${bg.label}`, true, 'read')
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_TEXT_ON_${bg.label}`), bg.key, "text-invert-base", `INVERTED TEXT ON ${bg.label}`, false)
+        addPair("LOG_27_INVERTED_TEXT_ICON", formatAgentLabel(`INVERT_ICON_ON_${bg.label}`), bg.key, "icon-invert-base", `INVERTED ICON ON ${bg.label}`, true)
       })
 
       // --- LOG_28_INPUT_DETAILED ---
-      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false, 'shell')
-      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true, 'shell')
-      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true, 'shell')
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true)
 
       // --- LOG_29_DIFF_EXTRAS ---
-      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true, 'diff')
-      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true, 'diff')
-      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true, 'diff')
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true)
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true)
+      addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true)
 
        // --- LOG_31_AVATAR_EXPANDED ---
        const extraAvatars = ["blue", "green", "yellow", "red", "gray"]
        extraAvatars.forEach(color => {
-         addPair("LOG_31_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false, 'action')
+         addPair("LOG_31_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false)
        })
 
        // --- LOG_32_MISC_BORDERS_ICONS ---
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true, 'shell')
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true, 'shell')
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true, 'shell')
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true, 'shell')
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true)
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true)
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true)
+       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true)
 
     return pairs
   }, [themeColors, matrixMode, formatAgentLabel])
