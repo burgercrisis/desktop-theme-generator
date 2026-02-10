@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } from "react"
 import ColorWheel from "./components/ColorWheel"
 import ThemePreview from "./components/ThemePreview"
-import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor } from "./utils/colorUtils"
+import { getContrastScore, hexToHsl, getClosestPassingColor, getClosestHuePassingColor, getThresholdLabel } from "./utils/colorUtils"
 import { getCachedContrastScore } from "./utils/cachedContrast"
 import {
   generateHarmony,
@@ -328,7 +328,14 @@ const App: React.FC = () => {
                                fgKey.includes('emph') || 
                                (fgKey.includes('strong') && !fgKey.includes('surface')) ||
                                fgKey.includes('line-indicator') ||
-                               fgKey.includes('separator');
+                               fgKey.includes('separator') ||
+                               fgKey.includes('DIFF_DELETE_TEXT') ||
+                               fgKey.includes('DIFF_ADD_TEXT') ||
+                               fgKey.includes('DIFF_HIDDEN_TEXT') ||
+                               fgKey.includes('delete') ||
+                               fgKey.includes('add') ||
+                               fgKey.includes('modified') ||
+                               fgKey.includes('hidden');
 
         const autoBorder = !isExplicitText && (fgKey.includes('border') || fgKey.includes('ring') || fgKey.includes('divider') || fgKey.includes('rule'));
         
@@ -824,7 +831,14 @@ const MatrixTokenRow = React.memo(({
                          property.includes('emph') || 
                          (property.includes('strong') && !property.includes('surface')) ||
                          property.includes('line-indicator') ||
-                         property.includes('separator');
+                         property.includes('separator') ||
+                         property.includes('DIFF_DELETE_TEXT') ||
+                         property.includes('DIFF_ADD_TEXT') ||
+                         property.includes('DIFF_HIDDEN_TEXT') ||
+                         property.includes('delete') ||
+                         property.includes('add') ||
+                         property.includes('modified') ||
+                         property.includes('hidden');
 
   const isBorder = !isExplicitText && (property.includes('border') || property.includes('rule') || property.includes('separator'));
   
@@ -885,9 +899,17 @@ const MatrixTokenRow = React.memo(({
       </div>
 
       <div className="flex flex-col min-w-[120px] flex-1">
-        <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
-          {formatAgentLabel(property)}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[10px] font-mono transition-colors truncate uppercase tracking-tighter ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-200'}`} title={property}>
+            {formatAgentLabel(property)}
+          </span>
+          <div className="flex items-center gap-1 opacity-60 text-[6px] font-mono">
+            {isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NT</span>}
+            {isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BD</span>}
+            {isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WK</span>}
+            {isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">ST</span>}
+          </div>
+        </div>
         <div className="flex items-center gap-2 mt-0.5">
           <div 
             className={`w-3 h-3 rounded-[2px] border shrink-0 cursor-pointer hover:scale-110 transition-transform ${activeMode === 'light' ? 'border-gray-200' : 'border-white/10'}`}
@@ -1635,11 +1657,7 @@ const MatrixTokenRow = React.memo(({
                               {scoredWcagPairs.filter(p => p.category === category).map(pair => {
                                 const score = pair.score
                                 const isFailing = !score.pass
-                                const thresholdLabel = pair.isBorder 
-                                  ? "1.1+ OR H:15°" 
-                                  : pair.isNonText 
-                                    ? (pair.isStrong ? "3.0+ OR H:15°" : (pair.isWeak ? "1.1-2.5 OR H:15°" : "2.0+ OR H:15°"))
-                                    : "4.5+"
+                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
                                 
                                 // Map type to icon
                                 let typeIcon = "📄" // read
@@ -1660,9 +1678,17 @@ const MatrixTokenRow = React.memo(({
                                     {/* Content Column */}
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-baseline justify-between gap-2">
-                                        <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
-                                          {pair.label}
-                                        </span>
+                                        <div className="flex flex-col min-w-0">
+                                          <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
+                                            {pair.label}
+                                          </span>
+                                          <div className="flex items-center gap-1 opacity-60 text-[7px] font-mono">
+                                            {pair.isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NON_TEXT</span>}
+                                            {pair.isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BORDER</span>}
+                                            {pair.isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WEAK</span>}
+                                            {pair.isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">STRONG</span>}
+                                          </div>
+                                        </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                           <div className="flex flex-col items-end">
                                             <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>

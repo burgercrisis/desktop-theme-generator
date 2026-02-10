@@ -195,9 +195,26 @@ export const getTargetContrast = (
 
   // Text requirements: WCAG AA is 4.5:1, AAA is 7:1.
   // We favor text having at least 4.5.
-  if (isStrong) return 7.0; // Text-strong should aim for AAA
+  if (isStrong) return 4.5; // Changed from 7.0 to 4.5 to match user expectation of AA
   if (isWeak) return 4.5;   // Even weak text should meet AA
   return 4.5;              // Default text requirement
+};
+
+export const getThresholdLabel = (
+  isNonText: boolean = false,
+  isBorder: boolean = false,
+  isWeak: boolean = false,
+  isStrong: boolean = false
+): string => {
+  if (isBorder) return "1.1+";
+  if (isNonText) {
+    if (isStrong) return "4.5+";
+    if (isWeak) return "1.1-2.5";
+    return "3.0+";
+  }
+  // Text targets
+  if (isStrong) return "4.5+"; // Matching getTargetContrast
+  return "4.5+";
 };
 
 export const getContrastScore = (
