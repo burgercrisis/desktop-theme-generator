@@ -299,7 +299,14 @@ const App: React.FC = () => {
       const bg = themeColors[bgKey as keyof OpencodeThemeColors]
       const fg = themeColors[fgKey as keyof OpencodeThemeColors]
       if (typeof bg === 'string' && typeof fg === 'string') {
-        const isExplicitText = fgKey.includes('text') || 
+        const isBorderElement = fgKey.includes('border') || 
+                               fgKey.includes('ring') || 
+                               fgKey.includes('divider') || 
+                               fgKey.includes('rule') || 
+                               fgKey.includes('separator');
+
+        const isExplicitText = !isBorderElement && (
+                               fgKey.includes('text') || 
                                fgKey.includes('foreground') || 
                                fgKey.includes('syntax') || 
                                fgKey.includes('markdown') || 
@@ -335,15 +342,10 @@ const App: React.FC = () => {
                                fgKey.includes('delete') ||
                                fgKey.includes('add') ||
                                fgKey.includes('modified') ||
-                               fgKey.includes('hidden');
-
-        const autoBorder = !isExplicitText && (
-          fgKey.includes('border') || 
-          fgKey.includes('ring') || 
-          fgKey.includes('divider') || 
-          fgKey.includes('rule') || 
-          fgKey.includes('separator')
+                               fgKey.includes('hidden')
         );
+
+        const autoBorder = isBorderElement;
         
         // CRITICAL: Any property containing 'surface' or 'background' is Non-Text and Weak (Target 1.1:1)
         const isSurfaceOrBg = fgKey.toLowerCase().includes('surface') || fgKey.toLowerCase().includes('background');
@@ -520,6 +522,23 @@ const App: React.FC = () => {
       })
       addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_CURSOR"), "background-base", "terminal-cursor", "TERMINAL CURSOR CONTRAST", true, 'shell')
       addPair("LOG_08_TERMINAL", formatAgentLabel("TERMINAL_SELECTION"), "terminal-selection", "text-base", "TERMINAL SELECTION CONTRAST", false, 'shell')
+
+      // --- LOG_09_COMPARISONS (1.1 vs 4.5) ---
+      // This section explicitly compares decorative elements (1.1) vs functional/text elements (4.5)
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TEXT_BASE_VS_ICON_BASE"), "background-base", "text-base", "TEXT (4.5:1) VS ICON (1.1:1)", false, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_BASE_VS_TEXT_BASE"), "background-base", "icon-base", "ICON (1.1:1) VS TEXT (4.5:1)", true, 'read')
+      
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ACTIVE_INDICATOR_VS_BORDER"), "background-base", "line-indicator-active", "ACTIVE INDICATOR (4.5:1) VS BORDER (1.1:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("BORDER_VS_ACTIVE_INDICATOR"), "background-base", "border-base", "BORDER (1.1:1) VS ACTIVE INDICATOR (4.5:1)", true, 'read')
+      
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("STATUS_ICON_VS_DECORATIVE"), "background-base", "status-icon", "STATUS ICON (4.5:1) VS DECORATIVE (1.1:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("ICON_WEAK_VS_STATUS"), "background-base", "icon-weak", "WEAK ICON (1.1:1) VS STATUS (4.5:1)", true, 'read')
+      
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TAB_ACTIVE_VS_INACTIVE"), "background-base", "tab-active", "ACTIVE TAB (4.5:1) VS INACTIVE (1.1:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("SURFACE_WEAK_VS_ACTIVE"), "background-base", "surface-weak", "WEAK SURFACE (1.1:1) VS ACTIVE (4.5:1)", true, 'read')
+
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("TERMINAL_CURSOR_VS_BORDER"), "background-base", "terminal-cursor", "CURSOR (4.5:1) VS BORDER (1.1:1)", true, 'read')
+      addPair("LOG_09_COMPARISONS", formatAgentLabel("LOGO_VS_TEXT"), "background-base", "logo-base-strong", "LOGO (1.1:1) VS TEXT (4.5:1)", true, 'read')
 
       // --- LOG_09_AVATARS ---
       const avatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
