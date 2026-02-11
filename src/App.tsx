@@ -405,8 +405,19 @@ const App: React.FC = () => {
       { bg: "surface-base-active", fg: "text-diff-delete-base", desc: "ERROR DOT ON ACTIVE SESSION", isNonText: true },
       { bg: "surface-base-active", fg: "text-interactive-base", desc: "NOTIF DOT ON ACTIVE SESSION", isNonText: true },
 
-      // 5. STATE VS BASE: 1.1:1 / 15° Requirement
-      // Compares the session background states against the main sidebar/app background
+      // 5. SURFACE VS BACKGROUND: 1.1:1 / 15° Requirement
+      // Ensures surfaces are visible against the main container background
+      { bg: "background-base", fg: "surface-base", desc: "BASE SURFACE VS BACKGROUND", isNonText: true },
+      { bg: "background-base", fg: "surface-raised-base", desc: "RAISED SURFACE VS BACKGROUND", isNonText: true },
+      { bg: "background-base", fg: "surface-inset-base", desc: "INSET SURFACE VS BACKGROUND", isNonText: true },
+      
+      // 6. STRONGER BACKGROUND (SIDEBAR PANELS)
+      { bg: "background-stronger", fg: "text-base", desc: "TEXT ON STRONGER BG", isNonText: false },
+      { bg: "background-stronger", fg: "text-strong", desc: "STRONG TEXT ON STRONGER BG", isNonText: false },
+      { bg: "background-stronger", fg: "surface-base-active", desc: "ACTIVE STATE ON STRONGER BG", isNonText: true },
+      { bg: "background-stronger", fg: "surface-raised-base-hover", desc: "HOVER STATE ON STRONGER BG", isNonText: true },
+
+      // 7. STATE VS BACKGROUND: 1.1:1 / 15° Requirement
       { bg: "background-base", fg: "surface-base-active", desc: "ACTIVE SESSION VS BACKGROUND", isNonText: true },
       { bg: "background-base", fg: "surface-raised-base-hover", desc: "HOVER SESSION VS BACKGROUND", isNonText: true },
       { bg: "surface-raised-base-hover", fg: "surface-base-active", desc: "ACTIVE VS HOVER STATE", isNonText: true },
