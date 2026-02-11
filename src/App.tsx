@@ -103,6 +103,30 @@ const App: React.FC = () => {
   const [writeError, setWriteError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [quickPicker, setQuickPicker] = useState<{ x: number, y: number, key: string, label: string } | null>(null)
+  const [seedsInitialized, setSeedsInitialized] = useState(() => getInitialState("seedsInitialized", false))
+
+  // Manual seed initialization trigger
+  const initializeSeeds = useCallback((force = false) => {
+    if (seedsInitialized && !force) return
+
+    const lightSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
+    const darkSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
+
+    const newSeedOverrides = {
+      light: { ...seedOverrides.light },
+      dark: { ...seedOverrides.dark }
+    }
+
+    lightSeeds.forEach(seed => {
+      newSeedOverrides.light[seed.name] = seed.hex
+    })
+    darkSeeds.forEach(seed => {
+      newSeedOverrides.dark[seed.name] = seed.hex
+    })
+
+    setSeedOverrides(newSeedOverrides)
+    setSeedsInitialized(true)
+  }, [baseColor, harmony, spread, lightBrightness, darkBrightness, seedOverrides, seedsInitialized])
 
   // DEFERRED INPUTS: Use React 18 Deferred Value to keep sliders/wheel snappy
   // while offloading heavy palette & WCAG calculations to background priority
@@ -125,7 +149,7 @@ const App: React.FC = () => {
         baseColor, harmony, spread, variantCount, saturation,
         lightBrightness, darkBrightness, lightContrast, darkContrast,
         variantStrategy, colorSpace, outputSpace, useOpencodeMode,
-        themeName, matrixMode, manualOverrides, seedOverrides
+        themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
       }
       Object.entries(stateToSave).forEach(([key, value]) => {
         try {
@@ -141,7 +165,7 @@ const App: React.FC = () => {
     baseColor, harmony, spread, variantCount, saturation,
     lightBrightness, darkBrightness, lightContrast, darkContrast,
     variantStrategy, colorSpace, outputSpace, useOpencodeMode,
-    themeName, matrixMode, manualOverrides, seedOverrides
+    themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
   ])
 
   // Holistic palette generation using the new modular engine
@@ -313,11 +337,12 @@ const App: React.FC = () => {
                                fgKey.includes('label') || 
                                fgKey.includes('placeholder') || 
                                fgKey.includes('description') ||
+                               fgKey.includes('syntax') ||
                                // Functional icons that actually print text (like diff +/-)
                                (fgKey.includes('icon') && (
                                  category.includes('DIFF')
                                ))
-                             );
+                             ) && !label.includes("SELECTION");
 
         const isNonText = isNonTextParam || !isExplicitText;
         const isStrong = fgKey.includes('strong');
@@ -595,8 +620,8 @@ const App: React.FC = () => {
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("TAB_HOVER"), "background-base", "tab-hover", "HOVER TAB INDICATOR CONTRAST", true)
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("FOCUS_RING"), "background-base", "focus-ring", "FOCUS RING CONTRAST", true)
       addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SCROLLBAR"), "scrollbar-track", "scrollbar-thumb", "SCROLLBAR CONTRAST", true)
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", false)
-      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", false)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("SELECTION"), "selection-background", "selection-foreground", "SELECTION CONTRAST", true)
+      addPair("LOG_11_UI_EXTRAS", formatAgentLabel("INACTIVE_SELECTION"), "selection-inactive-background", "text-base", "INACTIVE SELECTION CONTRAST", true)
 
       // --- LOG_12_SPLASH_LOADING ---
       // Splash screen background is usually background-base or a specific surface
@@ -693,9 +718,44 @@ const App: React.FC = () => {
       })
 
       // --- LOG_20_SELECTIONS ---
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_VS_BG"), "background-base", "selection-background", "SELECTION BACKGROUND VS BASE", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_VS_BG"), "background-base", "selection-inactive-background", "INACTIVE SELECTION VS BASE", true)
+
+      // --- LOG_21_SEMANTIC_SURFACES ---
+      const surfaceSemanticTypes = ["brand", "interactive", "success", "warning", "critical", "info"]
+      surfaceSemanticTypes.forEach(type => {
+        // Text on base semantic surface
+        const bg = `surface-${type}-base`
+        const fg = `text-on-${type}-base`
+        addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_TEXT_ON_BASE`), bg, fg, `TEXT ON ${type.toUpperCase()} BASE`, false)
+        
+        // Text variants on base semantic surface
+        if (themeColors[`text-on-${type}-weak` as keyof OpencodeThemeColors]) {
+          addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_TEXT_WEAK_ON_BASE`), bg, `text-on-${type}-weak`, `WEAK TEXT ON ${type.toUpperCase()} BASE`, false)
+        }
+        if (themeColors[`text-on-${type}-strong` as keyof OpencodeThemeColors]) {
+          addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_TEXT_STRONG_ON_BASE`), bg, `text-on-${type}-strong`, `STRONG TEXT ON ${type.toUpperCase()} BASE`, false)
+        }
+
+        // Hover/Active surface contrast with base text
+        addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_TEXT_ON_HOVER`), `surface-${type}-hover`, fg, `TEXT ON ${type.toUpperCase()} HOVER`, false)
+        if (themeColors[`surface-${type}-active` as keyof OpencodeThemeColors]) {
+          addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_TEXT_ON_ACTIVE`), `surface-${type}-active`, fg, `TEXT ON ${type.toUpperCase()} ACTIVE`, false)
+        }
+
+        // Weak surface variant (often used for background tint) with base text
+        if (themeColors[`surface-${type}-weak` as keyof OpencodeThemeColors]) {
+          addPair("LOG_21_SEMANTIC_SURFACES", formatAgentLabel(`${type}_BASE_TEXT_ON_WEAK`), `surface-${type}-weak`, "text-base", `BASE TEXT ON WEAK ${type.toUpperCase()}`, false)
+        }
+      })
+
+      // --- LOG_22_INVERTED_TEXT ---
+      addPair("LOG_22_INVERTED_TEXT", formatAgentLabel("INVERT_TEXT_ON_STRONG"), "surface-strong", "text-invert-base", "INVERTED TEXT ON STRONG SURFACE", false)
+      addPair("LOG_22_INVERTED_TEXT", formatAgentLabel("INVERT_TEXT_ON_BRAND"), "surface-brand-base", "text-invert-base", "INVERTED TEXT ON BRAND SURFACE", false)
+      addPair("LOG_22_INVERTED_TEXT", formatAgentLabel("INVERT_ICON_ON_STRONG"), "surface-strong", "icon-invert-base", "INVERTED ICON ON STRONG SURFACE", true)
 
       // --- LOG_22_COLORED_TEXT_ICON ---
       const coloredBgs = [
@@ -767,6 +827,10 @@ const App: React.FC = () => {
       addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_DISABLED_TEXT"), "input-disabled", "text-weaker", "DISABLED INPUT TEXT CONTRAST", false)
       addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_BORDER"), "background-base", "border-hover", "INPUT HOVER BORDER CONTRAST", true)
       addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_BORDER"), "background-base", "border-active", "INPUT ACTIVE BORDER CONTRAST", true)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_HOVER_VS_BASE"), "input-base", "input-hover", "INPUT HOVER VS BASE CONTRAST", true)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_VS_BASE"), "input-base", "input-active", "INPUT ACTIVE VS BASE CONTRAST", true)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_ACTIVE_VS_HOVER"), "input-hover", "input-active", "INPUT ACTIVE VS HOVER CONTRAST", true)
+      addPair("LOG_28_INPUT_DETAILED", formatAgentLabel("INPUT_BASE_VS_BG"), "background-base", "input-base", "INPUT BASE VS BACKGROUND", true)
 
       // --- LOG_29_DIFF_EXTRAS ---
       addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_MODIFIED_ICON"), "background-base", "icon-diff-modified-base", "DIFF MODIFIED ICON CONTRAST", true)
@@ -780,10 +844,41 @@ const App: React.FC = () => {
        })
 
        // --- LOG_32_MISC_BORDERS_ICONS ---
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true)
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true)
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true)
-       addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true)
+      addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true)
+      addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true)
+      addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_WEAK_HOVER"), "background-base", "icon-weak-hover", "WEAK ICON HOVER CONTRAST", true)
+      addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("ICON_STRONG_SELECTED"), "background-base", "icon-strong-selected", "STRONG ICON SELECTED CONTRAST", true)
+
+      // --- LOG_33_SURFACE_TEXT_PAIRS ---
+      const surfaceTypes = ["inset", "raised", "float"]
+      surfaceTypes.forEach(s => {
+        const bg = `surface-${s}-base`
+        addPair("LOG_33_SURFACE_TEXT_PAIRS", formatAgentLabel(`${s.toUpperCase()}_TEXT_BASE`), bg, "text-base", `TEXT ON ${s.toUpperCase()} SURFACE`, false)
+        addPair("LOG_33_SURFACE_TEXT_PAIRS", formatAgentLabel(`${s.toUpperCase()}_TEXT_WEAK`), bg, "text-weak", `WEAK TEXT ON ${s.toUpperCase()} SURFACE`, false)
+        addPair("LOG_33_SURFACE_TEXT_PAIRS", formatAgentLabel(`${s.toUpperCase()}_TEXT_STRONG`), bg, "text-strong", `STRONG TEXT ON ${s.toUpperCase()} SURFACE`, false)
+      })
+      
+      // Inset strong surface often used for deeper depth
+      if (themeColors["surface-inset-strong" as keyof OpencodeThemeColors]) {
+        addPair("LOG_33_SURFACE_TEXT_PAIRS", formatAgentLabel("INSET_STRONG_TEXT"), "surface-inset-strong", "text-base", "TEXT ON INSET STRONG SURFACE", false)
+      }
+
+      // --- LOG_34_INTERACTIVE_SURFACE_PAIRS ---
+       const detailedInteractiveSurfaces = ["brand", "interactive"]
+       detailedInteractiveSurfaces.forEach(s => {
+         const bg = `surface-${s}-base`
+         addPair("LOG_34_INTERACTIVE_SURFACE_PAIRS", formatAgentLabel(`${s.toUpperCase()}_TEXT`), bg, `text-on-${s}-base`, `${s.toUpperCase()} TEXT ON SURFACE`, false)
+         addPair("LOG_34_INTERACTIVE_SURFACE_PAIRS", formatAgentLabel(`${s.toUpperCase()}_ICON`), bg, `icon-on-${s}-base`, `${s.toUpperCase()} ICON ON SURFACE`, true)
+       })
+
+       // --- LOG_35_BUTTON_TEXT ---
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("SECONDARY_BUTTON_TEXT"), "button-secondary-base", "text-base", "SECONDARY BUTTON TEXT", false)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("DANGER_BUTTON_TEXT"), "button-danger-base", "text-on-critical-base", "DANGER BUTTON TEXT", false)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("GHOST_BUTTON_TEXT"), "background-base", "text-base", "GHOST BUTTON TEXT (NORMAL)", false)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("GHOST_BUTTON_HOVER_TEXT"), "button-ghost-hover", "text-base", "GHOST BUTTON TEXT (HOVER)", false)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("SECONDARY_BUTTON_HOVER_VS_BASE"), "button-secondary-base", "button-secondary-hover", "SECONDARY BUTTON HOVER VS BASE", true)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("DANGER_BUTTON_HOVER_VS_BASE"), "button-danger-base", "button-danger-hover", "DANGER BUTTON HOVER VS BASE", true)
+       addPair("LOG_35_BUTTON_TEXT", formatAgentLabel("GHOST_BUTTON_HOVER_VS_BG"), "background-base", "button-ghost-hover", "GHOST BUTTON HOVER VS BACKGROUND", true)
 
     return pairs
   }, [themeColors, matrixMode, formatAgentLabel])
@@ -802,6 +897,13 @@ const App: React.FC = () => {
       palette: flatVariants,
     }
   }, [themeName, themeColors, activeMode, seedVariantsLight, seedVariantsDark])
+
+  // Trigger initial seeds ONLY ONCE if not already initialized
+  useEffect(() => {
+    if (!seedsInitialized) {
+      initializeSeeds();
+    }
+  }, [seedsInitialized, initializeSeeds]);
 
 // Matrix Router properties (Categorized for easier browsing)
 const MATRIX_PROPERTIES = [
@@ -1591,6 +1693,17 @@ const MatrixTokenRow = React.memo(({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => initializeSeeds(true)}
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
+                      activeMode === 'light'
+                        ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+                        : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                    }`}
+                    title="Regenerate seed colors based on current harmony and base color"
+                  >
+                    REGENERATE_SEEDS
+                  </button>
                   <button
                     onClick={handleAnalyzeSeeds}
                     disabled={isAnalyzing}
