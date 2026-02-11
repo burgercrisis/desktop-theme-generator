@@ -1,4 +1,4 @@
-import { DesktopTheme, OpencodeThemeColors, SeedColor } from "../types"
+import { DesktopTheme, SeedColor } from "../types"
 
 export interface OpencodeThemeJSON {
   $schema: string
@@ -62,8 +62,6 @@ export const exportToTailwind = (theme: DesktopTheme): string => {
 
 export const exportToOpencode9SeedJSON = (
   name: string,
-  lightColors: OpencodeThemeColors,
-  darkColors: OpencodeThemeColors,
   lightSeeds: SeedColor[],
   darkSeeds: SeedColor[],
   manualOverrides: Record<string, Record<string, string>> = { light: {}, dark: {} }
@@ -108,15 +106,14 @@ export const exportToOpencode9SeedJSON = (
   const lightSeedMap = getSeedMap(lightSeeds, 'light')
   const darkSeedMap = getSeedMap(darkSeeds, 'dark')
 
-  // Include all generated tokens as overrides to ensure Opencode matches the generator exactly.
-  // Opencode's internal seed-to-token generation logic is different from this generator's engine,
-  // so we must force our calculated colors as overrides.
+  // ONLY include manual overrides in the JSON. 
+  // We used to include all generated colors here to force Opencode to match the generator,
+  // but this clobbers the file and makes manual editing impossible.
+  // The user wants a clean overrides section.
   const lightOverrides: Record<string, string> = { 
-    ...lightColors,
     ...(manualOverrides.light || {}) 
   }
   const darkOverrides: Record<string, string> = { 
-    ...darkColors,
     ...(manualOverrides.dark || {}) 
   }
 
@@ -149,13 +146,11 @@ export const exportToOpencode9SeedJSON = (
  */
 export const writeOpencode9ThemeFile = async (
   name: string,
-  lightColors: OpencodeThemeColors,
-  darkColors: OpencodeThemeColors,
   lightSeeds: SeedColor[],
   darkSeeds: SeedColor[],
   overrides: Record<string, Record<string, string>>
 ): Promise<{ success: boolean; error?: string }> => {
-  const jsonContent = exportToOpencode9SeedJSON(name, lightColors, darkColors, lightSeeds, darkSeeds, overrides)
+  const jsonContent = exportToOpencode9SeedJSON(name, lightSeeds, darkSeeds, overrides)
   const json = JSON.parse(jsonContent)
 
   console.log(`📤 Syncing theme "${name}" to Opencode API...`)
