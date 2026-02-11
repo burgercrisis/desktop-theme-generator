@@ -295,9 +295,9 @@ const App: React.FC = () => {
 
   // WCAG Compliance Pairs - Comprehensive list for checker
   const wcagPairs = useMemo(() => {
-    // Return empty array if not in matrix mode to save heavy calculation
-    if (!matrixMode) return []
-
+    // We run the audit even if not in matrix mode so the Agent Log/Header is always accurate.
+    // getCachedContrastScore handles the performance by preventing redundant calculations.
+    
     clearContrastCache()
     const pairs: Array<{ 
       label: string; 
@@ -344,7 +344,7 @@ const App: React.FC = () => {
                                ))
                              );
 
-        const isNonText = isNonTextParam || (!isExplicitText && !label.includes("SELECTION_TEXT"));
+        const isNonText = isNonTextParam || (!isExplicitText && !label.includes("TEXT") && !label.includes("FOREGROUND") && !label.includes("DIFF"));
         const isStrong = fgKey.includes('strong');
         const isWeak = fgKey.includes('weak');
 
@@ -386,35 +386,48 @@ const App: React.FC = () => {
 
     // --- LOG_00_SESSION_CRITICAL_AUDIT ---
     // High-priority audit for the "Session" UI component (selection and hover states)
-    const criticalSessionBgs = [
-      "tree-background-selected", 
-      "tree-background-hover",
-      "selection-background", 
-      "surface-interactive-weak", 
-      "surface-brand-weak"
-    ]
-    criticalSessionBgs.forEach(bg => {
-      let bgLabel = "GEN_SEL"
-      if (bg.includes("tree")) {
-        bgLabel = bg.includes("selected") ? "SESSION_SEL" : "SESSION_HOVER"
-      }
-      if (bg.includes("interactive")) bgLabel = "INTER_SEL"
-      if (bg.includes("brand")) bgLabel = "BRAND_SEL"
-
-      const fgKey = bg.includes("tree") ? 
-        (bg.includes("selected") ? "tree-foreground-selected" : "tree-foreground-hover") : 
-        "selection-foreground"
+    // Pruned to only include tokens confirmed to be used in layout.tsx sidebar
+    const criticalSessionPairs = [
+      // 1. ACTIVE SESSION: The main culprit for "White on Light Blue"
+      { bg: "surface-base-active", fg: "text-text-strong", desc: "ACTIVE SESSION TEXT" },
+      { bg: "surface-base-active", fg: "text-icon-weak", desc: "ACTIVE SESSION ICON" },
       
-      const iconKey = bg.includes("tree") ? 
-        (bg.includes("selected") ? "tree-icon-selected" : "tree-icon-hover") : 
-        "icon-base"
+      // 2. HOVER SESSION: Second most common state
+      { bg: "surface-raised-base-hover", fg: "text-text-strong", desc: "HOVER SESSION TEXT" },
+      { bg: "surface-raised-base-hover", fg: "text-icon-weak", desc: "HOVER SESSION ICON" },
+      
+      // 3. TREE SELECTION: Used in file trees and secondary list components
+      { bg: "tree-background-selected", fg: "tree-foreground-selected", desc: "TREE SELECTED TEXT" },
+      { bg: "tree-background-selected", fg: "tree-icon-selected", desc: "TREE SELECTED ICON" },
+      
+      // 4. SEMANTIC INDICATORS: Specific badges/dots inside session items
+      { bg: "surface-base-active", fg: "surface-warning-strong", desc: "WARNING DOT ON ACTIVE SESSION", isNonText: true },
+      { bg: "surface-base-active", fg: "text-diff-delete-base", desc: "ERROR DOT ON ACTIVE SESSION", isNonText: true },
+      { bg: "surface-base-active", fg: "text-interactive-base", desc: "NOTIF DOT ON ACTIVE SESSION", isNonText: true },
 
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_PRIMARY_TEXT`), bg, "text-base", "PRIMARY TEXT ON SESSION STATE", false)
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_WEAK_TEXT`), bg, "text-weak", "WEAK TEXT ON SESSION STATE", false)
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_DIFF_ADD`), bg, "text-diff-add-base", "GREEN DIFF COUNT ON SESSION STATE", false)
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_DIFF_DEL`), bg, "text-diff-delete-base", "RED DIFF COUNT ON SESSION STATE", false)
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_FOREGROUND`), bg, fgKey, "CONTRAST FOR STATE FOREGROUND", false)
-      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_ICON`), bg, iconKey, "ICON CONTRAST ON SESSION STATE", true)
+      // 5. STATE VS BASE: 1.1:1 / 15° Requirement
+      // Compares the session background states against the main sidebar/app background
+      { bg: "background-base", fg: "surface-base-active", desc: "ACTIVE SESSION VS BACKGROUND", isNonText: true },
+      { bg: "background-base", fg: "surface-raised-base-hover", desc: "HOVER SESSION VS BACKGROUND", isNonText: true },
+      { bg: "surface-raised-base-hover", fg: "surface-base-active", desc: "ACTIVE VS HOVER STATE", isNonText: true },
+    ]
+
+    criticalSessionPairs.forEach(pair => {
+      const bg = themeColors[pair.bg as keyof OpencodeThemeColors]
+      const fg = themeColors[pair.fg as keyof OpencodeThemeColors]
+      if (!bg || !fg) return
+
+      const bgLabel = formatAgentLabel(pair.bg)
+      const fgLabel = formatAgentLabel(pair.fg)
+      
+      addPair(
+        "LOG_00_SESSION_CRITICAL_AUDIT", 
+        formatAgentLabel(`CRITICAL_${bgLabel}_X_${fgLabel}`), 
+        pair.bg, 
+        pair.fg, 
+        pair.desc, 
+        pair.isNonText || false
+      )
     })
 
       // --- LOG_01_TYPOGRAPHY ---
@@ -1683,6 +1696,22 @@ const MatrixTokenRow = React.memo(({
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {failCount > 0 && (
+            <div 
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all animate-pulse cursor-pointer ${
+                activeMode === 'light' 
+                  ? 'bg-red-50 border-red-200 text-red-600' 
+                  : 'bg-red-500/10 border-red-500/30 text-red-400'
+              }`}
+              onClick={() => {
+                setMatrixMode(true);
+                setActiveTab("palette");
+              }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest">{failCount} CONTRAST_FAILS</span>
+            </div>
+          )}
           <div className={`flex items-center gap-2 px-3 py-1.5 border rounded transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
             <span className={`text-[9px] font-mono uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-500/60' : 'text-purple-500/50'}`}>Project:</span>
             <input
