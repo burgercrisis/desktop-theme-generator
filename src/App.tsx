@@ -395,6 +395,14 @@ const App: React.FC = () => {
           addPair("LOG_02_SURFACES", formatAgentLabel(bgKey.replace("surface-", "")), "background-base", bgKey, `SURFACE ${bgKey.toUpperCase().replace(/-/g, '_')} ON BACKGROUND`, true)
           addPair("LOG_02_SURFACES", `TEXT_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "text-base", `TEXT_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, false)
           addPair("LOG_02_SURFACES", `ICON_ON_${formatAgentLabel(bgKey.replace("surface-", ""))}`, bgKey, "icon-base", `ICON_BASE_ON_${bgKey.toUpperCase().replace(/-/g, '_')}`, true)
+          
+          // Hover comparison: Hover state vs Base state (1.1/15 requirement)
+          if (bgKey.includes("-hover")) {
+            const baseKey = bgKey.replace("-hover", "");
+            if (themeColors[baseKey as keyof OpencodeThemeColors]) {
+              addPair("LOG_02_SURFACES", `${formatAgentLabel(bgKey.replace("surface-", ""))}_VS_BASE`, baseKey, bgKey, `HOVER VS BASE STATE`, true);
+            }
+          }
         })
       })
 
@@ -412,6 +420,19 @@ const App: React.FC = () => {
       ]
       interactiveSurfaces.forEach(s => {
         addPair("LOG_03_ACTIONS", formatAgentLabel(s.label), s.bg, s.fg, `TEXT_ON_${s.bg.toUpperCase().replace(/-/g, '_')}`, false)
+        
+        // Hover/Active vs Base state comparisons
+        if (s.bg.includes("-hover")) {
+          const baseKey = s.bg.replace("-hover", "-base");
+          if (themeColors[baseKey as keyof OpencodeThemeColors]) {
+            addPair("LOG_03_ACTIONS", `${formatAgentLabel(s.label)}_VS_BASE`, baseKey, s.bg, `HOVER VS BASE STATE`, true);
+          }
+        } else if (s.bg.includes("-active")) {
+          const baseKey = s.bg.replace("-active", "-base");
+          if (themeColors[baseKey as keyof OpencodeThemeColors]) {
+            addPair("LOG_03_ACTIONS", `${formatAgentLabel(s.label)}_VS_BASE`, baseKey, s.bg, `ACTIVE VS BASE STATE`, true);
+          }
+        }
       })
       
       addPair("LOG_03_ACTIONS", formatAgentLabel("INTERACTIVE_TEXT"), "background-base", "text-interactive-base", "INTERACTIVE_TEXT_ON_BACKGROUND", false)
@@ -424,11 +445,20 @@ const App: React.FC = () => {
       // --- LOG_04_BUTTONS ---
       addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_BASE"), "button-secondary-base", "text-base", "SECONDARY_BUTTON_TEXT", false)
       addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_HOVER"), "button-secondary-hover", "text-base", "SECONDARY_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("SECONDARY_HOVER_VS_BASE"), "button-secondary-base", "button-secondary-hover", "SECONDARY HOVER VS BASE", true)
+      
       addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER"), "button-ghost-hover", "text-base", "GHOST_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER_VS_BASE"), "background-base", "button-ghost-hover", "GHOST HOVER VS BASE", true)
+      
       addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER2"), "button-ghost-hover2", "text-base", "GHOST_BUTTON_HOVER2_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("GHOST_HOVER2_VS_BASE"), "background-base", "button-ghost-hover2", "GHOST HOVER2 VS BASE", true)
+      
       addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_BASE"), "button-danger-base", "text-on-critical-base", "DANGER_BUTTON_TEXT", false)
       addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER"), "button-danger-hover", "text-on-critical-base", "DANGER_BUTTON_HOVER_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER_VS_BASE"), "button-danger-base", "button-danger-hover", "DANGER HOVER VS BASE", true)
+      
       addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE"), "button-danger-active", "text-on-critical-base", "DANGER_BUTTON_ACTIVE_TEXT", false)
+      addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE_VS_BASE"), "button-danger-base", "button-danger-active", "DANGER ACTIVE VS BASE", true)
 
       // --- LOG_05_SEMANTIC ---
       const semanticTypes = ["success", "warning", "critical", "info"]
@@ -450,6 +480,14 @@ const App: React.FC = () => {
           
           // Verify strong text on all semantic surfaces
           addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_STRONG_ON_${state.label}`), bgKey, `text-on-${type}-strong`, `${type.toUpperCase()}_STRONG_TEXT_ON_${state.label}_SURFACE`, false)
+          
+          // Hover/Active vs Base state comparisons for semantic surfaces
+          if (state.suffix === "hover" || state.suffix === "active") {
+            const baseKey = `surface-${type}-base`;
+            if (themeColors[baseKey as keyof OpencodeThemeColors]) {
+              addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_${state.label}_VS_BASE`), baseKey, bgKey, `${state.label} VS BASE STATE`, true);
+            }
+          }
         })
         addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_ICON`), `background-base`, `icon-${type}-base`, `${type.toUpperCase()}_ICON_ON_BACKGROUND`, true)
         addPair("LOG_05_SEMANTIC", formatAgentLabel(`${type}_BORDER`), `background-base`, `border-${type}-base`, `${type.toUpperCase()}_BORDER_ON_BACKGROUND`, true)
