@@ -342,9 +342,9 @@ const App: React.FC = () => {
                                (fgKey.includes('icon') && (
                                  category.includes('DIFF')
                                ))
-                             ) && !label.includes("SELECTION");
+                             );
 
-        const isNonText = isNonTextParam || !isExplicitText;
+        const isNonText = isNonTextParam || (!isExplicitText && !label.includes("SELECTION_TEXT"));
         const isStrong = fgKey.includes('strong');
         const isWeak = fgKey.includes('weak');
 
@@ -383,6 +383,39 @@ const App: React.FC = () => {
         })
       }
     }
+
+    // --- LOG_00_SESSION_CRITICAL_AUDIT ---
+    // High-priority audit for the "Session" UI component (selection and hover states)
+    const criticalSessionBgs = [
+      "tree-background-selected", 
+      "tree-background-hover",
+      "selection-background", 
+      "surface-interactive-weak", 
+      "surface-brand-weak"
+    ]
+    criticalSessionBgs.forEach(bg => {
+      let bgLabel = "GEN_SEL"
+      if (bg.includes("tree")) {
+        bgLabel = bg.includes("selected") ? "SESSION_SEL" : "SESSION_HOVER"
+      }
+      if (bg.includes("interactive")) bgLabel = "INTER_SEL"
+      if (bg.includes("brand")) bgLabel = "BRAND_SEL"
+
+      const fgKey = bg.includes("tree") ? 
+        (bg.includes("selected") ? "tree-foreground-selected" : "tree-foreground-hover") : 
+        "selection-foreground"
+      
+      const iconKey = bg.includes("tree") ? 
+        (bg.includes("selected") ? "tree-icon-selected" : "tree-icon-hover") : 
+        "icon-base"
+
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_PRIMARY_TEXT`), bg, "text-base", "PRIMARY TEXT ON SESSION STATE", false)
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_WEAK_TEXT`), bg, "text-weak", "WEAK TEXT ON SESSION STATE", false)
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_DIFF_ADD`), bg, "text-diff-add-base", "GREEN DIFF COUNT ON SESSION STATE", false)
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_DIFF_DEL`), bg, "text-diff-delete-base", "RED DIFF COUNT ON SESSION STATE", false)
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_FOREGROUND`), bg, fgKey, "CONTRAST FOR STATE FOREGROUND", false)
+      addPair("LOG_00_SESSION_CRITICAL_AUDIT", formatAgentLabel(`${bgLabel}_ICON`), bg, iconKey, "ICON CONTRAST ON SESSION STATE", true)
+    })
 
       // --- LOG_01_TYPOGRAPHY ---
       // We exclude surfaces here to avoid duplicates with LOG_02_SURFACES
@@ -718,29 +751,30 @@ const App: React.FC = () => {
       })
 
       // --- LOG_20_SELECTIONS ---
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", true)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", true)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT"), "selection-background", "selection-foreground", "SELECTION TEXT CONTRAST", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("BASE_TEXT_ON_SELECTION"), "selection-background", "text-base", "BASE TEXT ON SELECTION BACKGROUND", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", false)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_VS_BG"), "background-base", "selection-background", "SELECTION BACKGROUND VS BASE", true)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_VS_BG"), "background-base", "selection-inactive-background", "INACTIVE SELECTION VS BASE", true)
-      
-      // Tree/Session Specific Selections
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED ITEM TEXT", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER ITEM TEXT", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_ICON"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ITEM ICON", true)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_VS_BG"), "background-base", "tree-background-selected", "TREE SELECTION VS BACKGROUND", true)
-      
-      // Detailed text on tree selection (for session items)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT_BASE"), "tree-background-selected", "text-base", "BASE TEXT ON TREE SELECTION", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT_WEAK"), "tree-background-selected", "text-weak", "WEAK TEXT ON TREE SELECTION", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_DIFF_ADD"), "tree-background-selected", "text-diff-add-base", "DIFF ADD TEXT ON TREE SELECTION", false)
-      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_DIFF_DELETE"), "tree-background-selected", "text-diff-delete-base", "DIFF DELETE TEXT ON TREE SELECTION", false)
       
       // Detailed text on general selection
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT_BASE"), "selection-background", "text-base", "BASE TEXT ON SELECTION", false)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT_WEAK"), "selection-background", "text-weak", "WEAK TEXT ON SELECTION", false)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_DIFF_ADD"), "selection-background", "text-diff-add-base", "DIFF ADD TEXT ON SELECTION", false)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_DIFF_DELETE"), "selection-background", "text-diff-delete-base", "DIFF DELETE TEXT ON SELECTION", false)
+
+      // --- LOG_36_SESSION_ITEM_DETAILS ---
+      // This specifically audits the "Session" UI component shown in user feedback
+      const sessionBgs = ["tree-background-selected", "selection-background"]
+      sessionBgs.forEach(bg => {
+        const bgLabel = bg.includes("tree") ? "TREE_SEL" : "GEN_SEL"
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_BASE_TEXT`), bg, "text-base", "PRIMARY TEXT ON SESSION SELECTION", false)
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_WEAK_TEXT`), bg, "text-weak", "SECONDARY/PATH TEXT ON SESSION SELECTION", false)
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_DIFF_ADD`), bg, "text-diff-add-base", "GREEN DIFF COUNT ON SESSION SELECTION", false)
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_DIFF_DELETE`), bg, "text-diff-delete-base", "RED DIFF COUNT ON SESSION SELECTION", false)
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_ICON_BASE`), bg, "icon-base", "ICON ON SESSION SELECTION", true)
+        addPair("LOG_36_SESSION_ITEM_DETAILS", formatAgentLabel(`${bgLabel}_ICON_WEAK`), bg, "icon-weak-base", "WEAK ICON ON SESSION SELECTION", true)
+      })
 
       // --- LOG_21_SEMANTIC_SURFACES ---
       const surfaceSemanticTypes = ["brand", "interactive", "success", "warning", "critical", "info"]
@@ -925,6 +959,7 @@ const App: React.FC = () => {
 
 // Matrix Router properties (Categorized for easier browsing)
 const MATRIX_PROPERTIES = [
+  { category: "CRITICAL_SESSION_UI", keys: ["tree-background-selected", "tree-foreground-selected", "tree-icon-selected", "selection-background", "selection-foreground", "selection-inactive-background"] },
   { category: "BACKGROUND", keys: ["background-base", "background-weak", "background-strong", "background-stronger"] },
   { category: "SURFACE_BASE", keys: ["surface-base", "surface-base-hover", "surface-base-active", "surface-base-interactive-active", "surface-weak", "surface-weaker", "surface-strong"] },
   { category: "SURFACE_INSET", keys: ["surface-inset-base", "surface-inset-base-hover", "surface-inset-base-active", "surface-inset-strong", "surface-inset-strong-hover"] },
