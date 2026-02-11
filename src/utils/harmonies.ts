@@ -6,22 +6,84 @@ export const generateOpencodeSeeds = (
   baseColor: HSL, 
   harmony: HarmonyRule = HarmonyRule.ANALOGOUS, 
   spread: number = 30,
-  brightness: number = 50
+  brightness: number = 50,
+  strategy: VariantStrategy = VariantStrategy.BALANCED
 ): SeedColor[] => {
   const { h, s, l } = baseColor;
   const lOffset = brightness - 50;
   
+  // Strategy-based adjustments for the seeds themselves
+  let sMod = 1.0;
+  let lMod = 0;
+  let tintAmount = 0;
+
+  switch (strategy) {
+    case VariantStrategy.PASTEL:
+      sMod = 0.5;
+      lMod = 10;
+      break;
+    case VariantStrategy.VIBRANT:
+    case VariantStrategy.HYPER:
+    case VariantStrategy.NEON:
+    case VariantStrategy.RADIOACTIVE:
+      sMod = 1.3;
+      lMod = -5;
+      break;
+    case VariantStrategy.MUTE:
+    case VariantStrategy.TONES:
+    case VariantStrategy.CLAY:
+      sMod = 0.4;
+      break;
+    case VariantStrategy.ATMOSPHERIC:
+    case VariantStrategy.BLEND:
+    case VariantStrategy.SHADED_BLEND:
+      tintAmount = 0.25; 
+      break;
+    case VariantStrategy.DEEP:
+    case VariantStrategy.GLACIAL:
+      lMod = -15;
+      sMod = 0.8;
+      break;
+    case VariantStrategy.ACID:
+      sMod = 1.5;
+      tintAmount = -0.1; // Slight push AWAY from primary
+      break;
+    case VariantStrategy.METALLIC:
+    case VariantStrategy.GLOSSY:
+    case VariantStrategy.CRYSTALLINE:
+      sMod = 0.7;
+      lMod = 5;
+      break;
+    case VariantStrategy.X_RAY:
+    case VariantStrategy.IRIDESCENT:
+    case VariantStrategy.LUMINOUS:
+      sMod = 1.1;
+      lMod = 10;
+      break;
+    default:
+      sMod = 1.0;
+      lMod = 0;
+  }
+
   // Helper to get harmony colors
-  const getHarmonyHue = (offset: number) => (h + offset + 360) % 360;
-  // Helper to apply brightness to HSL and return hex
+  const getHarmonyHue = (offset: number) => {
+    const rawHue = (h + offset + 360) % 360;
+    if (tintAmount === 0) return rawHue;
+    // Pull hue toward primary (h)
+    const diff = ((h - rawHue + 540) % 360) - 180;
+    return (rawHue + diff * tintAmount + 360) % 360;
+  };
+
+  // Helper to apply brightness/strategy to HSL and return hex
   const toHex = (hh: number, ss: number, ll: number) => {
-    const finalL = Math.max(0, Math.min(100, ll + lOffset));
-    return hslToHex(hh, ss, finalL);
+    const finalS = Math.max(0, Math.min(100, ss * sMod));
+    const finalL = Math.max(0, Math.min(100, ll + lOffset + lMod));
+    return hslToHex(hh, finalS, finalL);
   };
   const toHsl = (hh: number, ss: number, ll: number): HSL => ({
     h: hh,
-    s: ss,
-    l: Math.max(0, Math.min(100, ll + lOffset))
+    s: Math.max(0, Math.min(100, ss * sMod)),
+    l: Math.max(0, Math.min(100, ll + lOffset + lMod))
   });
 
   let interactiveHue = (h + spread) % 360;
@@ -46,25 +108,49 @@ export const generateOpencodeSeeds = (
       interactiveHue = getHarmonyHue(spread);
       infoHue = getHarmonyHue(spread * 2);
       break;
-    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY:
-      interactiveHue = getHarmonyHue(180 - spread);
-      infoHue = getHarmonyHue(180 + spread);
+    case HarmonyRule.SYNTHWAVE:
+      interactiveHue = getHarmonyHue(200);
+      infoHue = getHarmonyHue(320);
       break;
-    case HarmonyRule.TRIADIC:
+    case HarmonyRule.VIVID_PASTEL:
+      interactiveHue = getHarmonyHue(160);
+      infoHue = getHarmonyHue(280);
+      break;
+    case HarmonyRule.PASTEL_DREAMS:
       interactiveHue = getHarmonyHue(120);
       infoHue = getHarmonyHue(240);
       break;
-    case HarmonyRule.SQUARE:
-      interactiveHue = getHarmonyHue(90);
-      infoHue = getHarmonyHue(180);
+    case HarmonyRule.GOLDEN:
+      interactiveHue = getHarmonyHue(137.5);
+      infoHue = getHarmonyHue(275);
+      break;
+    case HarmonyRule.NATURAL:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(-spread);
       break;
     case HarmonyRule.TETRADIC:
       interactiveHue = getHarmonyHue(180);
       infoHue = getHarmonyHue(180 + spread);
       break;
+    case HarmonyRule.SQUARE:
+      interactiveHue = getHarmonyHue(90);
+      infoHue = getHarmonyHue(180);
+      break;
+    case HarmonyRule.TRIADIC:
+      interactiveHue = getHarmonyHue(120);
+      infoHue = getHarmonyHue(240);
+      break;
+    case HarmonyRule.DOUBLE_SPLIT_COMPLEMENTARY:
+      interactiveHue = getHarmonyHue(180 - spread);
+      infoHue = getHarmonyHue(180 + spread);
+      break;
     case HarmonyRule.SPLIT_COMPLEMENTARY:
       interactiveHue = getHarmonyHue(180 - spread);
       infoHue = getHarmonyHue(180 + spread);
+      break;
+    case HarmonyRule.ANALOGOUS_5:
+      interactiveHue = getHarmonyHue(spread);
+      infoHue = getHarmonyHue(spread * 2);
       break;
     case HarmonyRule.ACCENTED_ANALOGOUS:
       interactiveHue = getHarmonyHue(spread);
@@ -79,10 +165,6 @@ export const generateOpencodeSeeds = (
     case HarmonyRule.COMPOUND:
       interactiveHue = getHarmonyHue(spread);
       infoHue = getHarmonyHue(180 - spread);
-      break;
-    case HarmonyRule.NATURAL:
-      interactiveHue = getHarmonyHue(spread);
-      infoHue = getHarmonyHue(-spread);
       break;
     case HarmonyRule.DEEP_NIGHT:
       interactiveHue = getHarmonyHue(240);
@@ -124,14 +206,6 @@ export const generateOpencodeSeeds = (
     case HarmonyRule.ROYAL:
       interactiveHue = getHarmonyHue(270);
       infoHue = getHarmonyHue(50);
-      break;
-    case HarmonyRule.PASTEL_DREAMS:
-      interactiveHue = getHarmonyHue(120);
-      infoHue = getHarmonyHue(240);
-      break;
-    case HarmonyRule.GOLDEN:
-      interactiveHue = getHarmonyHue(137.5);
-      infoHue = getHarmonyHue(275);
       break;
     default:
       interactiveHue = getHarmonyHue(spread);

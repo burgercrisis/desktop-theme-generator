@@ -224,11 +224,11 @@ export const useThemeEngine = ({
       return seedNames.map(name => {
         const hex = seedOverrides.light[name];
         if (hex) return { name, hex, hsl: hexToHsl(hex) };
-        const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness);
+        const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness, variantStrategy);
         return baseSeeds.find(s => s.name === name) || baseSeeds[0];
       });
     }
-    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness)
+    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, lightBrightness, variantStrategy)
     return baseSeeds.map(seed => {
       const overrideHex = seedOverrides.light?.[seed.name]
       if (overrideHex) return { ...seed, hex: overrideHex, hsl: hexToHsl(overrideHex) }
@@ -242,11 +242,11 @@ export const useThemeEngine = ({
       return seedNames.map(name => {
         const hex = seedOverrides.dark[name];
         if (hex) return { name, hex, hsl: hexToHsl(hex) };
-        const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness);
+        const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness, variantStrategy);
         return baseSeeds.find(s => s.name === name) || baseSeeds[0];
       });
     }
-    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness)
+    const baseSeeds = generateOpencodeSeeds(baseColor, harmony, spread, darkBrightness, variantStrategy)
     return baseSeeds.map(seed => {
       const overrideHex = seedOverrides.dark?.[seed.name]
       if (overrideHex) return { ...seed, hex: overrideHex, hsl: hexToHsl(overrideHex) }
@@ -322,92 +322,138 @@ export const useThemeEngine = ({
       setSaturation(Math.round(avgS));
 
       // 3. Analyze CONTRAST (Lightness spread)
-      const baseSeed = currentSeeds.find(s => s.name === "seed-base");
-      const strongSeed = currentSeeds.find(s => s.name === "seed-strong");
-      if (baseSeed && strongSeed) {
-        const lDiff = Math.abs(baseSeed.hsl.l - strongSeed.hsl.l);
-        const guessedContrast = Math.min(100, Math.max(0, lDiff * 2.5));
-        if (activeMode === "light") setLightContrast(Math.round(guessedContrast));
-        else setDarkContrast(Math.round(guessedContrast));
-      }
+      // We look for the maximum lightness difference between any two seeds
+      // Typically neutral and primary, or a background/text pair if we had one
+      let minL = 100;
+      let maxL = 0;
+      currentSeeds.forEach(s => {
+        if (s.hsl.l < minL) minL = s.hsl.l;
+        if (s.hsl.l > maxL) maxL = s.hsl.l;
+      });
+      
+      const lDiff = maxL - minL;
+      // In Opencode, contrast of 50 usually means a ~20-30% spread. 
+      // 100 means ~40-50% spread. 
+      const guessedContrast = Math.min(100, Math.max(0, lDiff * 2.2));
+      
+      if (activeMode === "light") setLightContrast(Math.round(guessedContrast));
+      else setDarkContrast(Math.round(guessedContrast));
 
-      // 4. Analyze HARMONY and SPREAD
+      // 4. Analyze HARMONY, SPREAD, and STRATEGY
       const baseHue = currentSeeds.find(s => s.name === "primary")?.hsl.h || 0;
       setBaseColor(prev => ({ ...prev, h: baseHue }));
 
       let bestHarmony = harmony;
       let bestSpread = spread;
+      let bestStrategy = variantStrategy;
       let minTotalError = Infinity;
 
       const harmonyRules = Object.values(HarmonyRule);
-      
-      for (const hRule of harmonyRules) {
-        for (let sVal = 0; sVal <= 180; sVal += 1) {
-          const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50);
-          
-          let ruleHueError = 0;
-          let matchCount = 0;
+      const strategies = Object.values(VariantStrategy);
 
-          currentSeeds.forEach(target => {
-            const match = testSeeds.find(ts => ts.name === target.name);
-            if (match) {
-              const hueDiff = Math.min(Math.abs(match.hsl.h - target.hsl.h), 360 - Math.abs(match.hsl.h - target.hsl.h));
-              const satDiff = Math.abs(match.hsl.s - target.hsl.s);
-              const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
-              
-              const hueWeight = hueDiff < 5 ? 1 : hueDiff < 15 ? 5 : 15;
-              ruleHueError += (hueDiff * hueWeight) + (satDiff * 0.2) + (lumDiff * 0.2);
-              matchCount++;
-            }
-          });
+      // Helper for weighted error calculation (Comparing Seeds)
+      const calculateSeedError = (testSeeds: SeedColor[]) => {
+        let totalError = 0;
+        let totalWeight = 0;
 
-          const avgError = matchCount > 0 ? ruleHueError / matchCount : 999;
-          
-          let ruleBias = 0;
-          if (hRule === HarmonyRule.ANALOGOUS) ruleBias = 10;
-          if (hRule === HarmonyRule.MONOCHROMATIC || hRule === HarmonyRule.SHADES) ruleBias = 5;
-          
-          if (hRule === HarmonyRule.COMPLEMENTARY || hRule === HarmonyRule.TRIADIC || hRule === HarmonyRule.SQUARE) {
-            ruleBias = -2;
+        currentSeeds.forEach(target => {
+          const match = testSeeds.find(ts => ts.name === target.name);
+          if (match) {
+            const hueDiff = Math.min(Math.abs(match.hsl.h - target.hsl.h), 360 - Math.abs(match.hsl.h - target.hsl.h));
+            const satDiff = Math.abs(match.hsl.s - target.hsl.s);
+            const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
+            
+            let semanticWeight = 1.0;
+            if (target.name === "primary") semanticWeight = 5.0;
+            if (target.name === "neutral") semanticWeight = 4.0;
+            if (target.name === "interactive") semanticWeight = 3.0;
+
+            const error = (hueDiff * 2.0) + (satDiff * 0.5) + (lumDiff * 0.5);
+            totalError += error * semanticWeight;
+            totalWeight += semanticWeight;
           }
+        });
 
-          const finalError = avgError + ruleBias;
+        return totalWeight > 0 ? totalError / totalWeight : 999;
+      };
 
-          if (finalError < minTotalError) {
-            minTotalError = finalError;
-            bestHarmony = hRule;
-            bestSpread = sVal;
+      // PASS 1: Coarse search for (Harmony, Strategy, Spread)
+      // We collect the top 5 candidates to verify them more deeply in Pass 2
+      interface Candidate {
+        hRule: HarmonyRule;
+        strat: VariantStrategy;
+        sVal: number;
+        error: number;
+      }
+      let candidates: Candidate[] = [];
+
+      for (const strat of strategies) {
+        for (const hRule of harmonyRules) {
+          for (let sVal = 0; sVal <= 180; sVal += 15) { // Coarser pass to keep performance high
+            const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50, strat);
+            const avgError = calculateSeedError(testSeeds);
+            
+            let ruleBias = 0;
+            switch (hRule) {
+              case HarmonyRule.ANALOGOUS: ruleBias = -5; break;
+              case HarmonyRule.COMPLEMENTARY: ruleBias = -3; break;
+              case HarmonyRule.MONOCHROMATIC: ruleBias = -2; break;
+              default: ruleBias = 0;
+            }
+
+            candidates.push({ hRule, strat, sVal, error: avgError + ruleBias });
           }
         }
       }
 
-      setHarmony(bestHarmony);
-      setSpread(bestSpread);
+      // Sort and take top 5
+      candidates.sort((a, b) => a.error - b.error);
+      const topCandidates = candidates.slice(0, 5);
+
+      // PASS 2: Fine-grained search and Variant Verification
+      // Now we check the top candidates by comparing their full color ramps
+      let bestResult = topCandidates[0];
+      let minFullError = Infinity;
+
+      for (const cand of topCandidates) {
+        // Refine spread for this candidate
+        const startS = Math.max(0, cand.sVal - 15);
+        const endS = Math.min(180, cand.sVal + 15);
+
+        for (let sVal = startS; sVal <= endS; sVal += 2.5) {
+          const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, cand.hRule, sVal, 50, cand.strat);
+          
+          // Generate full variants for primary and neutral to verify the "feel" of the strategy
+          let variantError = 0;
+          const seedsToVerify = testSeeds.filter(s => ["primary", "neutral"].includes(s.name));
+          
+          seedsToVerify.forEach(seed => {
+            const testVars = generateVariants(seed.hsl, 12, (activeMode === "light" ? lightContrast : darkContrast), cand.strat, colorSpace, outputSpace, 50);
+            const currentVars = activeVariantsMap[seed.name] || [];
+            
+            const compareCount = Math.min(testVars.length, currentVars.length);
+            for (let i = 0; i < compareCount; i++) {
+              variantError += Math.abs(testVars[i].hsl.l - currentVars[i].hsl.l) * 1.5;
+              variantError += Math.abs(testVars[i].hsl.s - currentVars[i].hsl.s) * 0.5;
+            }
+          });
+
+          const seedErr = calculateSeedError(testSeeds);
+          const totalFullError = seedErr + (variantError / 24); // Normalize variant error
+
+          if (totalFullError < minFullError) {
+            minFullError = totalFullError;
+            bestResult = { ...cand, sVal };
+          }
+        }
+      }
+
+      setHarmony(bestResult.hRule);
+      setSpread(bestResult.sVal);
+      setVariantStrategy(bestResult.strat);
       setVariantCount(12);
 
-      // 5. Guess STRATEGY_MAP
-      let finalStrategy = variantStrategy;
-      const primarySeed = currentSeeds.find(s => s.name === "primary");
-      if (primarySeed) {
-        const strategies = Object.values(VariantStrategy);
-        let minVarError = Infinity;
-
-        strategies.forEach(strat => {
-          const testVars = generateVariants(primarySeed.hsl, 12, (activeMode === "light" ? lightContrast : darkContrast), strat, colorSpace, outputSpace, 50);
-          const currentVars = activeVariantsMap["primary"] || [];
-          
-          let varError = 0;
-          for (let i = 0; i < Math.min(testVars.length, currentVars.length); i++) {
-            varError += Math.abs(testVars[i].hsl.l - currentVars[i].hsl.l);
-          }
-          
-          if (varError < minVarError) {
-            minVarError = varError;
-            finalStrategy = strat;
-          }
-        });
-        setVariantStrategy(finalStrategy);
-      }
+      console.log(`[Analysis] Final Result: Harmony=${bestResult.hRule}, Strategy=${bestResult.strat}, Spread=${bestResult.sVal.toFixed(1)}`);
       
       console.log(`[Analysis] Result: Harmony=${bestHarmony}, Spread=${bestSpread}, Strategy=${finalStrategy}`);
     } finally {
