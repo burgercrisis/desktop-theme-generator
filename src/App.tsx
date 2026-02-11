@@ -723,6 +723,24 @@ const App: React.FC = () => {
       addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_TEXT"), "selection-inactive-background", "text-base", "TEXT ON INACTIVE SELECTION", true)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_VS_BG"), "background-base", "selection-background", "SELECTION BACKGROUND VS BASE", true)
       addPair("LOG_20_SELECTIONS", formatAgentLabel("INACTIVE_SELECTION_VS_BG"), "background-base", "selection-inactive-background", "INACTIVE SELECTION VS BASE", true)
+      
+      // Tree/Session Specific Selections
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT"), "tree-background-selected", "tree-foreground-selected", "TREE SELECTED ITEM TEXT", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_HOVER_TEXT"), "tree-background-hover", "tree-foreground-hover", "TREE HOVER ITEM TEXT", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_ICON"), "tree-background-selected", "tree-icon-selected", "TREE SELECTED ITEM ICON", true)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_VS_BG"), "background-base", "tree-background-selected", "TREE SELECTION VS BACKGROUND", true)
+      
+      // Detailed text on tree selection (for session items)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT_BASE"), "tree-background-selected", "text-base", "BASE TEXT ON TREE SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_TEXT_WEAK"), "tree-background-selected", "text-weak", "WEAK TEXT ON TREE SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_DIFF_ADD"), "tree-background-selected", "text-diff-add-base", "DIFF ADD TEXT ON TREE SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("TREE_SELECTED_DIFF_DELETE"), "tree-background-selected", "text-diff-delete-base", "DIFF DELETE TEXT ON TREE SELECTION", false)
+      
+      // Detailed text on general selection
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT_BASE"), "selection-background", "text-base", "BASE TEXT ON SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_TEXT_WEAK"), "selection-background", "text-weak", "WEAK TEXT ON SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_DIFF_ADD"), "selection-background", "text-diff-add-base", "DIFF ADD TEXT ON SELECTION", false)
+      addPair("LOG_20_SELECTIONS", formatAgentLabel("SELECTION_DIFF_DELETE"), "selection-background", "text-diff-delete-base", "DIFF DELETE TEXT ON SELECTION", false)
 
       // --- LOG_21_SEMANTIC_SURFACES ---
       const surfaceSemanticTypes = ["brand", "interactive", "success", "warning", "critical", "info"]
