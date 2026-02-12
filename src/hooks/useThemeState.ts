@@ -41,6 +41,7 @@ export const useThemeState = () => {
   const [themeName, setThemeName] = useState("My Theme")
   const [activeTab, setActiveTab] = useState<"palette" | "export">("palette")
   const [matrixMode, setMatrixMode] = useState(() => getInitialState("matrixMode", false))
+  const [matrixView, setMatrixView] = useState<"audit" | "mappings">((() => getInitialState("matrixView", "audit")))
   const [manualOverrides, setManualOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("manualOverrides", { light: {}, dark: {} }))
   const [seedOverrides, setSeedOverrides] = useState<Record<string, Record<string, string>>>(() => getInitialState("seedOverrides", { light: {}, dark: {} }))
   const [seedsInitialized, setSeedsInitialized] = useState(() => getInitialState("seedsInitialized", false))
@@ -127,7 +128,7 @@ export const useThemeState = () => {
         baseColor, harmony, spread, variantCount, saturation,
         lightBrightness, darkBrightness, lightContrast, darkContrast,
         variantStrategy, colorSpace, outputSpace, useOpencodeMode,
-        themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
+        themeName, matrixMode, matrixView, manualOverrides, seedOverrides, seedsInitialized
       }
       Object.entries(stateToSave).forEach(([key, value]) => {
         try {
@@ -143,7 +144,7 @@ export const useThemeState = () => {
     baseColor, harmony, spread, variantCount, saturation,
     lightBrightness, darkBrightness, lightContrast, darkContrast,
     variantStrategy, colorSpace, outputSpace, useOpencodeMode,
-    themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
+    themeName, matrixMode, matrixView, manualOverrides, seedOverrides, seedsInitialized
   ])
 
   return {
@@ -165,6 +166,7 @@ export const useThemeState = () => {
     themeName, setThemeName,
     activeTab, setActiveTab,
     matrixMode, setMatrixMode,
+    matrixView, setMatrixView,
     manualOverrides, setManualOverrides,
     seedOverrides, setSeedOverrides,
     seedsInitialized, setSeedsInitialized,

@@ -238,6 +238,12 @@ export const useWcagAudit = ({ themeColors }: UseWcagAuditProps) => {
     avatarColors.forEach(color => {
       addPair("LOG_09_AVATARS", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false)
     })
+    
+    // --- LOG_31_AVATAR_EXPANDED ---
+    const expandedAvatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
+    expandedAvatarColors.forEach(color => {
+      addPair("LOG_09_AVATARS", formatAgentLabel(`EXPANDED_${color}`), `avatar-background-${color}`, `avatar-text-${color}`, `EXPANDED_AVATAR_${color.toUpperCase()}_CONTRAST`, false)
+    })
 
     // --- LOG_10_SYNTAX ---
     const syntaxTokensDetailed = [

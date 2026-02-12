@@ -343,11 +343,6 @@ export const useThemeEngine = ({
       const baseHue = currentSeeds.find(s => s.name === "primary")?.hsl.h || 0;
       setBaseColor(prev => ({ ...prev, h: baseHue }));
 
-      let bestHarmony = harmony;
-      let bestSpread = spread;
-      let bestStrategy = variantStrategy;
-      let minTotalError = Infinity;
-
       const harmonyRules = Object.values(HarmonyRule);
       const strategies = Object.values(VariantStrategy);
 
@@ -454,8 +449,6 @@ export const useThemeEngine = ({
       setVariantCount(12);
 
       console.log(`[Analysis] Final Result: Harmony=${bestResult.hRule}, Strategy=${bestResult.strat}, Spread=${bestResult.sVal.toFixed(1)}`);
-      
-      console.log(`[Analysis] Result: Harmony=${bestHarmony}, Spread=${bestSpread}, Strategy=${finalStrategy}`);
     } finally {
       setIsAnalyzing(false);
     }

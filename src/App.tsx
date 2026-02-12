@@ -58,6 +58,7 @@ const App: React.FC = () => {
     themeName, setThemeName,
     activeTab, setActiveTab,
     matrixMode, setMatrixMode,
+    matrixView, setMatrixView,
     manualOverrides, setManualOverrides,
     seedOverrides, setSeedOverrides,
     seedsInitialized, setSeedsInitialized,
@@ -141,6 +142,19 @@ const App: React.FC = () => {
 
   const { wcagPairs, formatAgentLabel, passCount, failCount } = useWcagAudit({ themeColors });
   const deferredWcagPairs = useDeferredValue(wcagPairs);
+
+  const handleInitialize = useCallback(() => {
+    // Proactively detect all parameters
+    handleAnalyzeSeeds(seeds9);
+    
+    // Always switch to mappings view to display the detected state
+    setMatrixView("mappings");
+    
+    // Ensure matrix mode is active
+    if (!matrixMode) {
+      setMatrixMode(true);
+    }
+  }, [matrixMode, handleAnalyzeSeeds, seeds9, setMatrixMode, setMatrixView]);
 
   const { writeStatus, writeError, fileLoaded } = useThemeSync({
     themeName,
@@ -355,13 +369,13 @@ const App: React.FC = () => {
                     {isAnalyzing ? "CALCULATING..." : "ANALYZE_SEEDS"}
                   </button>
                   <button
-                    onClick={() => setMatrixMode(!matrixMode)}
+                    onClick={handleInitialize}
                     className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
                       matrixMode 
-                        ? "bg-purple-500/20 text-purple-600 border-purple-500/40" 
+                        ? "bg-purple-600 text-white border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
                         : activeMode === 'light'
-                          ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
-                          : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
+                          ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+                          : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
                     }`}
                   >
                     {matrixMode ? "DISCONNECT" : "INITIALIZE"}
@@ -371,361 +385,459 @@ const App: React.FC = () => {
 
               {matrixMode && (
                 <div className="p-4">
-                  {/* Override count and status */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-mono font-bold uppercase tracking-tight transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/40'}`}>
-                        {Object.keys(manualOverrides[activeMode] || {}).length + Object.keys(seedOverrides[activeMode] || {}).length} OVERRIDE(S)_ACTIVE
-                      </span>
-                      {writeStatus === "writing" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-mono animate-pulse">
-                          WRITING...
-                        </span>
+                  {/* View Toggle */}
+                  <div className="flex border-b border-purple-500/20 mb-4">
+                    <button
+                      onClick={() => setMatrixView("audit")}
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                        matrixView === "audit"
+                          ? "text-purple-400"
+                          : "text-purple-500/40 hover:text-purple-500/60"
+                      }`}
+                    >
+                      AUDIT_LOG
+                      {matrixView === "audit" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
                       )}
-                      {writeStatus === "success" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 font-mono">
-                          ✓ SYNC_SUCCESS
-                        </span>
+                    </button>
+                    <button
+                      onClick={() => setMatrixView("mappings")}
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                        matrixView === "mappings"
+                          ? "text-purple-400"
+                          : "text-purple-500/40 hover:text-purple-500/60"
+                      }`}
+                    >
+                      MAPPINGS
+                      {matrixView === "mappings" && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
                       )}
-                      {writeStatus === "error" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-mono" title={writeError || "Unknown error"}>
-                          ⚠ SYNC_FAILED
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={handleResetMode}
-                        disabled={
-                          Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
-                          Object.keys(seedOverrides[activeMode] || {}).length === 0
-                        }
-                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
-                          activeMode === 'light'
-                            ? "border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100"
-                            : "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
-                        }`}
-                        title={`Reset only ${activeMode} overrides`}
-                      >
-                        RESET_{activeMode.toUpperCase()}
-                      </button>
-                      <button
-                        onClick={handleClearAll}
-                        disabled={
-                          Object.keys(manualOverrides.light).length === 0 && 
-                          Object.keys(manualOverrides.dark).length === 0 && 
-                          Object.keys(seedOverrides.light).length === 0 && 
-                          Object.keys(seedOverrides.dark).length === 0
-                        }
-                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
-                          activeMode === 'light'
-                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                            : "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                        }`}
-                        title="Clear all overrides for BOTH modes"
-                      >
-                        PURGE_ALL
-                      </button>
-                    </div>
+                    </button>
                   </div>
 
-                  {/* WCAG Compliance Summary - AGENT LOG STYLE */}
-                  <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
-                    <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>
-                          AGENT_AUDIT_LOG
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
-                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
-                            {passCount}
-                          </span>
+                  {matrixView === "mappings" ? (
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                      {/* Seeds Section */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-2 py-1 border-b border-purple-500/10">
+                          <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest"># SEEDS_INVENTORY</span>
+                          <span className="text-[9px] font-mono text-purple-500/40 uppercase tracking-tighter">Hex Value</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
-                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
-                            {failCount}
-                          </span>
+                        <div className="grid grid-cols-3 gap-2 p-2">
+                          {seeds9.map((seed) => {
+                            const isOverridden = seedOverrides[activeMode]?.[seed.name] !== undefined;
+                            return (
+                              <div key={seed.name} className={`p-2 rounded border flex flex-col gap-1 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-[9px] font-mono font-bold uppercase ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{seed.name}</span>
+                                  {isOverridden && <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_5px_rgba(249,115,22,0.5)]"></span>}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded shadow-sm border border-black/10" style={{ backgroundColor: seed.hex }}></div>
+                                  <span className={`text-[10px] font-mono ${activeMode === 'light' ? 'text-purple-600' : 'text-purple-400'}`}>{seed.hex}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    </div>
 
-                    <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
-                      <div className="flex flex-col">
-                        {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
-                          <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
-                            <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
-                              <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
-                                <span className="opacity-40">#</span> {category}
-                              </h3>
-                              <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
-                                {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
-                              </span>
-                            </div>
-                            
-                            <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
-                              {deferredWcagPairs.filter(p => p.category === category).map(pair => {
-                                const score = pair.score
-                                const isFailing = !score.pass
-                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.category);
-                                
-                                // Map type to icon
-                                let typeIcon = "📄" // read
-                                if (pair.type === 'shell') typeIcon = "🐚"
-                                if (pair.type === 'action') typeIcon = "⚡"
-                                if (pair.type === 'diff') typeIcon = "🔍"
-
-                                return (
-                                  <div 
-                                    key={`${pair.category}-${pair.type}-${pair.label}-${pair.bgKey}-${pair.fgKey}`} 
-                                    className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
-                                  >
-                                    {/* Icon Column */}
-                                    <div className={`w-5 h-5 shrink-0 flex items-center justify-center rounded text-[10px] border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200 group-hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] group-hover:border-purple-500/30'}`}>
-                                      {typeIcon}
-                                    </div>
-
-                                    {/* Content Column */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-baseline justify-between gap-2">
-                                        <div className="flex flex-col min-w-0">
-                                          <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
-                                            {pair.label}
-                                          </span>
-                                          <div className="flex items-center gap-1 opacity-60 text-[7px] font-mono">
-                                            {pair.isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NON_TEXT</span>}
-                                            {pair.isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BORDER</span>}
-                                            {pair.isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WEAK</span>}
-                                            {pair.isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">STRONG</span>}
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                          <div className="flex flex-col items-end">
-                                            <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
-                                              {score.ratio.toFixed(2)}:1
-                                              <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
-                                            </span>
-                                            {score.hueDiff > 0 && (
-                                              <span className={`text-[7px] font-mono leading-none mt-0.5 transition-colors ${score.hueDiff >= 15 ? (activeMode === 'light' ? 'text-blue-600' : 'text-blue-400') : 'opacity-40'}`}>
-                                                H_DIFF: {score.hueDiff}°
-                                              </span>
-                                            )}
-                                          </div>
-                                          <span className={`text-[8px] font-black px-1 rounded-[2px] ${
-                                            isFailing 
-                                              ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
-                                              : activeMode === 'light' 
-                                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                                : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                          }`}>
-                                            {isFailing ? 'FAIL' : (score.level === 'AAA' ? 'AAA' : 'PASS')}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center justify-between mt-0.5">
-                                        <div className="flex items-center gap-1.5 overflow-hidden">
-                                          <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
-                                        </div>
-                                          {isFailing && (
-                                            <div className="grid grid-cols-2 gap-1 shrink-0">
-                                              <button
-                                                onClick={() => {
-                                                  const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
-                                                  handleManualOverride(pair.bgKey, fixed);
-                                                }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
-                                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
-                                                }`}
-                                                title={`FIX_BG_LUM: ${pair.bgKey}`}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
-                                                L_BG
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
-                                                  handleManualOverride(pair.fgKey, fixed);
-                                                }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
-                                                    : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
-                                                }`}
-                                                title={`FIX_FG_LUM: ${pair.fgKey}`}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
-                                                L_FG
-                                              </button>
-                                              
-                                              {/* Hue Fix Buttons */}
-                                              <button
-                                                onClick={() => {
-                                                  const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
-                                                  handleManualOverride(pair.bgKey, fixed);
-                                                }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200'
-                                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/40'
-                                                }`}
-                                                title={`FIX_BG_HUE: ${pair.bgKey}`}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
-                                                H_BG
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
-                                                  handleManualOverride(pair.fgKey, fixed);
-                                                }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'
-                                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40'
-                                                }`}
-                                                title={`FIX_FG_HUE: ${pair.fgKey}`}
-                                              >
-                                                <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
-                                                H_FG
-                                              </button>
-                                            </div>
-                                          )}
-                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                            <button 
-                                              className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
-                                            style={{ backgroundColor: pair.bg }} 
-                                            title={`BG: ${pair.bgKey}`}
-                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
-                                          />
-                                          <button 
-                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
-                                            style={{ backgroundColor: pair.fg }} 
-                                            title={`FG: ${pair.fgKey}`}
-                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Full Palette Overview - TERMINAL STYLE */}
-                  <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
-                    <div className={`px-3 py-1.5 border-b flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
-                      <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
-                        # SEED_PALETTE_BUFFER
-                      </span>
-                    </div>
-                    <div className={`p-3 transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
-                      <div className="flex flex-col gap-2">
-                        {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
-                          const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
+                      {/* Mappings View Content */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-2 py-1 border-b border-purple-500/10">
+                          <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest"># TOKEN_MAPPINGS</span>
+                          <span className="text-[9px] font-mono text-purple-500/40 uppercase tracking-tighter">Source / Value</span>
+                        </div>
+                        {Object.entries(themeColors).map(([key, value]) => {
+                          const overrideValue = manualOverrides[activeMode]?.[key as keyof OpencodeThemeColors];
+                          const isOverride = overrideValue !== undefined && overrideValue !== "unassigned";
+                          const isUnassigned = overrideValue === "unassigned";
+                          
                           return (
-                            <div key={seedName} className="flex items-center gap-2 group">
-                              <div className="flex items-center gap-1.5 w-24 shrink-0">
-                                <button
-                                  onClick={() => handleSeedReset(seedName)}
-                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${
-                                    isSeedOverridden
-                                      ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-                                      : activeMode === 'light'
-                                        ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-                                        : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-                                  }`}
-                                  title={isSeedOverridden ? "RESET_SEED_VECTOR" : "AUTO_GENERATED"}
-                                >
-                                  <span className="text-[8px] leading-none font-bold">{isSeedOverridden ? "×" : "·"}</span>
-                                </button>
-                                <span className={`text-[9px] font-mono transition-colors uppercase tracking-tighter truncate ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-300'}`}>
-                                  {formatAgentLabel(seedName)}
+                            <div key={key} className={`flex items-center justify-between p-2 rounded transition-colors ${activeMode === 'light' ? 'hover:bg-purple-50' : 'hover:bg-purple-500/5'}`}>
+                              <div className="flex items-center gap-3">
+                                <div className="w-4 h-4 rounded shadow-sm border border-black/10" style={{ backgroundColor: value as string }}></div>
+                                <span className={`text-[11px] font-mono font-bold ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>
+                                  {key}
                                 </span>
                               </div>
-                              <div className="flex gap-1 flex-wrap">
-                                {variants.map((variant, vIdx) => {
-                                  const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
-                                  return (
-                                    <div
-                                      key={`${seedName}-${vIdx}`}
-                                      onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-5 h-5 shrink-0 rounded-sm border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
-                                        isCurrentSeed 
-                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/60` 
-                                          : "opacity-80 hover:opacity-100 border-white/10"
-                                      }`}
-                                      style={{
-                                        backgroundColor: variant.hex,
-                                      }}
-                                      title={`MOUNT_SEED: ${variant.hex} (v${vIdx})`}
-                                    >
-                                      {variant.isBase && (
-                                        <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
-                                      )}
-                                    </div>
-                                  )
-                                })}
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                                  isOverride 
+                                    ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
+                                    : isUnassigned
+                                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                }`}>
+                                  {isOverride ? "MANUAL_OVERRIDE" : isUnassigned ? "SEEDED_FALLBACK" : "AUTO_GENERATED"}
+                                </span>
+                                <span className={`text-[10px] font-mono ${activeMode === 'light' ? 'text-purple-600' : 'text-purple-400'}`}>
+                                  {value as string}
+                                </span>
                               </div>
                             </div>
-                          )
+                          );
                         })}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Matrix Grid - TERMINAL STYLE */}
-                  <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
-                    <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
-                      <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
-                        # SEMANTIC_TOKEN_MATRIX
-                      </span>
-                      <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
-                        {MATRIX_PROPERTIES.reduce((acc, cat) => acc + cat.keys.length, 0)} TOKENS
-                      </span>
-                    </div>
-                    <div className={`max-h-[600px] overflow-y-auto custom-scrollbar transition-colors divide-y ${activeMode === 'light' ? 'bg-white divide-gray-50' : 'bg-[#0d0d17] divide-[#1a1a2e]'}`}>
-                      {MATRIX_PROPERTIES.map((category) => (
-                        <div key={category.category} className="flex flex-col">
-                          <div className={`px-3 py-1 text-[8px] font-black tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'bg-gray-50 text-purple-900/40' : 'bg-purple-900/10 text-purple-500/40'}`}>
-                            {category.category}
-                          </div>
-                          {category.keys.map((property) => {
-                            const currentColor = themeColors[property as keyof OpencodeThemeColors]
-                            const currentModeOverrides = manualOverrides[activeMode] || {}
-                            const isOverridden = property in currentModeOverrides
-
-                            return (
-                              <MatrixTokenRow
-                                key={property}
-                                property={property}
-                                currentColor={currentColor}
-                                activeMode={activeMode}
-                                isOverridden={isOverridden}
-                                handleManualReset={handleManualReset}
-                                handleManualOverride={handleManualOverride}
-                                setQuickPicker={setQuickPicker}
-                                formatAgentLabel={formatAgentLabel}
-                                activeVariantsMap={activeVariantsMap}
-                                themeColors={themeColors}
-                              />
-                            )
-                          })}
-
+                  ) : (
+                    <>
+                      {/* Override count and status */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-mono font-bold uppercase tracking-tight transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/40'}`}>
+                            {Object.keys(manualOverrides[activeMode] || {}).length + Object.keys(seedOverrides[activeMode] || {}).length} OVERRIDE(S)_ACTIVE
+                          </span>
+                          {writeStatus === "writing" && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-mono animate-pulse">
+                              WRITING...
+                            </span>
+                          )}
+                          {writeStatus === "success" && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/20 text-green-400 font-mono">
+                              ✓ SYNC_SUCCESS
+                            </span>
+                          )}
+                          {writeStatus === "error" && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-400 font-mono" title={writeError || "Unknown error"}>
+                              ⚠ SYNC_FAILED
+                            </span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleResetMode}
+                            disabled={
+                              Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
+                              Object.keys(seedOverrides[activeMode] || {}).length === 0
+                            }
+                            className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
+                              activeMode === 'light'
+                                ? "border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100"
+                                : "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
+                            }`}
+                            title={`Reset only ${activeMode} overrides`}
+                          >
+                            RESET_{activeMode.toUpperCase()}
+                          </button>
+                          <button
+                            onClick={handleClearAll}
+                            disabled={
+                              Object.keys(manualOverrides.light).length === 0 && 
+                              Object.keys(manualOverrides.dark).length === 0 && 
+                              Object.keys(seedOverrides.light).length === 0 && 
+                              Object.keys(seedOverrides.dark).length === 0
+                            }
+                            className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
+                              activeMode === 'light'
+                                ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                                : "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                            }`}
+                            title="Clear all overrides for BOTH modes"
+                          >
+                            PURGE_ALL
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* WCAG Compliance Summary - AGENT LOG STYLE */}
+                      <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                        <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>
+                              AGENT_MATRIX_ROUTER
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
+                              <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
+                                {passCount}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
+                              <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
+                                {failCount}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                          <div className="flex flex-col">
+                            {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
+                              <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
+                                <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
+                                  <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                                    <span className="opacity-40">#</span> {category}
+                                  </h3>
+                                  <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
+                                    {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
+                                  </span>
+                                </div>
+                                
+                                <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
+                                  {deferredWcagPairs.filter(p => p.category === category).map(pair => {
+                                    const score = pair.score
+                                    const isFailing = !score.pass
+                                    const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.category);
+                                    
+                                    // Map type to icon
+                                    let typeIcon = "📄" // read
+                                    if (pair.type === 'shell') typeIcon = "🐚"
+                                    if (pair.type === 'action') typeIcon = "⚡"
+                                    if (pair.type === 'diff') typeIcon = "🔍"
+
+                                    return (
+                                      <div 
+                                        key={`${pair.category}-${pair.type}-${pair.label}-${pair.bgKey}-${pair.fgKey}`} 
+                                        className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
+                                      >
+                                        {/* Icon Column */}
+                                        <div className={`w-5 h-5 shrink-0 flex items-center justify-center rounded text-[10px] border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200 group-hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] group-hover:border-purple-500/30'}`}>
+                                          {typeIcon}
+                                        </div>
+
+                                        {/* Content Column */}
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-baseline justify-between gap-2">
+                                            <div className="flex flex-col min-w-0">
+                                              <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
+                                                {pair.label}
+                                              </span>
+                                              <div className="flex items-center gap-1 opacity-60 text-[7px] font-mono">
+                                                {pair.isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NON_TEXT</span>}
+                                                {pair.isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BORDER</span>}
+                                                {pair.isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WEAK</span>}
+                                                {pair.isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">STRONG</span>}
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <div className="flex flex-col items-end">
+                                                <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
+                                                  {score.ratio.toFixed(2)}:1
+                                                  <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
+                                                </span>
+                                                {score.hueDiff > 0 && (
+                                                  <span className={`text-[7px] font-mono leading-none mt-0.5 transition-colors ${score.hueDiff >= 15 ? (activeMode === 'light' ? 'text-blue-600' : 'text-blue-400') : 'opacity-40'}`}>
+                                                    H_DIFF: {score.hueDiff}°
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <span className={`text-[8px] font-black px-1 rounded-[2px] ${
+                                                isFailing 
+                                                  ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
+                                                  : activeMode === 'light' 
+                                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                                    : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                              }`}>
+                                                {isFailing ? 'FAIL' : (score.level === 'AAA' ? 'AAA' : 'PASS')}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center justify-between mt-0.5">
+                                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                              <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
+                                            </div>
+                                              {isFailing && (
+                                                <div className="grid grid-cols-2 gap-1 shrink-0">
+                                                  <button
+                                                    onClick={() => {
+                                                      const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                      handleManualOverride(pair.bgKey, fixed);
+                                                    }}
+                                                    className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                      activeMode === 'light'
+                                                        ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
+                                                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
+                                                    }`}
+                                                    title={`FIX_BG_LUM: ${pair.bgKey}`}
+                                                  >
+                                                    <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
+                                                    L_BG
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                      handleManualOverride(pair.fgKey, fixed);
+                                                    }}
+                                                    className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                      activeMode === 'light'
+                                                        ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                                                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
+                                                    }`}
+                                                    title={`FIX_FG_LUM: ${pair.fgKey}`}
+                                                  >
+                                                    <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
+                                                    L_FG
+                                                  </button>
+                                                  
+                                                  {/* Hue Fix Buttons */}
+                                                  <button
+                                                    onClick={() => {
+                                                      const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                      handleManualOverride(pair.bgKey, fixed);
+                                                    }}
+                                                    className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                      activeMode === 'light'
+                                                        ? 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200'
+                                                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/40'
+                                                    }`}
+                                                    title={`FIX_BG_HUE: ${pair.bgKey}`}
+                                                  >
+                                                    <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
+                                                    H_BG
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                      handleManualOverride(pair.fgKey, fixed);
+                                                    }}
+                                                    className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
+                                                      activeMode === 'light'
+                                                        ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'
+                                                        : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40'
+                                                    }`}
+                                                    title={`FIX_FG_HUE: ${pair.fgKey}`}
+                                                  >
+                                                    <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
+                                                    H_FG
+                                                  </button>
+                                                </div>
+                                              )}
+                                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                <button 
+                                                  className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
+                                                style={{ backgroundColor: pair.bg }} 
+                                                title={`BG: ${pair.bgKey}`}
+                                                onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
+                                              />
+                                              <button 
+                                                className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
+                                                style={{ backgroundColor: pair.fg }} 
+                                                title={`FG: ${pair.fgKey}`}
+                                                onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Full Palette Overview - TERMINAL STYLE */}
+                      <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                        <div className={`px-3 py-1.5 border-b flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                          <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                            # SEED_PALETTE_BUFFER
+                          </span>
+                        </div>
+                        <div className={`p-3 transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                          <div className="flex flex-col gap-2">
+                            {Object.entries(activeVariantsMap).map(([seedName, variants]) => {
+                              const isSeedOverridden = seedName in (seedOverrides[activeMode] || {});
+                              return (
+                                <div key={seedName} className="flex items-center gap-2 group">
+                                  <div className="flex items-center gap-1.5 w-24 shrink-0">
+                                    <button
+                                      onClick={() => handleSeedReset(seedName)}
+                                      className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${
+                                        isSeedOverridden
+                                          ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+                                          : activeMode === 'light'
+                                            ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                                            : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+                                      }`}
+                                      title={isSeedOverridden ? "RESET_SEED_VECTOR" : "AUTO_GENERATED"}
+                                    >
+                                      <span className="text-[8px] leading-none font-bold">{isSeedOverridden ? "×" : "·"}</span>
+                                    </button>
+                                    <span className={`text-[9px] font-mono transition-colors uppercase tracking-tighter truncate ${activeMode === 'light' ? 'text-gray-500 group-hover:text-purple-700' : 'text-gray-400 group-hover:text-purple-300'}`}>
+                                      {formatAgentLabel(seedName)}
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1 flex-wrap">
+                                    {variants.map((variant, vIdx) => {
+                                      const isCurrentSeed = seeds9.find(s => s.name === seedName)?.hex.toLowerCase() === variant.hex.toLowerCase();
+                                      return (
+                                        <div
+                                          key={`${seedName}-${vIdx}`}
+                                          onClick={() => handleSeedOverride(seedName, variant.hex)}
+                                          className={`w-5 h-5 shrink-0 rounded-sm border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
+                                            isCurrentSeed 
+                                              ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/60` 
+                                              : "opacity-80 hover:opacity-100 border-white/10"
+                                          }`}
+                                          style={{
+                                            backgroundColor: variant.hex,
+                                          }}
+                                          title={`MOUNT_SEED: ${variant.hex} (v${vIdx})`}
+                                        >
+                                          {variant.isBase && (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Matrix Grid - TERMINAL STYLE */}
+                      <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                        <div className={`px-3 py-1.5 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                          <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                            # SEMANTIC_TOKEN_MATRIX
+                          </span>
+                          <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
+                            {MATRIX_PROPERTIES.reduce((acc, cat) => acc + cat.keys.length, 0)} TOKENS
+                          </span>
+                        </div>
+                        <div className={`max-h-[600px] overflow-y-auto custom-scrollbar transition-colors divide-y ${activeMode === 'light' ? 'bg-white divide-gray-50' : 'bg-[#0d0d17] divide-[#1a1a2e]'}`}>
+                          {MATRIX_PROPERTIES.map((category) => (
+                            <div key={category.category} className="flex flex-col">
+                              <div className={`px-3 py-1 text-[8px] font-black tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'bg-gray-50 text-purple-900/40' : 'bg-purple-900/10 text-purple-500/40'}`}>
+                                {category.category}
+                              </div>
+                              {category.keys.map((property) => {
+                                const currentColor = themeColors[property as keyof OpencodeThemeColors]
+                                const currentModeOverrides = manualOverrides[activeMode] || {}
+                                const isOverridden = property in currentModeOverrides
+
+                                return (
+                                  <MatrixTokenRow
+                                    key={property}
+                                    property={property}
+                                    currentColor={currentColor}
+                                    activeMode={activeMode}
+                                    isOverridden={isOverridden}
+                                    handleManualReset={handleManualReset}
+                                    handleManualOverride={handleManualOverride}
+                                    setQuickPicker={setQuickPicker}
+                                    formatAgentLabel={formatAgentLabel}
+                                    activeVariantsMap={activeVariantsMap}
+                                    themeColors={themeColors}
+                                  />
+                                )
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

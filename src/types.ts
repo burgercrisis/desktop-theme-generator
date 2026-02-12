@@ -89,6 +89,8 @@ export enum HarmonyRule {
 }
 
 export enum VariantStrategy {
+  BALANCED = 'Balanced',
+  MUTE = 'Muted',
   TINTS_SHADES = 'Tints & Shades',
   TONES = 'Tones',
   BLEND = 'Harmonic Blend',
