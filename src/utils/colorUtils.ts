@@ -53,6 +53,11 @@ export const getTargetContrast = (
     return 1.1;
   }
 
+  // Special handling for AVATARS: 3.0+ requirement
+  if (category === "LOG_09_AVATARS") {
+    return 3.0;
+  }
+
   // Border contrast can be low as it's often just a subtle separator
   if (isBorder) return 1.1;
 
@@ -77,6 +82,9 @@ export const getThresholdLabel = (
   isBorder: boolean = false,
   category?: string
 ): string => {
+  if (category === "LOG_09_AVATARS") {
+    return "3.0+";
+  }
   if (isBorder || isNonText || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
     return "1.1/15°";
   }

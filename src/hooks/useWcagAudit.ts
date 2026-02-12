@@ -485,12 +485,6 @@ export const useWcagAudit = ({ themeColors }: UseWcagAuditProps) => {
     addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_HOVER_ICON"), "background-base", "icon-diff-add-hover", "DIFF ADD HOVER ICON CONTRAST", true)
     addPair("LOG_29_DIFF_EXTRAS", formatAgentLabel("DIFF_ADD_ACTIVE_ICON"), "background-base", "icon-diff-add-active", "DIFF ADD ACTIVE ICON CONTRAST", true)
 
-    // --- LOG_31_AVATAR_EXPANDED ---
-    const extraAvatars = ["blue", "green", "yellow", "red", "gray"]
-    extraAvatars.forEach(color => {
-      addPair("LOG_31_AVATAR_EXPANDED", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false)
-    })
-
     // --- LOG_32_MISC_BORDERS_ICONS ---
     addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_COLOR"), "background-base", "border-color", "GENERAL BORDER COLOR CONTRAST", true)
     addPair("LOG_32_MISC_BORDERS_ICONS", formatAgentLabel("BORDER_DISABLED"), "background-base", "border-disabled", "DISABLED BORDER CONTRAST", true)
