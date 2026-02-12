@@ -107,15 +107,18 @@ export const exportToOpencode9SeedJSON = (
   const darkSeedMap = getSeedMap(darkSeeds, 'dark')
 
   // ONLY include manual overrides in the JSON. 
-  // We used to include all generated colors here to force Opencode to match the generator,
-  // but this clobbers the file and makes manual editing impossible.
-  // The user wants a clean overrides section.
-  const lightOverrides: Record<string, string> = { 
-    ...(manualOverrides.light || {}) 
+  // Filter out "unassigned" placeholders before exporting.
+  const filterOverrides = (overrides: Record<string, string>) => {
+    return Object.entries(overrides).reduce((acc, [key, value]) => {
+      if (value && value !== "unassigned") {
+        acc[key] = value
+      }
+      return acc
+    }, {} as Record<string, string>)
   }
-  const darkOverrides: Record<string, string> = { 
-    ...(manualOverrides.dark || {}) 
-  }
+
+  const lightOverrides = filterOverrides(manualOverrides.light || {})
+  const darkOverrides = filterOverrides(manualOverrides.dark || {})
 
   const lightOverrideCount = Object.keys(lightOverrides).length
   const darkOverrideCount = Object.keys(darkOverrides).length

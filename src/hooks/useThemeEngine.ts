@@ -464,7 +464,16 @@ export const useThemeEngine = ({
   const themeColors = useMemo<OpencodeThemeColors>(() => {
     const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
     const currentOverrides = manualOverrides[activeMode] || {}
-    return { ...baseColors, ...currentOverrides }
+    
+    // Filter out "unassigned" overrides to allow fallback to baseColors
+    const filteredOverrides = Object.entries(currentOverrides).reduce((acc, [key, value]) => {
+      if (value && value !== "unassigned") {
+        acc[key] = value
+      }
+      return acc
+    }, {} as Record<string, string>)
+
+    return { ...baseColors, ...filteredOverrides }
   }, [activeMode, lightThemeColors, darkThemeColors, manualOverrides])
 
   const paletteGroups = useMemo(() => {
