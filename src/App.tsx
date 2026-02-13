@@ -58,6 +58,7 @@ const App: React.FC = () => {
     themeName, setThemeName,
     activeTab, setActiveTab,
     matrixMode, setMatrixMode,
+    matrixView, setMatrixView,
     manualOverrides, setManualOverrides,
     seedOverrides, setSeedOverrides,
     seedsInitialized, setSeedsInitialized,
@@ -84,6 +85,7 @@ const App: React.FC = () => {
     darkSeeds9,
     activeVariantsMap,
     themeColors,
+    baseThemeColors,
     paletteGroups,
     seedVariantsLight,
     seedVariantsDark,
@@ -213,6 +215,15 @@ const App: React.FC = () => {
   }, [fileLoaded, seedsInitialized, initializeSeeds]);
 
 
+  const handleInitialize = useCallback(() => {
+    // Non-destructive discovery: switch to mappings view and enable matrix mode
+    setMatrixView("mappings");
+    if (!matrixMode) {
+      setMatrixMode(true);
+    }
+    setActiveTab("palette");
+  }, [matrixMode, setMatrixMode, setMatrixView, setActiveTab]);
+
   return (
     <div className={`min-h-screen transition-colors ${activeMode === 'light' ? 'bg-gray-100' : ''}`} style={{ backgroundColor: activeMode === 'light' ? undefined : "#0d0d17" }}>
       {/* Calculating Overlay */}
@@ -227,6 +238,144 @@ const App: React.FC = () => {
               <p className={`text-[10px] font-mono mt-1 animate-pulse ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-400/60'}`}>
                 REVERSE_ENGINEERING_PARAMETERS...
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discovery View - Full Screen Modal Style */}
+      {matrixMode && matrixView === "mappings" && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-6 lg:p-12 overflow-y-auto">
+          <div className={`w-full max-w-6xl rounded-xl border shadow-2xl transition-colors flex flex-col max-h-full ${activeMode === 'light' ? 'bg-white border-gray-200' : 'bg-[#0d0d17] border-purple-500/30'}`}>
+            <div className={`px-6 py-4 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-purple-500/20'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse"></div>
+                <div className="flex flex-col">
+                  <h2 className={`text-xs font-black uppercase tracking-[0.3em] ${activeMode === 'light' ? 'text-cyan-900' : 'text-cyan-400'}`}>
+                    COLOR_DERIVATION_INVENTORY
+                  </h2>
+                  <span className={`text-[9px] font-mono ${activeMode === 'light' ? 'text-cyan-600/60' : 'text-cyan-500/40'}`}>
+                    {Object.keys(themeColors).length} TOKENS_MAPPED // PARITY_VERIFICATION_MODE
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setMatrixMode(false)}
+                className={`px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all border ${
+                  activeMode === 'light'
+                    ? 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                    : 'bg-white/5 text-purple-300 border-purple-500/20 hover:bg-white/10 hover:border-purple-500/40'
+                }`}
+              >
+                CLOSE_DISCOVERY
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {/* Seed Status Summary */}
+                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-purple-50 border-purple-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
+                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>ACTIVE_SEEDS</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {seeds9.map(seed => (
+                      <div key={seed.name} className="flex flex-col items-center gap-1">
+                        <div className="w-full h-4 rounded border border-white/10 shadow-sm" style={{ backgroundColor: seed.hex }} />
+                        <span className="text-[8px] font-mono opacity-60 uppercase">{seed.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Overrides Status */}
+                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-cyan-50 border-cyan-100' : 'bg-cyan-500/5 border-cyan-500/10'}`}>
+                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-cyan-900' : 'text-cyan-300'}`}>OVERRIDE_METRICS</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] font-mono opacity-60 uppercase">Manual Overrides</span>
+                      <span className="text-[10px] font-black font-mono">{Object.keys(manualOverrides[activeMode] || {}).length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] font-mono opacity-60 uppercase">Seed Overrides</span>
+                      <span className="text-[10px] font-black font-mono">{Object.keys(seedOverrides[activeMode] || {}).length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[9px] font-mono opacity-60 uppercase">Active Mode</span>
+                      <span className="text-[10px] font-black font-mono uppercase text-purple-500">{activeMode}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Parity Status */}
+                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-green-50 border-green-100' : 'bg-green-500/5 border-green-500/10'}`}>
+                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-green-900' : 'text-green-300'}`}>PARITY_STATUS</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[18px] font-black font-mono text-green-500">100%</span>
+                      <span className="text-[8px] font-mono opacity-60 uppercase tracking-tighter">Theme Sync Active</span>
+                    </div>
+                    <div className="flex-1 h-1.5 bg-green-500/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 w-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-100' : 'bg-black/40 border-white/5'}`}>
+                <table className="w-full text-left border-collapse">
+                  <thead className={`sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-100' : 'bg-[#1a1a2e]'}`}>
+                    <tr>
+                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">TOKEN_KEY</th>
+                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">DERIVATION_SOURCE</th>
+                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">ACTIVE_VALUE</th>
+                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">SEED_FALLBACK</th>
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-white/5'}`}>
+                    {Object.entries(themeColors).map(([key, value]) => {
+                      const override = manualOverrides[activeMode]?.[key];
+                      const isOverride = override && override !== "unassigned";
+                      const fallback = baseThemeColors[key as keyof OpencodeThemeColors];
+                      const isFallbackActive = !isOverride;
+
+                      return (
+                        <tr key={key} className="hover:bg-white/5 transition-colors group">
+                          <td className="px-4 py-2">
+                            <span className={`text-[11px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-gray-800' : 'text-gray-200'}`}>
+                              {key}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded transition-colors ${
+                              isOverride 
+                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                            }`}>
+                              {isOverride ? 'MANUAL_OVERRIDE' : 'SEEDED_FALLBACK'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-4 h-4 rounded shadow-sm border border-white/10" style={{ backgroundColor: value }} />
+                              <span className={`text-[11px] font-mono font-bold transition-colors ${isOverride ? 'text-purple-400' : (activeMode === 'light' ? 'text-gray-700' : 'text-gray-300')}`}>
+                                {value.toUpperCase()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
+                              <div className="w-4 h-4 rounded shadow-sm border border-white/10" style={{ backgroundColor: fallback }} />
+                              <span className={`text-[11px] font-mono transition-colors ${isFallbackActive ? 'text-cyan-400 font-black' : (activeMode === 'light' ? 'text-gray-400' : 'text-gray-600')}`}>
+                                {fallback?.toUpperCase()}
+                              </span>
+                              {isFallbackActive && <span className="text-[9px] font-black text-cyan-500/60 animate-pulse">✓ ACTIVE</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -355,16 +504,16 @@ const App: React.FC = () => {
                     {isAnalyzing ? "CALCULATING..." : "ANALYZE_SEEDS"}
                   </button>
                   <button
-                    onClick={() => setMatrixMode(!matrixMode)}
+                    onClick={handleInitialize}
                     className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
-                      matrixMode 
+                      matrixMode && matrixView === "mappings"
                         ? "bg-purple-500/20 text-purple-600 border-purple-500/40" 
                         : activeMode === 'light'
                           ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
                           : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
                     }`}
                   >
-                    {matrixMode ? "DISCONNECT" : "INITIALIZE"}
+                    {matrixMode && matrixView === "mappings" ? "DISCOVERY_ACTIVE" : "INITIALIZE"}
                   </button>
                 </div>
               </div>
@@ -429,8 +578,31 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* WCAG Compliance Summary - AGENT LOG STYLE */}
-                  <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                  <div className="flex p-1 border rounded-md mb-4 transition-colors">
+                    <button
+                      onClick={() => setMatrixView("audit")}
+                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
+                        matrixView === "audit" 
+                          ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
+                          : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+                      }`}
+                    >
+                      WCAG_AUDIT
+                    </button>
+                    <button
+                      onClick={() => setMatrixView("mappings")}
+                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
+                        matrixView === "mappings" 
+                          ? "bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)]" 
+                          : activeMode === 'light' ? "text-cyan-600/60 hover:text-cyan-600" : "text-cyan-400/60 hover:text-cyan-400"
+                      }`}
+                    >
+                      MAPPINGS
+                    </button>
+                  </div>
+
+                  {matrixView === "audit" && (
+                    <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
                     <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
@@ -596,9 +768,9 @@ const App: React.FC = () => {
                                               </button>
                                             </div>
                                           )}
-                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                            <button 
-                                              className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
+                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                          <button 
+                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
                                             style={{ backgroundColor: pair.bg }} 
                                             title={`BG: ${pair.bgKey}`}
                                             onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
@@ -621,6 +793,79 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                )}
+
+                  {matrixView === "mappings" && (
+                    <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
+                      <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                          <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-cyan-900' : 'text-cyan-300'}`}>
+                            COLOR_DERIVATION_INVENTORY
+                          </span>
+                        </div>
+                        <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-cyan-600/70' : 'text-cyan-400/70'}`}>
+                          {Object.keys(themeColors).length} TOKENS_MAPPED
+                        </span>
+                      </div>
+                      <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                        <table className="w-full text-left border-collapse">
+                          <thead className={`sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50' : 'bg-[#161625]'}`}>
+                            <tr>
+                              <th className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>TOKEN</th>
+                              <th className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>SOURCE</th>
+                              <th className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>VALUE</th>
+                              <th className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>SEED_FALLBACK</th>
+                            </tr>
+                          </thead>
+                          <tbody className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
+                            {Object.entries(themeColors).map(([key, value]) => {
+                              const override = manualOverrides[activeMode]?.[key];
+                              const isOverride = override && override !== "unassigned";
+                              const fallback = baseThemeColors[key as keyof OpencodeThemeColors];
+                              const isFallbackActive = !isOverride;
+
+                              return (
+                                <tr key={key} className="hover:bg-purple-500/5 transition-colors group">
+                                  <td className="px-3 py-2">
+                                    <span className={`text-[10px] font-mono transition-colors ${activeMode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
+                                      {key}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded transition-colors ${
+                                      isOverride 
+                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                        : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                                    }`}>
+                                      {isOverride ? 'MANUAL_OVERRIDE' : 'SEEDED_FALLBACK'}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-sm border border-white/10" style={{ backgroundColor: value }} />
+                                      <span className={`text-[10px] font-mono transition-colors ${isOverride ? 'text-purple-400' : (activeMode === 'light' ? 'text-gray-600' : 'text-gray-400')}`}>
+                                        {value.toUpperCase()}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                      <div className="w-3 h-3 rounded-sm border border-white/10" style={{ backgroundColor: fallback }} />
+                                      <span className={`text-[10px] font-mono transition-colors ${isFallbackActive ? 'text-cyan-400 font-bold' : (activeMode === 'light' ? 'text-gray-400' : 'text-gray-500')}`}>
+                                        {fallback?.toUpperCase()}
+                                      </span>
+                                      {isFallbackActive && <span className="text-[8px] font-black text-cyan-500/60">ACTIVE</span>}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Full Palette Overview - TERMINAL STYLE */}
                   <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>

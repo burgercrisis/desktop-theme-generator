@@ -20,12 +20,13 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 3032,
-    host: "0.0.0.0",
+    port: 3040,
+    host: true,
+    strictPort: true,
     hmr: {
-      protocol: "ws",
-      host: "localhost",
-      port: 3033,
-    },
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3040
+    }
   },
 })

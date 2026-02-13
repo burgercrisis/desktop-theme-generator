@@ -461,20 +461,25 @@ export const useThemeEngine = ({
     }
   }, [seedsInitialized, activeMode, harmony, spread, variantStrategy, lightContrast, darkContrast, activeVariantsMap, colorSpace, outputSpace, setIsAnalyzing, setLightBrightness, setDarkBrightness, setSaturation, setLightContrast, setDarkContrast, setBaseColor, setHarmony, setSpread, setVariantCount, setVariantStrategy]);
 
+  const baseThemeColors = useMemo<OpencodeThemeColors>(() => {
+    return activeMode === "light" ? lightThemeColors : darkThemeColors;
+  }, [activeMode, lightThemeColors, darkThemeColors]);
+
   const themeColors = useMemo<OpencodeThemeColors>(() => {
-    const baseColors = activeMode === "light" ? lightThemeColors : darkThemeColors
+    const baseColors = baseThemeColors;
     const currentOverrides = manualOverrides[activeMode] || {}
     
     // Filter out "unassigned" overrides to allow fallback to baseColors
     const filteredOverrides = Object.entries(currentOverrides).reduce((acc, [key, value]) => {
-      if (value && value !== "unassigned") {
-        acc[key] = value
+      // ONLY apply if it's a valid hex and NOT "unassigned"
+      if (value && value !== "unassigned" && value.startsWith('#')) {
+        acc[key] = value;
       }
-      return acc
-    }, {} as Record<string, string>)
+      return acc;
+    }, {} as Record<string, string>);
 
-    return { ...baseColors, ...filteredOverrides }
-  }, [activeMode, lightThemeColors, darkThemeColors, manualOverrides])
+    return { ...baseColors, ...filteredOverrides };
+  }, [activeMode, baseThemeColors, manualOverrides]);
 
   const paletteGroups = useMemo(() => {
     if (useOpencodeMode && seedsInitialized) {
@@ -496,6 +501,7 @@ export const useThemeEngine = ({
     seedVariantsDark,
     activeVariantsMap,
     themeColors,
+    baseThemeColors,
     paletteGroups,
     handleAnalyzeSeeds,
     randomizeAll,

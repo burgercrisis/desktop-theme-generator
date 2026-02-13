@@ -237,8 +237,12 @@ export const useWcagAudit = ({ themeColors }: UseWcagAuditProps) => {
     const avatarColors = ["pink", "mint", "orange", "purple", "cyan", "lime", "blue", "green", "yellow", "red", "gray"]
     avatarColors.forEach(color => {
       addPair("LOG_09_AVATARS", formatAgentLabel(color), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_${color.toUpperCase()}_CONTRAST`, false)
+      addPair("LOG_09_AVATARS", formatAgentLabel(`${color}_ICON`), `avatar-background-${color}`, `avatar-icon-${color}`, `AVATAR_${color.toUpperCase()}_ICON_CONTRAST`, true)
+      addPair("LOG_09_AVATARS", formatAgentLabel(`${color}_BORDER`), `avatar-background-${color}`, `avatar-border-${color}`, `AVATAR_${color.toUpperCase()}_BORDER_CONTRAST`, true)
+      // LOG_31_AVATAR_EXPANDED merged here
+      addPair("LOG_09_AVATARS", formatAgentLabel(`${color}_EXPANDED`), `avatar-background-${color}`, `avatar-text-${color}`, `AVATAR_EXPANDED_${color.toUpperCase()}_CONTRAST`, false)
     })
-
+    
     // --- LOG_10_SYNTAX ---
     const syntaxTokensDetailed = [
       "syntax-comment", "syntax-keyword", "syntax-function", "syntax-variable", 

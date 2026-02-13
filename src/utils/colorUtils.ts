@@ -54,7 +54,7 @@ export const getTargetContrast = (
   }
 
   // Special handling for AVATARS: 3.0+ requirement
-  if (category === "LOG_09_AVATARS") {
+  if (category === "LOG_09_AVATARS" || category === "LOG_31_AVATAR_EXPANDED") {
     return 3.0;
   }
 
@@ -82,7 +82,7 @@ export const getThresholdLabel = (
   isBorder: boolean = false,
   category?: string
 ): string => {
-  if (category === "LOG_09_AVATARS") {
+  if (category === "LOG_09_AVATARS" || category === "LOG_31_AVATAR_EXPANDED") {
     return "3.0+";
   }
   if (isBorder || isNonText || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
@@ -111,7 +111,8 @@ export const getContrastScore = (
 
   let pass = contrastPass;
   // Non-text elements (icons, surfaces, borders) and splash loading allow for Hue Pass fallback
-  if (isNonText || isBorder || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) {
+  // BUT Avatars MUST meet 3.0+ contrast
+  if ((isNonText || isBorder || category === "LOG_12_SPLASH_LOADING" || (category && category.includes("LOGO"))) && category !== "LOG_09_AVATARS" && category !== "LOG_31_AVATAR_EXPANDED") {
     pass = contrastPass || huePass;
   }
   
