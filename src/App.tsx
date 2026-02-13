@@ -982,8 +982,8 @@ const App: React.FC = () => {
                         value={activeMode === "light" ? lightBrightness : darkBrightness}
                         onChange={(e) => {
                           const val = parseInt(e.target.value)
-                          if (activeMode === "light") onEngineParamChange(setLightBrightness, val)
-                          else onEngineParamChange(setDarkBrightness, val)
+                          if (activeMode === "light") onEngineParamChange(setLightBrightness, val, false)
+                          else onEngineParamChange(setDarkBrightness, val, false)
                         }}
                         className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
@@ -1005,8 +1005,8 @@ const App: React.FC = () => {
                         value={activeMode === "light" ? lightContrast : darkContrast}
                         onChange={(e) => {
                           const val = parseInt(e.target.value)
-                          if (activeMode === "light") onEngineParamChange(setLightContrast, val)
-                          else onEngineParamChange(setDarkContrast, val)
+                          if (activeMode === "light") onEngineParamChange(setLightContrast, val, false)
+                          else onEngineParamChange(setDarkContrast, val, false)
                         }}
                         className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
@@ -1024,8 +1024,8 @@ const App: React.FC = () => {
                         value={saturation}
                         onChange={(e) => {
                           const val = parseInt(e.target.value)
-                          onEngineParamChange(setSaturation, val)
-                          onEngineParamChange(setBaseColor, (prev: HSL) => ({ ...prev, s: val }))
+                          onEngineParamChange(setSaturation, val, false)
+                          onEngineParamChange(setBaseColor, (prev: HSL) => ({ ...prev, s: val }), false)
                         }}
                         className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
@@ -1056,7 +1056,7 @@ const App: React.FC = () => {
                         min="1"
                         max="12"
                         value={variantCount}
-                        onChange={(e) => onEngineParamChange(setVariantCount, parseInt(e.target.value))}
+                        onChange={(e) => onEngineParamChange(setVariantCount, parseInt(e.target.value), false)}
                         className={`w-full h-1 rounded-lg appearance-none cursor-pointer accent-purple-500 transition-colors ${activeMode === 'light' ? 'bg-gray-200' : 'bg-[#1a1a2e]'}`}
                       />
                     </div>

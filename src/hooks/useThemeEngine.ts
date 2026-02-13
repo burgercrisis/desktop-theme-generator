@@ -88,10 +88,12 @@ export const useThemeEngine = ({
     setSeedsInitialized(true)
   }, [baseColor, harmony, spread, lightBrightness, darkBrightness, seedOverrides, seedsInitialized, setSeedOverrides, setSeedsInitialized])
 
-  const onEngineParamChange = useCallback((setter: (val: any) => void, val: any) => {
+  const onEngineParamChange = useCallback((setter: (val: any) => void, val: any, isDestructive = true) => {
     setter(val);
     isManualChangeRef.current = true;
-    if (useOpencodeMode && (Object.keys(seedOverrides.light).length > 0 || Object.keys(seedOverrides.dark).length > 0)) {
+    
+    // Only clear seed overrides if it's a destructive change (harmony, spread, etc)
+    if (isDestructive && useOpencodeMode && (Object.keys(seedOverrides.light).length > 0 || Object.keys(seedOverrides.dark).length > 0)) {
       setSeedOverrides({ light: {}, dark: {} });
       setSeedsInitialized(false);
     }
@@ -120,8 +122,8 @@ export const useThemeEngine = ({
   }, [activeMode, setSeedOverrides, isManualChangeRef])
 
   const handleColorChange = useCallback((hsl: HSL) => {
-    onEngineParamChange(setBaseColor, hsl)
-    onEngineParamChange(setSaturation, Math.round(hsl.s))
+    onEngineParamChange(setBaseColor, hsl, false)
+    onEngineParamChange(setSaturation, Math.round(hsl.s), false)
   }, [onEngineParamChange, setBaseColor, setSaturation])
 
   const applyOpencodePreset = useCallback((presetId: string) => {
