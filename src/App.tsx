@@ -216,13 +216,11 @@ const App: React.FC = () => {
 
 
   const handleInitialize = useCallback(() => {
-    // Non-destructive discovery: switch to mappings view and enable matrix mode
-    setMatrixView("mappings");
-    if (!matrixMode) {
-      setMatrixMode(true);
-    }
+    initializeSeeds();
+    setMatrixMode(true);
+    setMatrixView("audit");
     setActiveTab("palette");
-  }, [matrixMode, setMatrixMode, setMatrixView, setActiveTab]);
+  }, [initializeSeeds, setMatrixMode, setMatrixView, setActiveTab]);
 
   return (
     <div className={`min-h-screen transition-colors ${activeMode === 'light' ? 'bg-gray-100' : ''}`} style={{ backgroundColor: activeMode === 'light' ? undefined : "#0d0d17" }}>
@@ -243,143 +241,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Discovery View - Full Screen Modal Style */}
-      {matrixMode && matrixView === "mappings" && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-6 lg:p-12 overflow-y-auto">
-          <div className={`w-full max-w-6xl rounded-xl border shadow-2xl transition-colors flex flex-col max-h-full ${activeMode === 'light' ? 'bg-white border-gray-200' : 'bg-[#0d0d17] border-purple-500/30'}`}>
-            <div className={`px-6 py-4 border-b flex items-center justify-between transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-purple-500/20'}`}>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse"></div>
-                <div className="flex flex-col">
-                  <h2 className={`text-xs font-black uppercase tracking-[0.3em] ${activeMode === 'light' ? 'text-cyan-900' : 'text-cyan-400'}`}>
-                    COLOR_DERIVATION_INVENTORY
-                  </h2>
-                  <span className={`text-[9px] font-mono ${activeMode === 'light' ? 'text-cyan-600/60' : 'text-cyan-500/40'}`}>
-                    {Object.keys(themeColors).length} TOKENS_MAPPED // PARITY_VERIFICATION_MODE
-                  </span>
-                </div>
-              </div>
-              <button 
-                onClick={() => setMatrixMode(false)}
-                className={`px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all border ${
-                  activeMode === 'light'
-                    ? 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
-                    : 'bg-white/5 text-purple-300 border-purple-500/20 hover:bg-white/10 hover:border-purple-500/40'
-                }`}
-              >
-                CLOSE_DISCOVERY
-              </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {/* Seed Status Summary */}
-                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-purple-50 border-purple-100' : 'bg-purple-500/5 border-purple-500/10'}`}>
-                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>ACTIVE_SEEDS</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {seeds9.map(seed => (
-                      <div key={seed.name} className="flex flex-col items-center gap-1">
-                        <div className="w-full h-4 rounded border border-white/10 shadow-sm" style={{ backgroundColor: seed.hex }} />
-                        <span className="text-[8px] font-mono opacity-60 uppercase">{seed.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      {/* Discovery View - Full Screen Modal Style Removed as per user request */}
 
-                {/* Overrides Status */}
-                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-cyan-50 border-cyan-100' : 'bg-cyan-500/5 border-cyan-500/10'}`}>
-                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-cyan-900' : 'text-cyan-300'}`}>OVERRIDE_METRICS</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-mono opacity-60 uppercase">Manual Overrides</span>
-                      <span className="text-[10px] font-black font-mono">{Object.keys(manualOverrides[activeMode] || {}).length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-mono opacity-60 uppercase">Seed Overrides</span>
-                      <span className="text-[10px] font-black font-mono">{Object.keys(seedOverrides[activeMode] || {}).length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-mono opacity-60 uppercase">Active Mode</span>
-                      <span className="text-[10px] font-black font-mono uppercase text-purple-500">{activeMode}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Parity Status */}
-                <div className={`p-4 rounded-lg border transition-colors ${activeMode === 'light' ? 'bg-green-50 border-green-100' : 'bg-green-500/5 border-green-500/10'}`}>
-                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-3 ${activeMode === 'light' ? 'text-green-900' : 'text-green-300'}`}>PARITY_STATUS</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[18px] font-black font-mono text-green-500">100%</span>
-                      <span className="text-[8px] font-mono opacity-60 uppercase tracking-tighter">Theme Sync Active</span>
-                    </div>
-                    <div className="flex-1 h-1.5 bg-green-500/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 w-full animate-pulse"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-100' : 'bg-black/40 border-white/5'}`}>
-                <table className="w-full text-left border-collapse">
-                  <thead className={`sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-100' : 'bg-[#1a1a2e]'}`}>
-                    <tr>
-                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">TOKEN_KEY</th>
-                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">DERIVATION_SOURCE</th>
-                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">ACTIVE_VALUE</th>
-                      <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest opacity-60">SEED_FALLBACK</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-white/5'}`}>
-                    {Object.entries(themeColors).map(([key, value]) => {
-                      const override = manualOverrides[activeMode]?.[key];
-                      const isOverride = override && override !== "unassigned";
-                      const fallback = baseThemeColors[key as keyof OpencodeThemeColors];
-                      const isFallbackActive = !isOverride;
-
-                      return (
-                        <tr key={key} className="hover:bg-white/5 transition-colors group">
-                          <td className="px-4 py-2">
-                            <span className={`text-[11px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-gray-800' : 'text-gray-200'}`}>
-                              {key}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2">
-                            <span className={`text-[9px] font-black px-2 py-0.5 rounded transition-colors ${
-                              isOverride 
-                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
-                                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                            }`}>
-                              {isOverride ? 'MANUAL_OVERRIDE' : 'SEEDED_FALLBACK'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-4 h-4 rounded shadow-sm border border-white/10" style={{ backgroundColor: value }} />
-                              <span className={`text-[11px] font-mono font-bold transition-colors ${isOverride ? 'text-purple-400' : (activeMode === 'light' ? 'text-gray-700' : 'text-gray-300')}`}>
-                                {value.toUpperCase()}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
-                              <div className="w-4 h-4 rounded shadow-sm border border-white/10" style={{ backgroundColor: fallback }} />
-                              <span className={`text-[11px] font-mono transition-colors ${isFallbackActive ? 'text-cyan-400 font-black' : (activeMode === 'light' ? 'text-gray-400' : 'text-gray-600')}`}>
-                                {fallback?.toUpperCase()}
-                              </span>
-                              {isFallbackActive && <span className="text-[9px] font-black text-cyan-500/60 animate-pulse">✓ ACTIVE</span>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <header className={`px-6 py-2 border-b flex items-center justify-between sticky top-0 z-50 backdrop-blur-md transition-colors ${activeMode === 'light' ? 'bg-white/80 border-gray-200' : 'bg-[#1a1a2e]/80 border-[#2d2d4d]'}`}>
         <div className="flex items-center gap-4">
@@ -506,14 +369,14 @@ const App: React.FC = () => {
                   <button
                     onClick={handleInitialize}
                     className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
-                      matrixMode && matrixView === "mappings"
+                      matrixMode && matrixView === "audit"
                         ? "bg-purple-500/20 text-purple-600 border-purple-500/40" 
                         : activeMode === 'light'
                           ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
                           : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
                     }`}
                   >
-                    {matrixMode && matrixView === "mappings" ? "DISCOVERY_ACTIVE" : "INITIALIZE"}
+                    {matrixMode && matrixView === "audit" ? "AUDIT_ACTIVE" : "INITIALIZE"}
                   </button>
                 </div>
               </div>
@@ -706,7 +569,7 @@ const App: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-1 shrink-0">
                                               <button
                                                 onClick={() => {
-                                                  const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.bgKey, fixed);
                                                 }}
                                                 className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
@@ -721,7 +584,7 @@ const App: React.FC = () => {
                                               </button>
                                               <button
                                                 onClick={() => {
-                                                  const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.fgKey, fixed);
                                                 }}
                                                 className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
@@ -738,7 +601,7 @@ const App: React.FC = () => {
                                               {/* Hue Fix Buttons */}
                                               <button
                                                 onClick={() => {
-                                                  const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.bgKey, fixed);
                                                 }}
                                                 className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
@@ -753,7 +616,7 @@ const App: React.FC = () => {
                                               </button>
                                               <button
                                                 onClick={() => {
-                                                  const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong);
+                                                  const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.fgKey, fixed);
                                                 }}
                                                 className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
