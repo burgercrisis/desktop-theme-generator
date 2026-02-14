@@ -23,8 +23,8 @@ import {
   downloadFile,
   exportFormats,
 } from "./utils/exportUtils"
-import { 
-  DesktopTheme, 
+import {
+  DesktopTheme,
   InternalThemeColors,
   OpencodeThemeColors,
   HarmonyRule,
@@ -49,6 +49,7 @@ const App: React.FC = () => {
     darkBrightness, setDarkBrightness,
     lightContrast, setLightContrast,
     darkContrast, setDarkContrast,
+    contrastIntensity, setContrastIntensity,
     activeMode,
     toggleMode,
     variantStrategy, setVariantStrategy,
@@ -117,6 +118,8 @@ const App: React.FC = () => {
     setLightContrast,
     darkContrast: deferredDarkContrast,
     setDarkContrast,
+    contrastIntensity,
+    setContrastIntensity,
     variantStrategy: deferredVariantStrategy,
     setVariantStrategy,
     colorSpace,
@@ -159,7 +162,7 @@ const App: React.FC = () => {
   });
 
   const [quickPicker, setQuickPicker] = useState<{ x: number, y: number, key: string, label: string } | null>(null)
-  
+
   // Desktop theme object for export/preview
   const theme = useMemo<DesktopTheme>(() => {
     return {
@@ -263,12 +266,11 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           {failCount > 0 && (
-            <div 
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all animate-pulse cursor-pointer ${
-                activeMode === 'light' 
-                  ? 'bg-red-50 border-red-200 text-red-600' 
-                  : 'bg-red-500/10 border-red-500/30 text-red-400'
-              }`}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all animate-pulse cursor-pointer ${activeMode === 'light'
+                ? 'bg-red-50 border-red-200 text-red-600'
+                : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}
               onClick={() => {
                 setMatrixMode(true);
                 setActiveTab("palette");
@@ -291,21 +293,19 @@ const App: React.FC = () => {
           <div className={`flex p-1 border rounded-md transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
             <button
               onClick={() => setActiveTab("palette")}
-              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
-                activeTab === "palette" 
-                  ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
-                  : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
-              }`}
+              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${activeTab === "palette"
+                ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+                }`}
             >
               MATRIX_ROUTER
             </button>
             <button
               onClick={() => setActiveTab("export")}
-              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
-                activeTab === "export" 
-                  ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
-                  : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
-              }`}
+              className={`px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${activeTab === "export"
+                ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+                }`}
             >
               EXPORT_ENGINE
             </button>
@@ -343,11 +343,10 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => initializeSeeds(true)}
-                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
-                      activeMode === 'light'
-                        ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
-                        : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
-                    }`}
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${activeMode === 'light'
+                      ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+                      : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                      }`}
                     title="Regenerate seed colors based on current harmony and base color"
                   >
                     REGENERATE_SEEDS
@@ -355,26 +354,24 @@ const App: React.FC = () => {
                   <button
                     onClick={() => handleAnalyzeSeeds(seeds9)}
                     disabled={isAnalyzing}
-                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border relative ${
-                      isAnalyzing
-                        ? "bg-purple-600 text-white border-purple-400 animate-pulse cursor-wait"
-                        : activeMode === 'light'
-                          ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
-                          : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
-                    }`}
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border relative ${isAnalyzing
+                      ? "bg-purple-600 text-white border-purple-400 animate-pulse cursor-wait"
+                      : activeMode === 'light'
+                        ? "bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+                        : "bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/20"
+                      }`}
                     title="Analyze current seed values to reverse-engineer harmony and strategy parameters"
                   >
                     {isAnalyzing ? "CALCULATING..." : "ANALYZE_SEEDS"}
                   </button>
                   <button
                     onClick={handleInitialize}
-                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${
-                      matrixMode && matrixView === "audit"
-                        ? "bg-purple-500/20 text-purple-600 border-purple-500/40" 
-                        : activeMode === 'light'
-                          ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
-                          : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
-                    }`}
+                    className={`text-[9px] font-black px-3 py-1 rounded transition-all uppercase tracking-widest border ${matrixMode && matrixView === "audit"
+                      ? "bg-purple-500/20 text-purple-600 border-purple-500/40"
+                      : activeMode === 'light'
+                        ? "bg-gray-100 text-gray-400 border-gray-200 hover:border-purple-300"
+                        : "bg-black/40 text-purple-900 border-purple-900/20 hover:border-purple-800"
+                      }`}
                   >
                     {matrixMode && matrixView === "audit" ? "AUDIT_ACTIVE" : "INITIALIZE"}
                   </button>
@@ -409,14 +406,13 @@ const App: React.FC = () => {
                       <button
                         onClick={handleResetMode}
                         disabled={
-                          Object.keys(manualOverrides[activeMode] || {}).length === 0 && 
+                          Object.keys(manualOverrides[activeMode] || {}).length === 0 &&
                           Object.keys(seedOverrides[activeMode] || {}).length === 0
                         }
-                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
-                          activeMode === 'light'
-                            ? "border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100"
-                            : "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
-                        }`}
+                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${activeMode === 'light'
+                          ? "border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100"
+                          : "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
+                          }`}
                         title={`Reset only ${activeMode} overrides`}
                       >
                         RESET_{activeMode.toUpperCase()}
@@ -424,16 +420,15 @@ const App: React.FC = () => {
                       <button
                         onClick={handleClearAll}
                         disabled={
-                          Object.keys(manualOverrides.light).length === 0 && 
-                          Object.keys(manualOverrides.dark).length === 0 && 
-                          Object.keys(seedOverrides.light).length === 0 && 
+                          Object.keys(manualOverrides.light).length === 0 &&
+                          Object.keys(manualOverrides.dark).length === 0 &&
+                          Object.keys(seedOverrides.light).length === 0 &&
                           Object.keys(seedOverrides.dark).length === 0
                         }
-                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${
-                          activeMode === 'light'
-                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                            : "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                        }`}
+                        className={`text-[10px] px-3 py-1 font-mono font-bold uppercase tracking-tighter border transition-all disabled:opacity-20 ${activeMode === 'light'
+                          ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          : "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                          }`}
                         title="Clear all overrides for BOTH modes"
                       >
                         PURGE_ALL
@@ -444,21 +439,19 @@ const App: React.FC = () => {
                   <div className="flex p-1 border rounded-md mb-4 transition-colors">
                     <button
                       onClick={() => setMatrixView("audit")}
-                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
-                        matrixView === "audit" 
-                          ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]" 
-                          : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
-                      }`}
+                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${matrixView === "audit"
+                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                        : activeMode === 'light' ? "text-purple-500/60 hover:text-purple-600" : "text-purple-500/60 hover:text-purple-400"
+                        }`}
                     >
                       WCAG_AUDIT
                     </button>
                     <button
                       onClick={() => setMatrixView("mappings")}
-                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${
-                        matrixView === "mappings" 
-                          ? "bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)]" 
-                          : activeMode === 'light' ? "text-cyan-600/60 hover:text-cyan-600" : "text-cyan-400/60 hover:text-cyan-400"
-                      }`}
+                      className={`flex-1 px-4 py-1 text-[10px] font-black uppercase tracking-widest transition-all rounded ${matrixView === "mappings"
+                        ? "bg-cyan-600 text-white shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                        : activeMode === 'light' ? "text-cyan-600/60 hover:text-cyan-600" : "text-cyan-400/60 hover:text-cyan-400"
+                        }`}
                     >
                       MAPPINGS
                     </button>
@@ -466,105 +459,104 @@ const App: React.FC = () => {
 
                   {matrixView === "audit" && (
                     <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
-                    <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>
-                          AGENT_AUDIT_LOG
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
-                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
-                            {passCount}
+                      <div className={`flex items-center justify-between px-3 py-2 border-b transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-[#1a1a2e] border-[#2d2d4d]'}`}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                          <span className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-300'}`}>
+                            AGENT_AUDIT_LOG
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
-                          <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
-                            {failCount}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-green-600/70' : 'text-green-400/70'}`}>PASS:</span>
+                            <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-green-600' : 'text-green-400'}`}>
+                              {passCount}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[9px] font-mono transition-colors ${activeMode === 'light' ? 'text-red-600/70' : 'text-red-400/70'}`}>FAIL:</span>
+                            <span className={`text-[10px] font-mono font-bold transition-colors ${activeMode === 'light' ? 'text-red-600' : 'text-red-400'}`}>
+                              {failCount}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
-                      <div className="flex flex-col">
-                        {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
-                          <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
-                            <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
-                              <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
-                                <span className="opacity-40">#</span> {category}
-                              </h3>
-                              <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
-                                {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
-                              </span>
-                            </div>
-                            
-                            <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
-                              {deferredWcagPairs.filter(p => p.category === category).map(pair => {
-                                const score = pair.score
-                                const isFailing = !score.pass
-                                const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.category);
-                                
-                                // Map type to icon
-                                let typeIcon = "📄" // read
-                                if (pair.type === 'shell') typeIcon = "🐚"
-                                if (pair.type === 'action') typeIcon = "⚡"
-                                if (pair.type === 'diff') typeIcon = "🔍"
+                      <div className={`max-h-[500px] overflow-y-auto custom-scrollbar transition-colors ${activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}`}>
+                        <div className="flex flex-col">
+                          {Array.from(new Set(deferredWcagPairs.map(p => p.category))).map(category => (
+                            <div key={category} className={`border-b last:border-b-0 transition-colors ${activeMode === 'light' ? 'border-gray-100' : 'border-[#1a1a2e]'}`}>
+                              <div className={`px-3 py-1.5 flex items-center justify-between sticky top-0 z-10 transition-colors ${activeMode === 'light' ? 'bg-gray-50/95 border-b border-gray-100' : 'bg-[#161625] border-b border-[#1a1a2e]'}`}>
+                                <h3 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-400/80'}`}>
+                                  <span className="opacity-40">#</span> {category}
+                                </h3>
+                                <span className={`text-[8px] font-mono transition-colors ${activeMode === 'light' ? 'text-purple-600/50' : 'text-purple-500/50'}`}>
+                                  {deferredWcagPairs.filter(p => p.category === category).length} ENTRIES
+                                </span>
+                              </div>
 
-                                return (
-                                  <div 
-                                    key={`${pair.category}-${pair.type}-${pair.label}-${pair.bgKey}-${pair.fgKey}`} 
-                                    className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
-                                  >
-                                    {/* Icon Column */}
-                                    <div className={`w-5 h-5 shrink-0 flex items-center justify-center rounded text-[10px] border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200 group-hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] group-hover:border-purple-500/30'}`}>
-                                      {typeIcon}
-                                    </div>
+                              <div className={`divide-y transition-colors ${activeMode === 'light' ? 'divide-gray-50' : 'divide-[#1a1a2e]'}`}>
+                                {deferredWcagPairs.filter(p => p.category === category).map(pair => {
+                                  const score = pair.score
+                                  const isFailing = !score.pass
+                                  const thresholdLabel = getThresholdLabel(pair.isNonText, pair.isBorder, pair.category);
 
-                                    {/* Content Column */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-baseline justify-between gap-2">
-                                        <div className="flex flex-col min-w-0">
-                                          <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
-                                            {pair.label}
-                                          </span>
-                                          <div className="flex items-center gap-1 opacity-60 text-[7px] font-mono">
-                                            {pair.isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NON_TEXT</span>}
-                                            {pair.isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BORDER</span>}
-                                            {pair.isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WEAK</span>}
-                                            {pair.isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">STRONG</span>}
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                          <div className="flex flex-col items-end">
-                                            <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
-                                              {score.ratio.toFixed(2)}:1
-                                              <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
+                                  // Map type to icon
+                                  let typeIcon = "📄" // read
+                                  if (pair.type === 'shell') typeIcon = "🐚"
+                                  if (pair.type === 'action') typeIcon = "⚡"
+                                  if (pair.type === 'diff') typeIcon = "🔍"
+
+                                  return (
+                                    <div
+                                      key={`${pair.category}-${pair.type}-${pair.label}-${pair.bgKey}-${pair.fgKey}`}
+                                      className={`group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-purple-500/5 ${isFailing ? 'bg-red-500/5' : ''}`}
+                                    >
+                                      {/* Icon Column */}
+                                      <div className={`w-5 h-5 shrink-0 flex items-center justify-center rounded text-[10px] border transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200 group-hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] group-hover:border-purple-500/30'}`}>
+                                        {typeIcon}
+                                      </div>
+
+                                      {/* Content Column */}
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-baseline justify-between gap-2">
+                                          <div className="flex flex-col min-w-0">
+                                            <span className={`text-[10px] font-bold truncate transition-colors ${activeMode === 'light' ? 'text-gray-700 group-hover:text-purple-900' : 'text-gray-300 group-hover:text-purple-200'}`}>
+                                              {pair.label}
                                             </span>
-                                            {score.hueDiff > 0 && (
-                                              <span className={`text-[7px] font-mono leading-none mt-0.5 transition-colors ${score.hueDiff >= 15 ? (activeMode === 'light' ? 'text-blue-600' : 'text-blue-400') : 'opacity-40'}`}>
-                                                H_DIFF: {score.hueDiff}°
-                                              </span>
-                                            )}
+                                            <div className="flex items-center gap-1 opacity-60 text-[7px] font-mono">
+                                              {pair.isNonText && <span className="bg-blue-500/10 text-blue-400 px-0.5 rounded">NON_TEXT</span>}
+                                              {pair.isBorder && <span className="bg-cyan-500/10 text-cyan-400 px-0.5 rounded">BORDER</span>}
+                                              {pair.isWeak && <span className="bg-yellow-500/10 text-yellow-400 px-0.5 rounded">WEAK</span>}
+                                              {pair.isStrong && <span className="bg-orange-500/10 text-orange-400 px-0.5 rounded">STRONG</span>}
+                                            </div>
                                           </div>
-                                          <span className={`text-[8px] font-black px-1 rounded-[2px] ${
-                                            isFailing 
-                                              ? 'bg-red-500/20 text-red-500 border border-red-500/30' 
-                                              : activeMode === 'light' 
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            <div className="flex flex-col items-end">
+                                              <span className={`text-[10px] font-mono font-black transition-colors ${isFailing ? 'text-red-500' : (activeMode === 'light' ? 'text-green-600' : 'text-green-400')}`}>
+                                                {score.ratio.toFixed(2)}:1
+                                                <span className="ml-1 opacity-40 text-[8px]">({thresholdLabel})</span>
+                                              </span>
+                                              {score.hueDiff > 0 && (
+                                                <span className={`text-[7px] font-mono leading-none mt-0.5 transition-colors ${score.hueDiff >= 15 ? (activeMode === 'light' ? 'text-blue-600' : 'text-blue-400') : 'opacity-40'}`}>
+                                                  H_DIFF: {score.hueDiff}°
+                                                </span>
+                                              )}
+                                            </div>
+                                            <span className={`text-[8px] font-black px-1 rounded-[2px] ${isFailing
+                                              ? 'bg-red-500/20 text-red-500 border border-red-500/30'
+                                              : activeMode === 'light'
                                                 ? 'bg-green-100 text-green-700 border border-green-200'
                                                 : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                          }`}>
-                                            {isFailing ? 'FAIL' : (score.level === 'AAA' ? 'AAA' : 'PASS')}
-                                          </span>
+                                              }`}>
+                                              {isFailing ? 'FAIL' : (score.level === 'AAA' ? 'AAA' : 'PASS')}
+                                            </span>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <div className="flex items-center justify-between mt-0.5">
-                                        <div className="flex items-center gap-1.5 overflow-hidden">
-                                          <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
-                                        </div>
+                                        <div className="flex items-center justify-between mt-0.5">
+                                          <div className="flex items-center gap-1.5 overflow-hidden">
+                                            <span className={`text-[8px] font-mono truncate transition-colors ${activeMode === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>{pair.fgKey} / {pair.bgKey}</span>
+                                          </div>
                                           {isFailing && (
                                             <div className="grid grid-cols-2 gap-1 shrink-0">
                                               <button
@@ -572,11 +564,10 @@ const App: React.FC = () => {
                                                   const fixed = getClosestPassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.bgKey, fixed);
                                                 }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
-                                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
-                                                }`}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${activeMode === 'light'
+                                                  ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
+                                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/40'
+                                                  }`}
                                                 title={`FIX_BG_LUM: ${pair.bgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
@@ -587,28 +578,26 @@ const App: React.FC = () => {
                                                   const fixed = getClosestPassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.fgKey, fixed);
                                                 }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
-                                                    : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
-                                                }`}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${activeMode === 'light'
+                                                  ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/40'
+                                                  }`}
                                                 title={`FIX_FG_LUM: ${pair.fgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
                                                 L_FG
                                               </button>
-                                              
+
                                               {/* Hue Fix Buttons */}
                                               <button
                                                 onClick={() => {
                                                   const fixed = getClosestHuePassingColor(pair.fg, pair.bg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.bgKey, fixed);
                                                 }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200'
-                                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/40'
-                                                }`}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${activeMode === 'light'
+                                                  ? 'bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200'
+                                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/40'
+                                                  }`}
                                                 title={`FIX_BG_HUE: ${pair.bgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.bg }} />
@@ -619,11 +608,10 @@ const App: React.FC = () => {
                                                   const fixed = getClosestHuePassingColor(pair.bg, pair.fg, pair.isNonText, pair.isBorder, pair.isWeak, pair.isStrong, pair.category);
                                                   handleManualOverride(pair.fgKey, fixed);
                                                 }}
-                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${
-                                                  activeMode === 'light'
-                                                    ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'
-                                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40'
-                                                }`}
+                                                className={`text-[7px] font-black px-1 py-0.5 rounded-[2px] transition-all flex items-center gap-1 ${activeMode === 'light'
+                                                  ? 'bg-cyan-100 text-cyan-700 border border-cyan-200 hover:bg-cyan-200'
+                                                  : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40'
+                                                  }`}
                                                 title={`FIX_FG_HUE: ${pair.fgKey}`}
                                               >
                                                 <span className="w-1.5 h-1.5 rounded-full border border-current" style={{ backgroundColor: pair.fg }} />
@@ -631,32 +619,32 @@ const App: React.FC = () => {
                                               </button>
                                             </div>
                                           )}
-                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                          <button 
-                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
-                                            style={{ backgroundColor: pair.bg }} 
-                                            title={`BG: ${pair.bgKey}`}
-                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
-                                          />
-                                          <button 
-                                            className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm" 
-                                            style={{ backgroundColor: pair.fg }} 
-                                            title={`FG: ${pair.fgKey}`}
-                                            onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
-                                          />
+                                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                            <button
+                                              className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm"
+                                              style={{ backgroundColor: pair.bg }}
+                                              title={`BG: ${pair.bgKey}`}
+                                              onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.bgKey, label: pair.bgKey })}
+                                            />
+                                            <button
+                                              className="w-2.5 h-2.5 rounded-full border border-white/10 hover:scale-125 transition-transform cursor-pointer shadow-sm"
+                                              style={{ backgroundColor: pair.fg }}
+                                              title={`FG: ${pair.fgKey}`}
+                                              onClick={(e) => setQuickPicker({ x: e.clientX, y: e.clientY, key: pair.fgKey, label: pair.fgKey })}
+                                            />
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )
-                              })}
+                                  )
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                   {matrixView === "mappings" && (
                     <div className={`mb-4 rounded-lg border overflow-hidden transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 shadow-sm' : 'bg-[#0d0d17] border-[#2d2d4d]'}`}>
@@ -696,11 +684,10 @@ const App: React.FC = () => {
                                     </span>
                                   </td>
                                   <td className="px-3 py-2">
-                                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded transition-colors ${
-                                      isOverride 
-                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
-                                        : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                                    }`}>
+                                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded transition-colors ${isOverride
+                                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                      : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                                      }`}>
                                       {isOverride ? 'MANUAL_OVERRIDE' : 'SEEDED_FALLBACK'}
                                     </span>
                                   </td>
@@ -746,13 +733,12 @@ const App: React.FC = () => {
                               <div className="flex items-center gap-1.5 w-24 shrink-0">
                                 <button
                                   onClick={() => handleSeedReset(seedName)}
-                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${
-                                    isSeedOverridden
-                                      ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
-                                      : activeMode === 'light'
-                                        ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
-                                        : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
-                                  }`}
+                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all border ${isSeedOverridden
+                                    ? "bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30"
+                                    : activeMode === 'light'
+                                      ? "bg-gray-100 text-purple-400 border-gray-200 hover:text-purple-600 hover:border-purple-300"
+                                      : "bg-[#1a1a2e] text-purple-500/40 border-[#2d2d4d] hover:text-purple-400"
+                                    }`}
                                   title={isSeedOverridden ? "RESET_SEED_VECTOR" : "AUTO_GENERATED"}
                                 >
                                   <span className="text-[8px] leading-none font-bold">{isSeedOverridden ? "×" : "·"}</span>
@@ -768,11 +754,10 @@ const App: React.FC = () => {
                                     <div
                                       key={`${seedName}-${vIdx}`}
                                       onClick={() => handleSeedOverride(seedName, variant.hex)}
-                                      className={`w-5 h-5 shrink-0 rounded-sm border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${
-                                        isCurrentSeed 
-                                          ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/60` 
-                                          : "opacity-80 hover:opacity-100 border-white/10"
-                                      }`}
+                                      className={`w-5 h-5 shrink-0 rounded-sm border flex items-center justify-center transition-all hover:scale-110 cursor-pointer ${isCurrentSeed
+                                        ? `ring-1 ring-purple-500 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-105 border-white/60`
+                                        : "opacity-80 hover:opacity-100 border-white/10"
+                                        }`}
                                       style={{
                                         backgroundColor: variant.hex,
                                       }}
@@ -869,11 +854,10 @@ const App: React.FC = () => {
                     <select
                       value={colorSpace}
                       onChange={(e) => setColorSpace(e.target.value as ColorSpace)}
-                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
-                        activeMode === 'light' 
-                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
-                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
-                      }`}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${activeMode === 'light'
+                        ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100'
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                        }`}
                     >
                       {['HSL', 'CAM02', 'HSLuv', 'LCh D50', 'LCh D65', 'OkLCh', 'IPT', 'LCh(uv)'].map((opt) => (
                         <option key={opt} value={opt} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
@@ -887,11 +871,10 @@ const App: React.FC = () => {
                     <select
                       value={outputSpace}
                       onChange={(e) => setOutputSpace(e.target.value as OutputSpace)}
-                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
-                        activeMode === 'light' 
-                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
-                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
-                      }`}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${activeMode === 'light'
+                        ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100'
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                        }`}
                     >
                       {['sRGB', 'P3', 'AdobeRGB', 'Rec.2020', 'HSL', 'HSV'].map((opt) => (
                         <option key={opt} value={opt} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
@@ -908,11 +891,10 @@ const App: React.FC = () => {
                     <select
                       value={harmony}
                       onChange={(e) => onEngineParamChange(setHarmony, e.target.value as HarmonyRule)}
-                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
-                        activeMode === 'light' 
-                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
-                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
-                      }`}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${activeMode === 'light'
+                        ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100'
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                        }`}
                     >
                       {harmonyOptions.map((opt) => (
                         <option key={opt.value} value={opt.value} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
@@ -926,11 +908,10 @@ const App: React.FC = () => {
                     <select
                       value={variantStrategy}
                       onChange={(e) => onEngineParamChange(setVariantStrategy, e.target.value as VariantStrategy)}
-                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${
-                        activeMode === 'light' 
-                          ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100' 
-                          : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
-                      }`}
+                      className={`w-full border text-[10px] font-mono px-3 py-2 rounded focus:ring-0 outline-none appearance-none cursor-pointer transition-colors ${activeMode === 'light'
+                        ? 'bg-gray-50 border-gray-200 text-purple-900 focus:border-purple-400 hover:bg-gray-100'
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-200 focus:border-purple-500/50 hover:bg-black/60'
+                        }`}
                     >
                       {variantStrategyOptions.map((opt) => (
                         <option key={opt.value} value={opt.value} className={activeMode === 'light' ? 'bg-white' : 'bg-[#0d0d17]'}>
@@ -945,21 +926,19 @@ const App: React.FC = () => {
                   <div className={`flex items-center gap-2 p-1 border rounded-md transition-colors ${activeMode === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-black/40 border-[#2d2d4d]'}`}>
                     <button
                       onClick={toggleMode}
-                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
-                        activeMode === "dark" 
-                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${activeMode === "dark"
+                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]"
                         : "text-purple-900/40 hover:text-purple-600"
-                      }`}
+                        }`}
                     >
                       MODE_DARK
                     </button>
                     <button
                       onClick={toggleMode}
-                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${
-                        activeMode === "light" 
-                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest rounded transition-all ${activeMode === "light"
+                        ? "bg-purple-600 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]"
                         : "text-purple-500/40 hover:text-purple-400"
-                      }`}
+                        }`}
                     >
                       MODE_LIGHT
                     </button>
@@ -1076,31 +1055,28 @@ const App: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={randomizeAll}
-                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${
-                      activeMode === 'light' 
-                        ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300' 
-                        : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
-                    }`}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${activeMode === 'light'
+                      ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300'
+                      : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
+                      }`}
                   >
                     RANDOM_ALL
                   </button>
                   <button
                     onClick={invertBase}
-                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${
-                      activeMode === 'light' 
-                        ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300' 
-                        : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
-                    }`}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${activeMode === 'light'
+                      ? 'bg-gray-50 border-gray-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300'
+                      : 'bg-black/40 border-[#2d2d4d] text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/30'
+                      }`}
                   >
                     INVERT_VEC
                   </button>
                   <button
                     onClick={chaosMode}
-                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(168,85,247,0.1)] ${
-                      activeMode === 'light' 
-                        ? 'bg-purple-600 border-purple-400 text-white hover:bg-purple-700' 
-                        : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20'
-                    }`}
+                    className={`px-2 py-2 border rounded text-[9px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(168,85,247,0.1)] ${activeMode === 'light'
+                      ? 'bg-purple-600 border-purple-400 text-white hover:bg-purple-700'
+                      : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20'
+                      }`}
                   >
                     CHAOS_INIT
                   </button>
@@ -1111,11 +1087,10 @@ const App: React.FC = () => {
                     <button
                       key={preset}
                       onClick={() => applyThemePreset(preset as keyof typeof thematicPresets)}
-                      className={`px-1 py-1.5 border rounded text-[8px] font-mono uppercase tracking-tighter transition-all ${
-                        activeMode === 'light' 
-                          ? 'bg-gray-50 border-gray-100 text-purple-900/40 hover:text-purple-600 hover:border-purple-200 hover:bg-gray-100' 
-                          : 'bg-black/40 border-[#2d2d4d] text-purple-500/60 hover:text-purple-300 hover:border-purple-500/40 hover:bg-black/60'
-                      }`}
+                      className={`px-1 py-1.5 border rounded text-[8px] font-mono uppercase tracking-tighter transition-all ${activeMode === 'light'
+                        ? 'bg-gray-50 border-gray-100 text-purple-900/40 hover:text-purple-600 hover:border-purple-200 hover:bg-gray-100'
+                        : 'bg-black/40 border-[#2d2d4d] text-purple-500/60 hover:text-purple-300 hover:border-purple-500/40 hover:bg-black/60'
+                        }`}
                     >
                       {preset}
                     </button>
@@ -1148,15 +1123,14 @@ const App: React.FC = () => {
                         <button
                           key={preset.id}
                           onClick={() => applyOpencodePreset(preset.id)}
-                          className={`p-3 rounded border text-left transition-all group ${
-                            activePreset === preset.id
-                              ? activeMode === 'light' 
-                                ? "bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]" 
-                                : "bg-purple-600/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
-                              : activeMode === 'light'
-                                ? "bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50"
-                                : "bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5"
-                          }`}
+                          className={`p-3 rounded border text-left transition-all group ${activePreset === preset.id
+                            ? activeMode === 'light'
+                              ? "bg-purple-600 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                              : "bg-purple-600/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                            : activeMode === 'light'
+                              ? "bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50"
+                              : "bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5"
+                            }`}
                         >
                           <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activePreset === preset.id ? (activeMode === 'light' ? 'text-white' : 'text-purple-100') : (activeMode === 'light' ? 'text-purple-900 group-hover:text-purple-700' : 'text-purple-300 group-hover:text-purple-200')}`}>
                             {preset.name}
@@ -1232,8 +1206,8 @@ const App: React.FC = () => {
                           <div className={`text-[10px] font-black uppercase tracking-tight truncate transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{formatAgentLabel(key)}</div>
                           <div className={`text-[9px] font-mono mt-0.5 transition-colors ${activeMode === 'light' ? 'text-purple-600/60' : 'text-purple-500/60'}`}>{String(value).toUpperCase()}</div>
                         </div>
-                        <button 
-                          onClick={() => handleCopy(value as string)} 
+                        <button
+                          onClick={() => handleCopy(value as string)}
                           className={`p-1.5 border rounded transition-colors ${activeMode === 'light' ? 'bg-white border-gray-200 text-purple-600 hover:text-purple-900 hover:border-purple-300' : 'bg-[#1a1a2e] border-[#2d2d4d] text-purple-400 hover:text-purple-200 hover:bg-purple-500/10'}`}
                           title="COPY_HEX"
                         >
@@ -1260,11 +1234,10 @@ const App: React.FC = () => {
                       <button
                         key={format.id}
                         onClick={() => handleExport(format.id)}
-                        className={`p-4 border rounded group transition-all text-left ${
-                          activeMode === 'light' 
-                            ? 'bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50' 
-                            : 'bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5'
-                        }`}
+                        className={`p-4 border rounded group transition-all text-left ${activeMode === 'light'
+                          ? 'bg-gray-50 border-gray-100 hover:border-purple-300 hover:bg-purple-50'
+                          : 'bg-black/40 border-[#2d2d4d] hover:border-purple-500/40 hover:bg-purple-500/5'
+                          }`}
                       >
                         <div className={`text-[8px] font-mono mb-1 uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-500/60 group-hover:text-purple-700' : 'text-purple-500/60 group-hover:text-purple-400'}`}>{format.ext}</div>
                         <div className={`text-[10px] font-black uppercase tracking-wider transition-colors ${activeMode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}>{format.name}</div>
@@ -1279,18 +1252,17 @@ const App: React.FC = () => {
       </main>
       {/* Quick Color Picker Portal - TERMINAL STYLE */}
       {quickPicker && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-start justify-start"
           onClick={() => setQuickPicker(null)}
         >
-          <div 
-            className={`absolute rounded border shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-2 min-w-[460px] transition-colors ${
-              activeMode === 'light' 
-                ? 'bg-white border-purple-200' 
-                : 'bg-[#0d0d17] border-[#2d2d4d]'
-            }`}
-            style={{ 
-              top: Math.min(window.innerHeight - 500, Math.max(10, quickPicker.y)), 
+          <div
+            className={`absolute rounded border shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-3 flex flex-col gap-2 min-w-[460px] transition-colors ${activeMode === 'light'
+              ? 'bg-white border-purple-200'
+              : 'bg-[#0d0d17] border-[#2d2d4d]'
+              }`}
+            style={{
+              top: Math.min(window.innerHeight - 500, Math.max(10, quickPicker.y)),
               left: Math.min(window.innerWidth - 480, Math.max(10, quickPicker.x + 10)),
             }}
             onClick={e => e.stopPropagation()}
@@ -1302,16 +1274,16 @@ const App: React.FC = () => {
                   {formatAgentLabel(quickPicker.label)}
                 </span>
               </div>
-              <button 
-                onClick={() => setQuickPicker(null)} 
+              <button
+                onClick={() => setQuickPicker(null)}
                 className={`transition-colors text-xs font-bold ${activeMode === 'light' ? 'text-purple-300 hover:text-purple-600' : 'text-purple-500/50 hover:text-purple-300'}`}
               >
                 ×
               </button>
             </div>
-            
+
             <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-1 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># ENGINE_VARIANTS</div>
-            
+
             <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
               {Object.entries(activeVariantsMap).map(([seedName, variants]: [string, any]) => (
                 <div key={seedName} className="flex flex-col gap-1">
@@ -1321,15 +1293,14 @@ const App: React.FC = () => {
                   <div className="flex flex-wrap gap-1">
                     {variants.map((v: any, i: number) => {
                       const isSelected = (themeColors[quickPicker.key as keyof OpencodeThemeColors] || "").toLowerCase() === v.hex.toLowerCase()
-                      
+
                       return (
                         <button
                           key={`${v.hex}-${i}`}
-                          className={`w-3.5 h-3.5 rounded-[1px] transition-all border ${
-                            isSelected 
-                              ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-125 border-white/40` 
-                              : "hover:scale-125 border-white/5 hover:border-white/40"
-                          }`}
+                          className={`w-3.5 h-3.5 rounded-[1px] transition-all border ${isSelected
+                            ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white' : 'ring-offset-[#0d0d17]'} z-10 scale-125 border-white/40`
+                            : "hover:scale-125 border-white/5 hover:border-white/40"
+                            }`}
                           style={{ backgroundColor: v.hex }}
                           title={`${seedName} variant ${i} (${v.hex})`}
                           onClick={() => {
@@ -1347,19 +1318,18 @@ const App: React.FC = () => {
             <div className={`text-[8px] uppercase tracking-[0.2em] font-black mt-2 transition-colors ${activeMode === 'light' ? 'text-purple-400' : 'text-purple-500/40'}`}># MANUAL_OVERRIDE</div>
             {(() => {
               const currentColor = (themeColors[quickPicker.key as keyof OpencodeThemeColors] || "").toLowerCase()
-              const isVariantMatch = Object.values(activeVariantsMap).some((variants: any) => 
+              const isVariantMatch = Object.values(activeVariantsMap).some((variants: any) =>
                 variants.some((v: any) => v.hex.toLowerCase() === currentColor)
               )
               const isManualActive = !isVariantMatch
 
               return (
-                <div className={`flex items-center gap-2 border rounded p-1.5 transition-all ${
-                  isManualActive 
-                    ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white border-purple-200' : 'ring-offset-[#0d0d17] border-purple-500/40 bg-purple-500/5'}` 
-                    : activeMode === 'light' ? 'bg-gray-50 border-purple-100' : 'bg-black/40 border-[#2d2d4d]'
-                }`}>
-                  <input 
-                    type="color" 
+                <div className={`flex items-center gap-2 border rounded p-1.5 transition-all ${isManualActive
+                  ? `ring-1 ring-purple-400 ring-offset-1 ${activeMode === 'light' ? 'ring-offset-white border-purple-200' : 'ring-offset-[#0d0d17] border-purple-500/40 bg-purple-500/5'}`
+                  : activeMode === 'light' ? 'bg-gray-50 border-purple-100' : 'bg-black/40 border-[#2d2d4d]'
+                  }`}>
+                  <input
+                    type="color"
                     className="w-8 h-6 cursor-pointer rounded-[1px] bg-transparent border-none"
                     onChange={(e) => {
                       handleQuickOverride(quickPicker.key, e.target.value)
@@ -1367,11 +1337,10 @@ const App: React.FC = () => {
                     }}
                     defaultValue={currentColor || "#000000"}
                   />
-                  <span className={`text-[10px] font-mono uppercase transition-colors ${
-                    isManualActive
-                      ? 'text-purple-400 font-bold'
-                      : activeMode === 'light' ? 'text-purple-700' : 'text-purple-300/60'
-                  }`}>
+                  <span className={`text-[10px] font-mono uppercase transition-colors ${isManualActive
+                    ? 'text-purple-400 font-bold'
+                    : activeMode === 'light' ? 'text-purple-700' : 'text-purple-300/60'
+                    }`}>
                     {currentColor.toUpperCase()}
                   </span>
                 </div>
@@ -1384,11 +1353,10 @@ const App: React.FC = () => {
                   handleManualReset(quickPicker.key)
                   setQuickPicker(null)
                 }}
-                className={`mt-2 py-1.5 text-[8px] font-black uppercase tracking-widest border transition-all ${
-                  activeMode === 'light'
-                    ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
-                    : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
-                }`}
+                className={`mt-2 py-1.5 text-[8px] font-black uppercase tracking-widest border transition-all ${activeMode === 'light'
+                  ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                  : 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
+                  }`}
               >
                 RESET_PROPERTY
               </button>

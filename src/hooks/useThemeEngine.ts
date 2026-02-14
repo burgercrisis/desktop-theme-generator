@@ -2,9 +2,11 @@ import { useMemo, useCallback, useState } from "react"
 import { HSL, HarmonyRule, VariantStrategy, ColorSpace, OutputSpace, SeedColor, PaletteGroup, OpencodeThemeColors, ColorStop } from "../types"
 import { hexToHsl } from "../utils/colorUtils"
 import { generateHarmony } from "../utils/engine/harmonies"
-import { generateOpencodeSeeds, generateOpencodeThemeColors, harmonyOptions, variantStrategyOptions, thematicPresets } from "../utils/harmonies"
-import { generateVariants } from "../utils/engine/variants"
+import { generateOpencodeThemeColors, harmonyOptions, variantStrategyOptions, thematicPresets } from "../utils/harmonies"
+import { generateVariants } from "../utils/cache/cachedFunctions"
+import { generateOpencodeSeeds } from "../utils/cache/cachedFunctions"
 import { opencodePresets, getPresetOverrides } from "../utils/themePresets"
+import { analysisWorkerManager, AnalysisProgress } from "../utils/workers/analysisWorkerManager"
 
 interface UseThemeEngineProps {
   baseColor: HSL
@@ -24,6 +26,8 @@ interface UseThemeEngineProps {
   setLightContrast: React.Dispatch<React.SetStateAction<number>>
   darkContrast: number
   setDarkContrast: React.Dispatch<React.SetStateAction<number>>
+  contrastIntensity: number
+  setContrastIntensity: React.Dispatch<React.SetStateAction<number>>
   variantStrategy: VariantStrategy
   setVariantStrategy: React.Dispatch<React.SetStateAction<VariantStrategy>>
   colorSpace: ColorSpace
@@ -50,6 +54,7 @@ export const useThemeEngine = ({
   darkBrightness, setDarkBrightness,
   lightContrast, setLightContrast,
   darkContrast, setDarkContrast,
+  contrastIntensity, setContrastIntensity,
   variantStrategy, setVariantStrategy,
   colorSpace,
   outputSpace,
@@ -65,6 +70,173 @@ export const useThemeEngine = ({
   setActivePreset,
 }: UseThemeEngineProps) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
+
+  // Progressive analysis with chunking for fallback
+  const performProgressiveAnalysis = useCallback(async (
+    currentSeeds: SeedColor[],
+    baseHue: number,
+    avgS: number,
+    avgL: number,
+    onProgress: (progress: AnalysisProgress) => void
+  ) => {
+    const harmonyRules = Object.values(HarmonyRule);
+    const strategies = Object.values(VariantStrategy);
+
+    // Helper for weighted error calculation
+    const calculateSeedError = (testSeeds: SeedColor[]) => {
+      let totalError = 0;
+      let totalWeight = 0;
+
+      currentSeeds.forEach(target => {
+        const match = testSeeds.find(ts => ts.name === target.name);
+        if (match) {
+          const hueDiff = Math.min(Math.abs(match.hsl.h - target.hsl.h), 360 - Math.abs(match.hsl.h - target.hsl.h));
+          const satDiff = Math.abs(match.hsl.s - target.hsl.s);
+          const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
+
+          let semanticWeight = 1.0;
+          if (target.name === "primary") semanticWeight = 5.0;
+          if (target.name === "neutral") semanticWeight = 4.0;
+          if (target.name === "interactive") semanticWeight = 3.0;
+
+          const error = (hueDiff * 2.0) + (satDiff * 0.5) + (lumDiff * 0.5);
+          totalError += error * semanticWeight;
+          totalWeight += semanticWeight;
+        }
+      });
+
+      return totalWeight > 0 ? totalError / totalWeight : 999;
+    };
+
+    // Intelligent pruning
+    const hues = currentSeeds.map(s => s.hsl.h).sort((a, b) => a - b);
+    const hueSpread = Math.max(...hues) - Math.min(...hues);
+    const avgSaturation = currentSeeds.reduce((sum, s) => sum + s.hsl.s, 0) / currentSeeds.length;
+
+    let prioritizedStrategies = [...strategies];
+    let prioritizedHarmonies = [...harmonyRules];
+
+    if (avgSaturation > 70) {
+      prioritizedStrategies = [VariantStrategy.VIBRANT, VariantStrategy.NEON, VariantStrategy.HYPER, VariantStrategy.ACID, ...strategies.filter(s => ![VariantStrategy.VIBRANT, VariantStrategy.NEON, VariantStrategy.HYPER, VariantStrategy.ACID].includes(s))];
+    } else if (avgSaturation < 30) {
+      prioritizedStrategies = [VariantStrategy.TONES, VariantStrategy.PASTEL, VariantStrategy.CLAY, VariantStrategy.TINTS_SHADES, ...strategies.filter(s => ![VariantStrategy.TONES, VariantStrategy.PASTEL, VariantStrategy.CLAY, VariantStrategy.TINTS_SHADES].includes(s))];
+    }
+
+    if (hueSpread < 60) {
+      prioritizedHarmonies = [HarmonyRule.MONOCHROMATIC, HarmonyRule.ANALOGOUS, HarmonyRule.ANALOGOUS_5, ...harmonyRules.filter(h => ![HarmonyRule.MONOCHROMATIC, HarmonyRule.ANALOGOUS, HarmonyRule.ANALOGOUS_5].includes(h))];
+    } else if (hueSpread > 180) {
+      prioritizedHarmonies = [HarmonyRule.COMPLEMENTARY, HarmonyRule.TRIADIC, HarmonyRule.TETRADIC, HarmonyRule.SQUARE, ...harmonyRules.filter(h => ![HarmonyRule.COMPLEMENTARY, HarmonyRule.TRIADIC, HarmonyRule.TETRADIC, HarmonyRule.SQUARE].includes(h))];
+    }
+
+    // PASS 1: Coarse search with chunking
+    interface Candidate {
+      hRule: HarmonyRule;
+      strat: VariantStrategy;
+      sVal: number;
+      error: number;
+    }
+
+    let candidates: Candidate[] = [];
+    let processed = 0;
+    const totalCoarse = prioritizedStrategies.length * prioritizedHarmonies.length * 13;
+
+    for (let sIndex = 0; sIndex < prioritizedStrategies.length; sIndex++) {
+      const strat = prioritizedStrategies[sIndex];
+
+      for (let hIndex = 0; hIndex < prioritizedHarmonies.length; hIndex++) {
+        const hRule = prioritizedHarmonies[hIndex];
+
+        for (let sVal = 0; sVal <= 180; sVal += 15) {
+          const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50, strat);
+          const avgError = calculateSeedError(testSeeds);
+
+          let ruleBias = 0;
+          switch (hRule) {
+            case HarmonyRule.ANALOGOUS: ruleBias = -5; break;
+            case HarmonyRule.COMPLEMENTARY: ruleBias = -3; break;
+            case HarmonyRule.MONOCHROMATIC: ruleBias = -2; break;
+            default: ruleBias = 0;
+          }
+
+          candidates.push({ hRule, strat, sVal, error: avgError + ruleBias });
+          processed++;
+
+          if (processed % 50 === 0) {
+            onProgress({
+              current: processed,
+              total: totalCoarse,
+              phase: 'coarse',
+              percentage: Math.round((processed / totalCoarse) * 100)
+            });
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+        }
+      }
+    }
+
+    candidates.sort((a, b) => a.error - b.error);
+    const topCandidates = candidates.slice(0, 5);
+
+    // PASS 2: Fine-grained search (simplified)
+    let bestResult = topCandidates[0];
+    let minFullError = Infinity;
+    let processedFine = 0;
+    const totalFine = topCandidates.length * 13;
+
+    for (const cand of topCandidates) {
+      const startS = Math.max(0, cand.sVal - 15);
+      const endS = Math.min(180, cand.sVal + 15);
+
+      for (let sVal = startS; sVal <= endS; sVal += 2.5) {
+        const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, cand.hRule, sVal, 50, cand.strat);
+
+        // Simplified variant comparison
+        let variantError = 0;
+        const seedsToVerify = testSeeds.filter(s => ["primary", "neutral"].includes(s.name));
+
+        seedsToVerify.forEach(seed => {
+          const testVars = generateVariants(seed.hsl, 12, activeMode === "light" ? lightContrast : darkContrast, cand.strat, colorSpace, outputSpace, 50);
+
+          // Only check key variants (0, 6, 11) instead of all 12
+          const keyIndices = [0, 6, 11];
+          keyIndices.forEach(i => {
+            if (testVars[i]) {
+              variantError += Math.abs(testVars[i].hsl.l - avgL) * 1.5;
+              variantError += Math.abs(testVars[i].hsl.s - avgS) * 0.5;
+            }
+          });
+        });
+
+        const seedErr = calculateSeedError(testSeeds);
+        const totalFullError = seedErr + (variantError / 9);
+
+        if (totalFullError < minFullError) {
+          minFullError = totalFullError;
+          bestResult = { ...cand, sVal };
+        }
+
+        processedFine++;
+
+        if (processedFine % 5 === 0) {
+          onProgress({
+            current: processedFine,
+            total: totalFine,
+            phase: 'fine',
+            percentage: Math.round((processedFine / totalFine) * 100)
+          });
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+      }
+    }
+
+    setHarmony(bestResult.hRule);
+    setSpread(bestResult.sVal);
+    setVariantStrategy(bestResult.strat);
+    setVariantCount(12);
+
+    console.log(`[Progressive Analysis] Result: Harmony=${bestResult.hRule}, Strategy=${bestResult.strat}, Spread=${bestResult.sVal.toFixed(1)}`);
+  }, [activeMode, lightContrast, darkContrast, colorSpace, outputSpace, setHarmony, setSpread, setVariantStrategy, setVariantCount]);
 
   const initializeSeeds = useCallback((force = false) => {
     if (seedsInitialized && !force) return
@@ -91,7 +263,7 @@ export const useThemeEngine = ({
   const onEngineParamChange = useCallback((setter: (val: any) => void, val: any, isDestructive = true) => {
     setter(val);
     isManualChangeRef.current = true;
-    
+
     // Only clear seed overrides if it's a destructive change (harmony, spread, etc)
     if (isDestructive && useOpencodeMode && (Object.keys(seedOverrides.light).length > 0 || Object.keys(seedOverrides.dark).length > 0)) {
       setSeedOverrides({ light: {}, dark: {} });
@@ -129,17 +301,17 @@ export const useThemeEngine = ({
   const applyOpencodePreset = useCallback((presetId: string) => {
     const overrides = getPresetOverrides(presetId)
     const preset = opencodePresets[presetId]
-    
+
     isManualChangeRef.current = true;
     setManualOverrides(prev => ({
       ...prev,
       [activeMode]: overrides
     }))
-    
+
     if (preset?.baseColor) setBaseColor(preset.baseColor)
     if (preset?.harmony) setHarmony(preset.harmony)
     if (preset?.variantStrategy) setVariantStrategy(preset.variantStrategy)
-    
+
     setActivePreset(presetId)
   }, [activeMode, setManualOverrides, setBaseColor, setHarmony, setVariantStrategy, setActivePreset])
 
@@ -152,13 +324,13 @@ export const useThemeEngine = ({
     const h = Math.floor(Math.random() * 360)
     const s = 40 + Math.floor(Math.random() * 60)
     const l = 40 + Math.floor(Math.random() * 30)
-    
+
     setBaseColor({ h, s, l })
     setSaturation(s)
-    
+
     const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
     const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
-    
+
     setHarmony(randomHarmony)
     setVariantStrategy(randomStrategy)
     setVariantCount(12)
@@ -195,13 +367,13 @@ export const useThemeEngine = ({
     const h = Math.floor(Math.random() * 360)
     const s = Math.random() > 0.5 ? 80 + Math.random() * 20 : Math.random() * 30
     const l = Math.random() > 0.5 ? 70 + Math.random() * 30 : Math.random() * 30
-    
+
     setBaseColor({ h, s, l })
     setSaturation(Math.round(s))
-    
+
     const randomHarmony = harmonyOptions[Math.floor(Math.random() * harmonyOptions.length)].value
     const randomStrategy = variantStrategyOptions[Math.floor(Math.random() * variantStrategyOptions.length)].value
-    
+
     setHarmony(randomHarmony)
     setVariantStrategy(randomStrategy)
     setVariantCount(Math.floor(Math.random() * 12) + 1)
@@ -213,7 +385,7 @@ export const useThemeEngine = ({
     const h = Math.round(preset.h[0] + Math.random() * (preset.h[1] - preset.h[0]))
     const s = Math.round(preset.s[0] + Math.random() * (preset.s[1] - preset.s[0]))
     const l = Math.round(preset.l[0] + Math.random() * (preset.l[1] - preset.l[0]))
-    
+
     setBaseColor({ h, s, l })
     setSaturation(s)
     setHarmony(preset.harmony)
@@ -263,7 +435,7 @@ export const useThemeEngine = ({
   const seedVariantsLight = useMemo(() => {
     const variants: Record<string, ColorStop[]> = {}
     lightSeeds9.forEach((seed) => {
-      variants[seed.name] = generateVariants(seed.hsl, variantCount, lightContrast, variantStrategy, colorSpace, outputSpace, 50)
+      variants[seed.name] = generateVariants(seed.hsl, variantCount, lightContrast, variantStrategy, colorSpace, outputSpace, 50, undefined, undefined)
     })
     return variants
   }, [lightSeeds9, variantCount, lightContrast, variantStrategy, colorSpace, outputSpace])
@@ -271,7 +443,7 @@ export const useThemeEngine = ({
   const seedVariantsDark = useMemo(() => {
     const variants: Record<string, ColorStop[]> = {}
     darkSeeds9.forEach((seed) => {
-      variants[seed.name] = generateVariants(seed.hsl, variantCount, darkContrast, variantStrategy, colorSpace, outputSpace, 50)
+      variants[seed.name] = generateVariants(seed.hsl, variantCount, darkContrast, variantStrategy, colorSpace, outputSpace, 50, undefined, undefined)
     })
     return variants
   }, [darkSeeds9, variantCount, darkContrast, variantStrategy, colorSpace, outputSpace])
@@ -294,7 +466,7 @@ export const useThemeEngine = ({
 
   const handleAnalyzeSeeds = useCallback(async (currentSeeds: SeedColor[]) => {
     setIsAnalyzing(true);
-    
+
     // Allow UI to render the loading state
     await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -332,12 +504,12 @@ export const useThemeEngine = ({
         if (s.hsl.l < minL) minL = s.hsl.l;
         if (s.hsl.l > maxL) maxL = s.hsl.l;
       });
-      
+
       const lDiff = maxL - minL;
       // In Opencode, contrast of 50 usually means a ~20-30% spread. 
       // 100 means ~40-50% spread. 
       const guessedContrast = Math.min(100, Math.max(0, lDiff * 2.2));
-      
+
       if (activeMode === "light") setLightContrast(Math.round(guessedContrast));
       else setDarkContrast(Math.round(guessedContrast));
 
@@ -364,7 +536,7 @@ export const useThemeEngine = ({
             const hueDiff = Math.min(Math.abs(match.hsl.h - target.hsl.h), 360 - Math.abs(match.hsl.h - target.hsl.h));
             const satDiff = Math.abs(match.hsl.s - target.hsl.s);
             const lumDiff = Math.abs(match.hsl.l - target.hsl.l);
-            
+
             let semanticWeight = 1.0;
             if (target.name === "primary") semanticWeight = 5.0;
             if (target.name === "neutral") semanticWeight = 4.0;
@@ -394,7 +566,7 @@ export const useThemeEngine = ({
           for (let sVal = 0; sVal <= 180; sVal += 15) { // Coarser pass to keep performance high
             const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, hRule, sVal, 50, strat);
             const avgError = calculateSeedError(testSeeds);
-            
+
             let ruleBias = 0;
             switch (hRule) {
               case HarmonyRule.ANALOGOUS: ruleBias = -5; break;
@@ -424,15 +596,15 @@ export const useThemeEngine = ({
 
         for (let sVal = startS; sVal <= endS; sVal += 2.5) {
           const testSeeds = generateOpencodeSeeds({ h: baseHue, s: avgS, l: avgL }, cand.hRule, sVal, 50, cand.strat);
-          
+
           // Generate full variants for primary and neutral to verify the "feel" of the strategy
           let variantError = 0;
           const seedsToVerify = testSeeds.filter(s => ["primary", "neutral"].includes(s.name));
-          
+
           seedsToVerify.forEach(seed => {
             const testVars = generateVariants(seed.hsl, 12, (activeMode === "light" ? lightContrast : darkContrast), cand.strat, colorSpace, outputSpace, 50);
             const currentVars = activeVariantsMap[seed.name] || [];
-            
+
             const compareCount = Math.min(testVars.length, currentVars.length);
             for (let i = 0; i < compareCount; i++) {
               variantError += Math.abs(testVars[i].hsl.l - currentVars[i].hsl.l) * 1.5;
@@ -455,8 +627,9 @@ export const useThemeEngine = ({
       setVariantStrategy(bestResult.strat);
       setVariantCount(12);
 
+      const finalStrategy = bestResult.strat;
       console.log(`[Analysis] Final Result: Harmony=${bestResult.hRule}, Strategy=${bestResult.strat}, Spread=${bestResult.sVal.toFixed(1)}`);
-      
+
       console.log(`[Analysis] Result: Harmony=${bestHarmony}, Spread=${bestSpread}, Strategy=${finalStrategy}`);
     } finally {
       setIsAnalyzing(false);
@@ -470,7 +643,7 @@ export const useThemeEngine = ({
   const themeColors = useMemo<OpencodeThemeColors>(() => {
     const baseColors = baseThemeColors;
     const currentOverrides = manualOverrides[activeMode] || {}
-    
+
     // Filter out "unassigned" overrides to allow fallback to baseColors
     const filteredOverrides = Object.entries(currentOverrides).reduce((acc, [key, value]) => {
       // ONLY apply if it's a valid hex and NOT "unassigned"
@@ -515,5 +688,6 @@ export const useThemeEngine = ({
     handleSeedOverride,
     handleSeedReset,
     isAnalyzing,
+    analysisProgress,
   }
 }

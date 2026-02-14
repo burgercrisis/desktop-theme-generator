@@ -6,14 +6,14 @@ export const getInitialState = (key: string, defaultValue: any) => {
   if (!saved) return defaultValue
   try {
     const parsed = JSON.parse(saved)
-    
+
     // Migration for nested overrides
     if (key === "manualOverrides" || key === "seedOverrides") {
       if (parsed && typeof parsed === "object" && !parsed.light && !parsed.dark) {
         return { light: parsed, dark: {} }
       }
     }
-    
+
     return parsed
   } catch (e) {
     return defaultValue
@@ -30,6 +30,7 @@ export const useThemeState = () => {
   const [darkBrightness, setDarkBrightness] = useState(() => getInitialState("darkBrightness", 50))
   const [lightContrast, setLightContrast] = useState(() => getInitialState("lightContrast", 50))
   const [darkContrast, setDarkContrast] = useState(() => getInitialState("darkContrast", 50))
+  const [contrastIntensity, setContrastIntensity] = useState(() => getInitialState("contrastIntensity", 50))
   const [activeMode, setActiveMode] = useState<"light" | "dark">(() => {
     const saved = localStorage.getItem("activeMode")
     return (saved === "light" || saved === "dark") ? saved : "dark"
@@ -127,6 +128,7 @@ export const useThemeState = () => {
       const stateToSave = {
         baseColor, harmony, spread, variantCount, saturation,
         lightBrightness, darkBrightness, lightContrast, darkContrast,
+        contrastIntensity,
         variantStrategy, colorSpace, outputSpace, useOpencodeMode,
         themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
       }
@@ -143,6 +145,7 @@ export const useThemeState = () => {
   }, [
     baseColor, harmony, spread, variantCount, saturation,
     lightBrightness, darkBrightness, lightContrast, darkContrast,
+    contrastIntensity,
     variantStrategy, colorSpace, outputSpace, useOpencodeMode,
     themeName, matrixMode, manualOverrides, seedOverrides, seedsInitialized
   ])
@@ -157,6 +160,7 @@ export const useThemeState = () => {
     darkBrightness, setDarkBrightness,
     lightContrast, setLightContrast,
     darkContrast, setDarkContrast,
+    contrastIntensity, setContrastIntensity,
     activeMode, setActiveMode,
     toggleMode,
     variantStrategy, setVariantStrategy,

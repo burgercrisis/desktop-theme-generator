@@ -151,6 +151,8 @@ export const useWcagAudit = ({ themeColors }: UseWcagAuditProps) => {
     addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_HOVER_VS_BASE"), "button-danger-base", "button-danger-hover", "DANGER HOVER VS BASE", true)
     addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE"), "button-danger-active", "text-on-critical-base", "DANGER_BUTTON_ACTIVE_TEXT", false)
     addPair("LOG_04_BUTTONS", formatAgentLabel("DANGER_ACTIVE_VS_BASE"), "button-danger-base", "button-danger-active", "DANGER ACTIVE VS BASE", true)
+    addPair("LOG_04_BUTTONS", formatAgentLabel("BUTTON_ICON"), "button-secondary-base", "icon-base", "BUTTON ICON CONTRAST", true)
+    addPair("LOG_04_BUTTONS", formatAgentLabel("BUTTON_BORDER"), "background-base", "button-secondary-base", "BUTTON BORDER CONTRAST", true)
 
     // --- LOG_05_SEMANTIC ---
     const semanticTypes = ["success", "warning", "critical", "info"]
@@ -211,6 +213,9 @@ export const useWcagAudit = ({ themeColors }: UseWcagAuditProps) => {
     addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_DISABLED"), "background-base", "input-disabled", "DISABLED_INPUT_BACKGROUND_CONTRAST", true)
     addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_SELECTED_BORDER"), "background-base", "border-selected", "SELECTED_INPUT_BORDER_CONTRAST", true)
     addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_FOCUS_RING"), "background-base", "input-focus-ring", "INPUT FOCUS RING", true)
+    addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_CURSOR"), "input-base", "terminal-cursor", "INPUT CURSOR CONTRAST", true)
+    addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_ICON"), "input-base", "icon-weak", "INPUT ICON CONTRAST", true)
+    addPair("LOG_07_INPUTS", formatAgentLabel("INPUT_HINT"), "background-base", "text-weaker", "INPUT HINT ON BACKGROUND", false)
 
     // --- LOG_08_TERMINAL ---
     const ansiColors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]

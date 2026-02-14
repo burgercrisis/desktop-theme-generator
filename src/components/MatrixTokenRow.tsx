@@ -23,6 +23,7 @@ export const MatrixTokenRow = React.memo(({
   setQuickPicker,
   formatAgentLabel,
   activeVariantsMap,
+  themeColors,
 }: MatrixTokenRowProps) => {
   return (
     <div className={`group flex items-center justify-between gap-4 p-2 rounded-md transition-colors ${activeMode === 'light' ? 'hover:bg-gray-50 border-b border-gray-100' : 'hover:bg-white/5 border-b border-white/5'}`}>
@@ -49,6 +50,12 @@ export const MatrixTokenRow = React.memo(({
             title="QUICK_PICKER"
           />
           <span className={`text-[8px] font-mono transition-colors uppercase ${activeMode === 'light' ? 'text-gray-400 group-hover:text-gray-600' : 'text-gray-600 group-hover:text-gray-500'}`}>{currentColor}</span>
+        </div>
+        {/* Token Name (Semantic Context) */}
+        <div className="mt-1">
+          <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeMode === 'light' ? 'text-purple-900/40' : 'text-purple-500/30'}`}>
+            {property.replace(/-/g, '_')}
+          </span>
         </div>
       </div>
 
